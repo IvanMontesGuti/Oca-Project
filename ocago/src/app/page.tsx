@@ -28,14 +28,14 @@ export default function Home() {
         </div>
       </nav>
 
-      <main className="container mx-auto px-4 py-12 md:py-14 flex flex-col md:flex-row items-center justify-between">
-        <div className="md:w-1/2 space-y-3">
-          <h1 className="text-5xl md:text-7xl font-fredoka font-bold">
+      <main className="container mx-auto px-4 py-6 md:py-1 flex flex-col md:flex-row items-center justify-between">
+        <div className="md:w-1/2 space-y-4">
+          <h1 className="text-8xl md:text-8xl font-fredoka font-bold ">
             <span className="text-[#FFFF00]">CLÁSICO,</span>
             <br />
             <span className="text-white">REAL-TIME,</span>
             <br />
-            <span className="text-white">DIVERTIDO.</span>
+            <span className="text-white tracking-wide">ENTRETENIDO.</span>
           </h1>
           <p className="text-white text-xl font-montserrat">
             El juego clásico de la oca, con amigos.
@@ -45,7 +45,7 @@ export default function Home() {
             <Download className="h-5 w-5" />
           </button>
         </div>
-        <div className="md:w-1/2 mt-12 md:mt-0 relative">
+        <div className="md:w-1/2 mt-8 md:mt-0 relative">
           <div className="relative w-full aspect-square flex justify-end items-center">
             <div className="relative w-[80%] h-[80%]">
               <Image
