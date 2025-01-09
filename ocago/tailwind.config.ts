@@ -12,6 +12,10 @@ export default {
         background: "var(--background)",
         foreground: "var(--foreground)",
       },
+      fontFamily: {
+        fredoka: ['var(--font-fredoka)'],
+        montserrat: ['var(--font-montserrat)'],
+      },
     },
   },
   plugins: [],
