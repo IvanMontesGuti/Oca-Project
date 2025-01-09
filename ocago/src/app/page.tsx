@@ -29,7 +29,7 @@ export default function Home() {
       </nav>
 
       <main className="container mx-auto px-4 py-12 md:py-14 flex flex-col md:flex-row items-center justify-between">
-        <div className="md:w-1/2 space-y-6">
+        <div className="md:w-1/2 space-y-3">
           <h1 className="text-5xl md:text-7xl font-fredoka font-bold">
             <span className="text-[#FFFF00]">CLÁSICO,</span>
             <br />
@@ -55,7 +55,7 @@ export default function Home() {
                 objectFit="contain"
                 className="z-10"
               />
-              <div className="absolute -top-26 -right-8 z-20">
+              <div className="absolute -top-2 -right-8 z-20">
                 <Image
                   src="/images/dados.webp"
                   alt="Dice"
