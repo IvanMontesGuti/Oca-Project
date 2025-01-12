@@ -1,3 +1,7 @@
+"use client"
+
+
+import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowRight } from 'lucide-react'
@@ -7,8 +11,13 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
+import dynamic from 'next/dynamic'
+
+const Modal = dynamic(() => import('@/components/modal').then(mod => mod.Modal), { ssr: false })
 
 export default function Home() {
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
   return (
     <div className="bg-svg bg-cover min-h-[150vh] bg-no-repeat h-screen flex flex-col">
       <nav className="container mx-auto px-4 py-6 flex justify-between items-center">
@@ -31,12 +40,12 @@ export default function Home() {
           >
             Preguntas frecuentes
           </Link>
-          <Link
-            href="/login"
-            className="text-white hover:text-gray-200 transition-colors font-montserrat "
+          <button
+            onClick={() => setIsLoginModalOpen(true)}
+            className="text-white hover:text-gray-200 transition-colors font-montserrat"
           >
             Inicia Sesion
-          </Link>
+          </button>
           <Link
             href="/register"
             className="text-white hover:text-gray-200 transition-colors font-montserrat"
@@ -126,6 +135,9 @@ export default function Home() {
           </AccordionItem>
         </Accordion>
       </div>
+
+      <Modal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
     </div>
   )
 }
+
