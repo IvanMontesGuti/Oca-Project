@@ -13,7 +13,13 @@ export default function Home() {
     <div className="bg-svg bg-cover min-h-[150vh] bg-no-repeat h-screen flex flex-col">
       <nav className="container mx-auto px-4 py-6 flex justify-between items-center">
         <div className="flex items-center gap-2 ">
-          <div className="w-12 h-12 bg-gray-100 rounded-full" />
+        <Image
+                  src="/images/logo.svg"
+                  alt="logo"
+                  width={50}
+                  height={50}
+                  
+                />
           <span className="text-white text-2xl font-fredoka flex items-center gap-2">
             OcaGo! <ArrowRight className="h-5 w-5" />
           </span>
