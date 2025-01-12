@@ -10,7 +10,7 @@ import {
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-[#0066FF] flex flex-col overflow-hidden">
+    <div className="bg-svg bg-cover min-h-[150vh] bg-no-repeat h-screen flex flex-col">
       <nav className="container mx-auto px-4 py-6 flex justify-between items-center">
         <div className="flex items-center gap-2 ">
           <div className="w-12 h-12 bg-gray-100 rounded-full" />
@@ -63,15 +63,15 @@ export default function Home() {
           <div className="relative w-full aspect-square flex justify-end items-center">
             <div className="relative w-[80%] h-[80%]">
               <Image
-                src="/images/table.webp"
+                src="/images/tablero.svg"
                 alt="Game Board"
                 layout="fill"
                 objectFit="contain"
                 className="z-10"
               />
-              <div className="absolute -top-2 -right-8 z-20">
+              <div className="absolute -top-12 -right-2 z-20">
                 <Image
-                  src="/images/dados.webp"
+                  src="/images/dice.webp"
                   alt="Dice"
                   width={420}
                   height={420}
