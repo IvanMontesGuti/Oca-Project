@@ -61,13 +61,15 @@ export default function Home() {
         
         <div className="md:w-1/2 mt-8 md:mt-0 relative">
           <div className="relative w-full aspect-square flex justify-end items-center">
-            <div className="relative w-[80%] h-[80%]">
+            <div className="marquee relative w-[80%] h-[80%]">
               <Image
+                
                 src="/images/tablero.svg"
                 alt="Game Board"
                 layout="fill"
                 objectFit="contain"
-                className="z-10"
+                className="animate-float"
+                
               />
               <div className="absolute -top-12 -right-2 z-20">
                 <Image
@@ -75,7 +77,7 @@ export default function Home() {
                   alt="Dice"
                   width={420}
                   height={420}
-                  className="object-contain"
+                  className="animate-float"
                 />
               </div>
             </div>
@@ -84,7 +86,7 @@ export default function Home() {
       </main>
 
       <div className="mt-auto m-right-8 mb-8 md:-right-16 w-full md:w-1/2 mx-auto text-white hover:text-gray-200 transition-colors font-montserrat">
-        <h1>Preguntas Frecuentes</h1>
+        <h1 className='text-3xl	font-size: 1.875rem'>Preguntas Frecuentes</h1>
         <Accordion type="single" collapsible>
           <AccordionItem value="item-1">
             <AccordionTrigger id="faq">¿Como se juega?</AccordionTrigger>
