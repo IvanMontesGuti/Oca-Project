@@ -19,7 +19,7 @@ export default function Home() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   return (
-    <div className="bg-svg bg-cover min-h-[150vh] bg-no-repeat h-screen flex flex-col">
+    <div className="bg-svg bg-cover min-h-[170vh] bg-no-repeat h-screen flex flex-col">
       <nav className="container mx-auto px-4 py-6 flex justify-between items-center">
         <div className="flex items-center gap-2 ">
         <Image
@@ -98,6 +98,7 @@ export default function Home() {
             </div>
           </div>
         </div>
+        <Modal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
       </main>
 
       <div className="mt-auto m-right-8 mb-8 md:-right-16 w-full md:w-1/2 mx-auto text-white hover:text-gray-200 transition-colors font-montserrat">
@@ -136,7 +137,7 @@ export default function Home() {
         </Accordion>
       </div>
 
-      <Modal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
+      
     </div>
   )
 }
