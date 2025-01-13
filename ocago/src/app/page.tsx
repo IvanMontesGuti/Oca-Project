@@ -19,7 +19,7 @@ export default function Home() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   return (
-    <div className="bg-svg bg-cover min-h-[130vh] bg-no-repeat h-screen flex flex-col">
+    <div className="bg-svg bg-cover bg-no-repeat h-full min-h-screen w-full flex flex-col">
       <nav className="container mx-auto px-4 py-6 flex justify-between items-center">
         <div className="flex items-center gap-2 ">
         <Image
