@@ -77,3 +77,19 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@layer components {
+  .bg-svg {
+    background-image: url('/images/fondo.svg');
+  }
+}
+
+@theme {
+  --animate-marquee: marquee 3s linear infinite;
+
+  @keyframes marquee {
+    to {
+      transform: translateY(-50%);
+    }
+  }
+}

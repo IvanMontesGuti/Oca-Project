@@ -19,10 +19,16 @@ export default function Home() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-[#0066FF] flex flex-col overflow-hidden">
+    <div className="bg-svg bg-cover min-h-[170vh] bg-no-repeat h-screen flex flex-col">
       <nav className="container mx-auto px-4 py-6 flex justify-between items-center">
         <div className="flex items-center gap-2 ">
-          <div className="w-12 h-12 bg-gray-100 rounded-full" />
+        <Image
+                  src="/images/logo.svg"
+                  alt="logo"
+                  width={50}
+                  height={50}
+                  
+                />
           <span className="text-white text-2xl font-fredoka flex items-center gap-2">
             OcaGo! <ArrowRight className="h-5 w-5" />
           </span>
@@ -70,30 +76,33 @@ export default function Home() {
         
         <div className="md:w-1/2 mt-8 md:mt-0 relative">
           <div className="relative w-full aspect-square flex justify-end items-center">
-            <div className="relative w-[80%] h-[80%]">
+            <div className="marquee relative w-[80%] h-[80%]">
               <Image
-                src="/images/table.webp"
+                
+                src="/images/tablero.svg"
                 alt="Game Board"
                 layout="fill"
                 objectFit="contain"
-                className="z-10"
+                className="animate-float"
+                
               />
-              <div className="absolute -top-2 -right-8 z-20">
+              <div className="absolute -top-12 -right-2 z-20">
                 <Image
-                  src="/images/dados.webp"
+                  src="/images/dice.webp"
                   alt="Dice"
                   width={420}
                   height={420}
-                  className="object-contain"
+                  className="animate-float"
                 />
               </div>
             </div>
           </div>
         </div>
+        <Modal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
       </main>
 
       <div className="mt-auto m-right-8 mb-8 md:-right-16 w-full md:w-1/2 mx-auto text-white hover:text-gray-200 transition-colors font-montserrat">
-        <h1>Preguntas Frecuentes</h1>
+        <h1 className='text-3xl	font-size: 1.875rem'>Preguntas Frecuentes</h1>
         <Accordion type="single" collapsible>
           <AccordionItem value="item-1">
             <AccordionTrigger id="faq">¿Como se juega?</AccordionTrigger>
@@ -128,7 +137,7 @@ export default function Home() {
         </Accordion>
       </div>
 
-      <Modal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
+      
     </div>
   )
 }
