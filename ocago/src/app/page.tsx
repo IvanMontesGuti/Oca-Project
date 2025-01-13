@@ -19,7 +19,7 @@ export default function Home() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   return (
-    <div className="bg-svg bg-cover min-h-[170vh] bg-no-repeat h-screen flex flex-col">
+    <div className="bg-svg bg-cover bg-no-repeat h-full min-h-screen w-full flex flex-col">
       <nav className="container mx-auto px-4 py-6 flex justify-between items-center">
         <div className="flex items-center gap-2 ">
         <Image
@@ -34,6 +34,7 @@ export default function Home() {
           </span>
         </div>
         <div className="flex gap-4">
+        
           <Link
             href="#faq"
             className="text-white hover:text-gray-200 transition-colors font-montserrat"
@@ -44,18 +45,18 @@ export default function Home() {
             onClick={() => setIsLoginModalOpen(true)}
             className="text-white hover:text-gray-200 transition-colors font-montserrat"
           >
-            Inicia Sesion
+            Inicia Sesión
           </button>
           <Link
             href="/register"
             className="text-white hover:text-gray-200 transition-colors font-montserrat"
           >
-            Registrate
+            Regístrate
           </Link>
         </div>
       </nav>
 
-      <main className="container mx-auto px-4 py-6 md:py-1 flex flex-col md:flex-row items-center justify-between flex-grow">
+      <main className="container mx-auto px-12 py-5 md:py-1 flex flex-col md:flex-row items-center justify-between flex-grow">
         <div className="md:w-1/2 space-y-4">
           <h1 className="text-8xl md:text-8xl font-fredoka font-bold ">
             <span className="text-[#FFFF00]">CLÁSICO,</span>
