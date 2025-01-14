@@ -1,0 +1,6 @@
+@BackendOcago_HostAddress = http://localhost:5170
+
+GET {{BackendOcago_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
