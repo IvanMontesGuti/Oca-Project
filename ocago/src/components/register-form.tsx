@@ -1,12 +1,12 @@
 'use client'
 
 import React, { useState } from 'react';
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 export function RegisterForm({
   className,
@@ -15,19 +15,40 @@ export function RegisterForm({
 }: React.ComponentProps<"div"> & { onClose: () => void }) {
   const [avatar, setAvatar] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Handle registration logic here
-    onClose();
+
+    const form = e.currentTarget;
+    const user = {
+      nickname: form.nickname.value,
+      email: form.email.value,
+      password: form.password.value,
+      avatar,
+    };
+
+    try {
+      const response = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(user),
+      });
+
+      if (!response.ok) {
+        throw new Error('Error al registrar el usuario.');
+      }
+
+      console.log('Usuario registrado con éxito');
+      onClose();
+    } catch (error) {
+      console.error('Error:', error);
+    }
   };
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatar(reader.result as string);
-      };
+      reader.onloadend = () => setAvatar(reader.result as string);
       reader.readAsDataURL(file);
     }
   };
@@ -48,6 +69,7 @@ export function RegisterForm({
                 <Label htmlFor="nickname">Nickname</Label>
                 <Input
                   id="nickname"
+                  name="nickname"
                   type="text"
                   placeholder="TuNickname123"
                   required
@@ -57,6 +79,7 @@ export function RegisterForm({
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
+                  name="email"
                   type="email"
                   placeholder="m@example.com"
                   required
@@ -64,11 +87,12 @@ export function RegisterForm({
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="password">Contraseña</Label>
-                <Input id="password" type="password" required />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="confirmPassword">Confirmar Contraseña</Label>
-                <Input id="confirmPassword" type="password" required />
+                <Input
+                  id="password"
+                  name="password"
+                  type="password"
+                  required
+                />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="avatar">Avatar</Label>
@@ -110,5 +134,5 @@ export function RegisterForm({
         y nuestra <a href="#">Política de Privacidad</a>.
       </div>
     </div>
-  )
+  );
 }
