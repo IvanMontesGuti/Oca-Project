@@ -12,17 +12,13 @@ public class UserService
 {
     private readonly UnitOfWork _unitOfWork;
     private readonly UserMapper _mapper;
-    private readonly CartService _cartService;
-    private readonly ReviewService _reviewService;
-    private readonly OrderService _orderService;
+    
 
-    public UserService(UnitOfWork unitOfWork, UserMapper mapper, CartService cartService, ReviewService reviewService, OrderService orderService)
+    public UserService(UnitOfWork unitOfWork, UserMapper mapper)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
-        _cartService = cartService;
-        _reviewService = reviewService;
-        _orderService = orderService;
+        
     }
 
 
@@ -50,7 +46,7 @@ public class UserService
 
         return user;
     }
-
+    /*
     public async Task<UserDto> InsertByMailAsync(RegisterRequest userRequest)
     {
         List<Address> newAddresses = [new Address {
@@ -72,6 +68,7 @@ public class UserService
 
         return _mapper.ToDto(await InsertAsync(newUser));
     }
+    */
 
 
     /* ----- UPDATE ----- */
@@ -92,6 +89,7 @@ public class UserService
         return _mapper.ToDto(userEntity);
     }
 
+    /*
     public async Task<UserDto> UpdateRole(HandleRole handleRole)
     {
         User userEntity = await _unitOfWork.UserRepository.GetByIdAsync(handleRole.UserId) ?? throw new Exception("El usuario no existe");
@@ -103,7 +101,7 @@ public class UserService
 
         return _mapper.ToDto(userEntity);
     }
-
+    */
 
     /* ----- DELETE ----- */
 

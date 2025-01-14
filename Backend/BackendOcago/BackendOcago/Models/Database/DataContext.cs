@@ -1,4 +1,5 @@
 ﻿
+using BackendOcago.Models.Database.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace BackendOcago.Models.Database

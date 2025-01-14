@@ -1,0 +1,8 @@
+C:\Users\Usuario\Documents\GitHub\Oca-Project\Backend\BackendOcago\BackendOcago\obj\Debug\net8.0\BackendOcago.csproj.AssemblyReference.cache
+C:\Users\Usuario\Documents\GitHub\Oca-Project\Backend\BackendOcago\BackendOcago\obj\Debug\net8.0\BackendOcago.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Usuario\Documents\GitHub\Oca-Project\Backend\BackendOcago\BackendOcago\obj\Debug\net8.0\BackendOcago.AssemblyInfoInputs.cache
+C:\Users\Usuario\Documents\GitHub\Oca-Project\Backend\BackendOcago\BackendOcago\obj\Debug\net8.0\BackendOcago.AssemblyInfo.cs
+C:\Users\Usuario\Documents\GitHub\Oca-Project\Backend\BackendOcago\BackendOcago\obj\Debug\net8.0\BackendOcago.csproj.CoreCompileInputs.cache
+C:\Users\Usuario\Documents\GitHub\Oca-Project\Backend\BackendOcago\BackendOcago\obj\Debug\net8.0\BackendOcago.MvcApplicationPartsAssemblyInfo.cs
+C:\Users\Usuario\Documents\GitHub\Oca-Project\Backend\BackendOcago\BackendOcago\obj\Debug\net8.0\BackendOcago.MvcApplicationPartsAssemblyInfo.cache
+C:\Users\Usuario\Documents\GitHub\Oca-Project\Backend\BackendOcago\BackendOcago\obj\Debug\net8.0\BackendOcago.sourcelink.json

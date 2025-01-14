@@ -1,6 +1,5 @@
 ﻿using BackendOcago.Models.Database.Entities;
-using eCommerce.Models.Database.Entities;
-using eCommerce.Services;
+using BackendOcago.Services;
 using System.Net;
 using System.Text.Json;
 

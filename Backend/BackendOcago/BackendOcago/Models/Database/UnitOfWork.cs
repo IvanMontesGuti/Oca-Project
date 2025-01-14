@@ -1,6 +1,4 @@
 ﻿using BackendOcago.Models.Database.Repositories;
-using eCommerce.Models.Database;
-using eCommerce.Models.Database.Repositories;
 namespace BackendOcago.Models.Database;
 
 public class UnitOfWork
