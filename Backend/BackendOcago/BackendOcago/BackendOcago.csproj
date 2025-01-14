@@ -24,7 +24,6 @@
 
   <ItemGroup>
     <Folder Include="Models\Constants\" />
-    <Folder Include="Models\Database\Repositories\" />
     <Folder Include="Models\Dtos\" />
     <Folder Include="Models\Mappers\" />
     <Folder Include="Services\" />

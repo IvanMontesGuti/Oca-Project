@@ -1,7 +1,28 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\Backend\\BackendOcago\\",
-  "Documents": [],
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|c:\\users\\usuario\\documents\\github\\oca-project\\backend\\backendocago\\backendocago\\models\\database\\entities\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|solutionrelative:backendocago\\models\\database\\entities\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|c:\\users\\usuario\\documents\\github\\oca-project\\backend\\backendocago\\backendocago\\models\\database\\datacontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|solutionrelative:backendocago\\models\\database\\datacontext.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|c:\\users\\usuario\\documents\\github\\oca-project\\backend\\backendocago\\backendocago\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|solutionrelative:backendocago\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|c:\\users\\usuario\\documents\\github\\oca-project\\backend\\backendocago\\backendocago\\weatherforecast.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|solutionrelative:backendocago\\weatherforecast.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|c:\\users\\usuario\\documents\\github\\oca-project\\backend\\backendocago\\backendocago\\backendocago.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|solutionrelative:backendocago\\backendocago.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
@@ -9,8 +30,73 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": -1,
+          "SelectedChildIndex": 0,
           "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "User.cs",
+              "DocumentMoniker": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\Models\\Database\\Entities\\User.cs",
+              "RelativeDocumentMoniker": "BackendOcago\\Models\\Database\\Entities\\User.cs",
+              "ToolTip": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\Models\\Database\\Entities\\User.cs",
+              "RelativeToolTip": "BackendOcago\\Models\\Database\\Entities\\User.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAtAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-14T15:48:23.549Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "DataContext.cs",
+              "DocumentMoniker": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\Models\\Database\\DataContext.cs",
+              "RelativeDocumentMoniker": "BackendOcago\\Models\\Database\\DataContext.cs",
+              "ToolTip": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\Models\\Database\\DataContext.cs",
+              "RelativeToolTip": "BackendOcago\\Models\\Database\\DataContext.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-14T15:44:13.267Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\Program.cs",
+              "RelativeDocumentMoniker": "BackendOcago\\Program.cs",
+              "ToolTip": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\Program.cs",
+              "RelativeToolTip": "BackendOcago\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAXAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-14T15:38:44.106Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "WeatherForecast.cs",
+              "DocumentMoniker": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\WeatherForecast.cs",
+              "RelativeDocumentMoniker": "BackendOcago\\WeatherForecast.cs",
+              "ToolTip": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\WeatherForecast.cs",
+              "RelativeToolTip": "BackendOcago\\WeatherForecast.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-01-14T15:39:02.837Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "BackendOcago",
+              "DocumentMoniker": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\BackendOcago.csproj",
+              "RelativeDocumentMoniker": "BackendOcago\\BackendOcago.csproj",
+              "ToolTip": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\BackendOcago.csproj",
+              "RelativeToolTip": "BackendOcago\\BackendOcago.csproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2025-01-14T15:31:51.988Z",
+              "EditorCaption": ""
+            },
             {
               "$type": "Bookmark",
               "Name": "ST:0:0:{d78612c7-9962-4b83-95d9-268046dad23a}"
