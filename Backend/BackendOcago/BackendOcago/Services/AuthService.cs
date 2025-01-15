@@ -1,12 +1,13 @@
 ﻿using BackendOcago.Models.Database.Entities;
 using BackendOcago.Models.Database;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Security.Cryptography;
+using BackendOcago.Models.Dtos;
 
 namespace BackendOcago.Services;
 
@@ -24,7 +25,7 @@ public class AuthService
         _userService = userService;
     }
 
-    public async Task<string> Login(LoginRequest model)
+    public async Task<string> Login(Models.Dtos.LoginRequest model)
     {
         User user = await _unitOfWork.UserRepository.GetByMailAsync(model.Mail);
 

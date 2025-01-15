@@ -1,7 +1,6 @@
-﻿using BackendOcago.Services;
+﻿using BackendOcago.Models.Dtos;
+using BackendOcago.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;

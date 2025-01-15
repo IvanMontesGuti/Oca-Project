@@ -7,12 +7,16 @@ using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.Filters;
 using System.Text.Json.Serialization;
 using System.Text;
+using BackendOcago.Models.Database;
+using BackendOcago.Models.Database.Repositories;
+using BackendOcago.Services;
+using BackendOcago.Models.Mappers;
 
 namespace BackendOcago;
 
 public class Program
 {
-    public static void Main(string[] args)
+    public static async Task Main(string[] args)
     {
         //Especificamos el directorio de trabajo
         Directory.SetCurrentDirectory(AppContext.BaseDirectory);
@@ -36,33 +40,24 @@ public class Program
         //Contextos
         builder.Services.AddScoped<DataContext>();
         builder.Services.AddScoped<UnitOfWork>();
-        builder.Services.AddScoped<CategoryRepository>();
         builder.Services.AddScoped<UserRepository>();
-        builder.Services.AddScoped<ProductRepository>();
-        builder.Services.AddScoped<ReviewRepository>();
-        builder.Services.AddScoped<CartProductRepository>();
-        builder.Services.AddScoped<OrderRepository>();
-        builder.Services.AddScoped<OrderProductRepository>();
-        builder.Services.AddScoped<AddressRepository>();
+
+        builder.Services.AddTransient<ExampleMiddleware>();
+
+
 
         //Servicios
-        builder.Services.AddScoped<TextComparer>();
+        // builder.Services.AddScoped<TextComparer>();
         builder.Services.AddScoped<AuthService>();
         builder.Services.AddScoped<UserService>();
-        builder.Services.AddScoped<ProductService>();
-        builder.Services.AddScoped<ReviewService>();
-        builder.Services.AddScoped<CartService>();
-        builder.Services.AddScoped<OrderService>();
-        builder.Services.AddScoped<AddressService>();
+
+        //Los servicios websocket son singleton siempre
+        builder.Services.AddSingleton<ProcessWebSocket>();
+
 
         //Mappers
         builder.Services.AddTransient<UserMapper>();
-        builder.Services.AddTransient<ProductMapper>();
-        builder.Services.AddTransient<ReviewMapper>();
-        builder.Services.AddTransient<CartProductMapper>();
-        builder.Services.AddTransient<OrderMapper>();
-        builder.Services.AddTransient<OrderProductMapper>();
-        builder.Services.AddTransient<AddressMapper>();
+       
 
         //Swagger/OpenApi
         builder.Services.AddEndpointsApiExplorer();
@@ -136,6 +131,27 @@ public class Program
         //Configuración de Cors para aceptar cualquier petición
         app.UseCors();
 
+        app.UseMiddleware<ExampleMiddleware>();
+        /*Ejemplo de middleware
+        app.Use(async (context, next) =>
+        {
+            string method = context.Request.Method;
+
+            if (method == "POST"){
+                // Devuelvo error HTTP 418: I'm a teapot
+                context.Response.StatusCode = 418;
+            }
+            else
+            {
+                //voy al siguiente middleware
+                await next();
+            }
+        });
+        */
+
+        //Indicamos que queremos usar webSockets
+        app.UseWebSockets();
+
         app.UseHttpsRedirection();
 
         //Habilita la autenticación
@@ -144,11 +160,12 @@ public class Program
         app.UseAuthorization();
 
         //Permite transmitir archivos estáticos
+        /*
         app.UseStaticFiles(new StaticFileOptions
         {
             FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"))
         });
-
+        */
         app.MapControllers();
 
         //Llamamos al método de creación de base de datos de respaldo (seed)

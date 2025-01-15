@@ -4,8 +4,6 @@ using BackendOcago.Models.Database;
 using BackendOcago.Models.Dtos;
 using BackendOcago.Models.Mappers;
 using System.Net;
-using Microsoft.AspNetCore.Cors.Infrastructure;
-using Microsoft.AspNetCore.Identity.Data;
 namespace BackendOcago.Services;
 
 public class UserService
@@ -46,14 +44,10 @@ public class UserService
 
         return user;
     }
-    /*
+    
     public async Task<UserDto> InsertByMailAsync(RegisterRequest userRequest)
     {
-        List<Address> newAddresses = [new Address {
-      Addressee = $"{userRequest.Name} {userRequest.Surname}",
-      PhoneNumber = userRequest.Phone,
-      AddressInfo = userRequest.Address
-    }];
+        
 
         User newUser = new User
         {
@@ -63,12 +57,12 @@ public class UserService
             Surname = userRequest.Surname,
             Phone = userRequest.Phone,
             Role = null,
-            Addresses = newAddresses
+            
         };
 
         return _mapper.ToDto(await InsertAsync(newUser));
     }
-    */
+    
 
 
     /* ----- UPDATE ----- */

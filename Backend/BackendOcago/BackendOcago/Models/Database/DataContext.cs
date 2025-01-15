@@ -10,6 +10,7 @@ namespace BackendOcago.Models.Database
 
         public DbSet<User> Users { get; set; }
 
+        /*
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.LogTo(Console.WriteLine);
@@ -24,5 +25,6 @@ namespace BackendOcago.Models.Database
             optionsBuilder.UseMySql(connectionString,ServerVersion.AutoDetect(connectionString));
             #endif
         }
+        */
     }
 }
