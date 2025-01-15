@@ -6,10 +6,15 @@ namespace BackendOcago.Models.Database
 {
     public class DataContext : DbContext
     {
-        private const string DATABASE_PATH = "OcaGo.db";
+        private const string DATABASE_PATH = "OcaGoDB.db";
 
         public DbSet<User> Users { get; set; }
 
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            string baseDir = AppDomain.CurrentDomain.BaseDirectory; 
+            optionsBuilder.UseSqlite($"DataSource={baseDir}{DATABASE_PATH}");
+        }
         /*
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
