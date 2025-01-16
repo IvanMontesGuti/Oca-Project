@@ -90,7 +90,7 @@ export default function Home() {
                 className="animate-float"
                 
               />
-              <div className="absolute -top-12 -right-2 z-20">
+              <div className="absolute -top-12 -right-2 z--20 ">
                 <Image
                   src="/images/dice.webp"
                   alt="Dice"
