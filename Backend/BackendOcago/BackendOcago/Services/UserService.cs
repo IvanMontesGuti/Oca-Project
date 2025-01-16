@@ -19,6 +19,16 @@ public class UserService
         
     }
 
+    public async Task<UserDto> UpdateAvatarAsync(long userId, string base64Image)
+    {
+        User user = await _unitOfWork.UserRepository.GetByIdAsync(userId) ?? throw new Exception("El usuario especificado no existe");
+
+        user.Avatar = base64Image;
+        _unitOfWork.UserRepository.Update(user);
+        await _unitOfWork.SaveAsync();
+
+        return _mapper.ToDto(user);
+    }
 
     /* ----- GET ----- */
 
@@ -53,11 +63,9 @@ public class UserService
         {
             Mail = userRequest.Mail,
             Password = AuthService.HashPassword(userRequest.Password),
-            Name = userRequest.Name,
-            Surname = userRequest.Surname,
-            Phone = userRequest.Phone,
+            Nickname = userRequest.Nickname,
             Role = null,
-            
+            Avatar = userRequest.Avatar
         };
 
         return _mapper.ToDto(await InsertAsync(newUser));
@@ -72,9 +80,8 @@ public class UserService
         User userEntity = await _unitOfWork.UserRepository.GetByIdAsync(user.Id) ?? throw new Exception("El usuario especificado no existe");
 
         userEntity.Mail = user.Mail;
-        userEntity.Name = user.Name;
-        userEntity.Surname = user.Surname;
-        userEntity.Phone = user.Phone;
+        userEntity.Nickname = user.Nickname;
+        userEntity.Avatar = user.Avatar;
 
         _unitOfWork.UserRepository.Update(userEntity);
 

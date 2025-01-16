@@ -74,6 +74,7 @@ public class Program
                 Scheme = JwtBearerDefaults.AuthenticationScheme
             });
             options.OperationFilter<SecurityRequirementsOperationFilter>(true, JwtBearerDefaults.AuthenticationScheme);
+        
         });
 
         //Configuramos program para que use el servicio de autenticacion

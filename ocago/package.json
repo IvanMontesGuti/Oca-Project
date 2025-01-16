@@ -9,7 +9,6 @@
     "lint": "next lint",
     "lint-fix": "next lint --fix",
     "type": "tsc --noEmit"
-
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

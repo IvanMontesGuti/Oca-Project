@@ -20,14 +20,15 @@ export function RegisterForm({
 
     const form = e.currentTarget;
     const user = {
+      mail: form.email.value,
       nickname: form.nickname.value,
-      email: form.email.value,
       password: form.password.value,
-      avatar,
+      role: null
+      // avatar,
     };
 
     try {
-      const response = await fetch('/api/register', {
+      const response = await fetch('https://localhost:7107/api/Auth/Register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(user),
