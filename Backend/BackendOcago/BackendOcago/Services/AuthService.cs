@@ -37,8 +37,8 @@ public class AuthService
                 { "id", user.Id },
                 { ClaimTypes.Email, model.Mail },
                 { ClaimTypes.Role, user.Role },
-                { ClaimTypes.Name, user.Name },
-                { ClaimTypes.Surname, user.Surname }
+                { ClaimTypes.Name, user.Nickname },
+
             },
 
             //Caducidad del token

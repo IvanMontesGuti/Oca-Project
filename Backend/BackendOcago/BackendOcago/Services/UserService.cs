@@ -1,9 +1,7 @@
-﻿using System;
-using BackendOcago.Models.Database.Entities;
+﻿using BackendOcago.Models.Database.Entities;
 using BackendOcago.Models.Database;
 using BackendOcago.Models.Dtos;
 using BackendOcago.Models.Mappers;
-using System.Net;
 namespace BackendOcago.Services;
 
 public class UserService
@@ -19,6 +17,16 @@ public class UserService
         
     }
 
+    //public async Task<UserDto> UpdateAvatarAsync(long userId, string base64Image)
+    //{
+    //    User user = await _unitOfWork.UserRepository.GetByIdAsync(userId) ?? throw new Exception("El usuario especificado no existe");
+
+    //    user.Avatar = base64Image;
+    //    _unitOfWork.UserRepository.Update(user);
+    //    await _unitOfWork.SaveAsync();
+
+    //    return _mapper.ToDto(user);
+    //}
 
     /* ----- GET ----- */
 
@@ -53,11 +61,9 @@ public class UserService
         {
             Mail = userRequest.Mail,
             Password = AuthService.HashPassword(userRequest.Password),
-            Name = userRequest.Name,
-            Surname = userRequest.Surname,
-            Phone = userRequest.Phone,
+            Nickname = userRequest.Nickname,
             Role = null,
-            
+            AvatarUrl = userRequest.AvatarUrl
         };
 
         return _mapper.ToDto(await InsertAsync(newUser));
@@ -72,9 +78,8 @@ public class UserService
         User userEntity = await _unitOfWork.UserRepository.GetByIdAsync(user.Id) ?? throw new Exception("El usuario especificado no existe");
 
         userEntity.Mail = user.Mail;
-        userEntity.Name = user.Name;
-        userEntity.Surname = user.Surname;
-        userEntity.Phone = user.Phone;
+        userEntity.Nickname = user.Nickname;
+        userEntity.AvatarUrl = user.AvatarUrl;
 
         _unitOfWork.UserRepository.Update(userEntity);
 

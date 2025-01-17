@@ -30,28 +30,29 @@ public class Seeder
             new User {
                 Mail = "yasir@gmail.es",
                 Password = AuthService.HashPassword("Yasir#123456789") ,
-                Name = "Yasir",
-                Surname = "Bel Maalem Ouhadou Abdenour",
-                Phone = 123456789,
-                Role = "admin"
+                Nickname = "Yasir",
+                Role = "admin",
+                AvatarUrl = "images/Yasir.png" 
+
             },
             new User {
                 Mail = "ivan@gmail.es",
                 Password = AuthService.HashPassword("Ivan#123456789") ,
-                Name = "Ivan",
-                Surname = "Montes Gutierrez",
-                Phone = 123456789,
-                Role = "admin"
+                Nickname = "Ivan",
+                Role = "admin",
+                AvatarUrl = "images/Ivan.png"
+
             },
             new User {
                 Mail = "jose@gmail.es",
                 Password = AuthService.HashPassword("Jose#123456789"),
-                Name = "José",
-                Surname = "Santos Garrido",
-                Phone = 123456789,
-                Role = "admin"
+                Nickname = "José",
+                Role = "admin",
+                AvatarUrl = "images/José.png"
+
             }
         ];
+
 
         //Users
 

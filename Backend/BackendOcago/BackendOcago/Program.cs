@@ -41,8 +41,10 @@ public class Program
         builder.Services.AddScoped<DataContext>();
         builder.Services.AddScoped<UnitOfWork>();
         builder.Services.AddScoped<UserRepository>();
+        builder.Services.AddScoped<ImageRepository>();
 
         builder.Services.AddTransient<ExampleMiddleware>();
+        builder.Services.AddTransient<ImageService>();
 
 
 
@@ -57,7 +59,8 @@ public class Program
 
         //Mappers
         builder.Services.AddTransient<UserMapper>();
-       
+        builder.Services.AddTransient<ImageMapper>();
+
 
         //Swagger/OpenApi
         builder.Services.AddEndpointsApiExplorer();
@@ -74,6 +77,7 @@ public class Program
                 Scheme = JwtBearerDefaults.AuthenticationScheme
             });
             options.OperationFilter<SecurityRequirementsOperationFilter>(true, JwtBearerDefaults.AuthenticationScheme);
+        
         });
 
         //Configuramos program para que use el servicio de autenticacion
@@ -153,6 +157,7 @@ public class Program
         app.UseWebSockets();
 
         app.UseHttpsRedirection();
+        app.UseStaticFiles();
 
         //Habilita la autenticación
         app.UseAuthentication();

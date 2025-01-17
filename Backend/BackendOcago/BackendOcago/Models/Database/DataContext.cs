@@ -9,6 +9,7 @@ namespace BackendOcago.Models.Database
         private const string DATABASE_PATH = "OcaGoDB.db";
 
         public DbSet<User> Users { get; set; }
+        public DbSet<Image> Images { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

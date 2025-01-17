@@ -1,11 +1,39 @@
 {
   "Version": 1,
-  "Hash": "VVTamup8eGYYw2dRyuGThieaFFWh4EaXqbqyw5+6S80=",
+  "Hash": "FSyroisC2s02G1n0OLCzv3c7zd2QECmUlI5Ku2jHQ7w=",
   "Source": "BackendOcago",
   "BasePath": "_content/BackendOcago",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],
-  "DiscoveryPatterns": [],
-  "Assets": []
+  "DiscoveryPatterns": [
+    {
+      "Name": "BackendOcago\\wwwroot",
+      "Source": "BackendOcago",
+      "ContentRoot": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\wwwroot\\",
+      "BasePath": "_content/BackendOcago",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\wwwroot\\images\\Yasir.png",
+      "SourceId": "BackendOcago",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\wwwroot\\",
+      "BasePath": "_content/BackendOcago",
+      "RelativePath": "images/Yasir.png",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\images\\Yasir.png"
+    }
+  ]
 }

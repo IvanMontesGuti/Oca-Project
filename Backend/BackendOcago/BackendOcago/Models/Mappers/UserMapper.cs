@@ -5,10 +5,7 @@ namespace BackendOcago.Models.Mappers;
 
 public class UserMapper
 {
-    /*
-    private readonly OrderMapper _orderMapper;
-    private readonly AddressMapper _addressMapper;
-    */
+
     public UserMapper()
     {
         
@@ -21,10 +18,9 @@ public class UserMapper
         {
             Id = user.Id,
             Mail = user.Mail,
-            Name = user.Name,
-            Surname = user.Surname,
-            Phone = user.Phone,
+            Nickname = user.Nickname,
             Role = user.Role,
+            AvatarUrl = user.AvatarUrl
             
         };
     }
@@ -42,10 +38,9 @@ public class UserMapper
         {
             Id = user.Id,
             Mail = user.Mail,
-            Name = user.Name,
-            Surname = user.Surname,
-            Phone = user.Phone,
-            Role = user.Role
+            Nickname = user.Nickname,
+            Role = user.Role,
+            AvatarUrl = user.AvatarUrl
         };
     }
 
