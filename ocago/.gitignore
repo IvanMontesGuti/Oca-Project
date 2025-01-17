@@ -39,3 +39,84 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.userprefs
+
+# Build
+bin/
+obj/
+[Bb]uild/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+
+# Rider
+.idea/
+*.iml
+
+# ReSharper
+*.DotSettings.user
+
+# Logs
+*.log
+logs/
+
+# Transient
+*.pid
+*.svclog
+*.ts
+*.cache
+*.lock
+
+# OS Files
+[Tt]humbs.db
+*.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+desktop.ini
+$RECYCLE.BIN/
+
+# Web projects
+node_modules/
+dist/
+wwwroot/
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+
+# Publish
+.publish/
+
+# Git-specific
+*.orig
+*.rej
+*.idx
+*.pack
+*.sha
+*.bundle
+
+# Other IDE files
+*.ide/
+# Visual Studio
+.vs/
+*.vsidx
+*.suo
+
+# Backups y metadatos
+*.backup.json
+*.metadata
+*.strings.v9.bin
+*.projects.v9.bin
+
+# Cache de diseño
+*.dtbcache.v2

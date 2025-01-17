@@ -12,11 +12,14 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 import dynamic from 'next/dynamic'
+import { LoginForm } from '@/components/login-form'
+import { RegisterForm } from '@/components/register-form'
 
 const Modal = dynamic(() => import('@/components/modal').then(mod => mod.Modal), { ssr: false })
 
 export default function Home() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
 
   return (
     <div className="bg-svg bg-cover bg-no-repeat h-full min-h-screen w-full flex flex-col">
@@ -47,12 +50,12 @@ export default function Home() {
           >
             Inicia Sesión
           </button>
-          <Link
-            href="/register"
+          <button
+            onClick={() => setIsRegisterModalOpen(true)}
             className="text-white hover:text-gray-200 transition-colors font-montserrat"
           >
             Regístrate
-          </Link>
+          </button>
         </div>
       </nav>
 
@@ -99,7 +102,12 @@ export default function Home() {
             </div>
           </div>
         </div>
-        <Modal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
+        <Modal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)}>
+        <LoginForm onClose={() => setIsLoginModalOpen(false)} />
+      </Modal>
+      <Modal isOpen={isRegisterModalOpen} onClose={() => setIsRegisterModalOpen(false)}>
+        <RegisterForm onClose={() => setIsRegisterModalOpen(false)} />
+      </Modal>
       </main>
 
       <div className="mt-auto m-right-8 mb-8 md:-right-16 w-full md:w-1/2 mx-auto text-white hover:text-gray-200 transition-colors font-montserrat">
