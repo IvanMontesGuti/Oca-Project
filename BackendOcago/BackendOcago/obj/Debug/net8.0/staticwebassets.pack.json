@@ -1,0 +1,25 @@
+{
+  "Files": [
+    {
+      "Id": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\wwwroot\\images\\Yasir.png",
+      "PackagePath": "staticwebassets\\images\\Yasir.png"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.BackendOcago.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.build.BackendOcago.props",
+      "PackagePath": "build\\BackendOcago.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.buildMultiTargeting.BackendOcago.props",
+      "PackagePath": "buildMultiTargeting\\BackendOcago.props"
+    },
+    {
+      "Id": "obj\\Debug\\net8.0\\staticwebassets\\msbuild.buildTransitive.BackendOcago.props",
+      "PackagePath": "buildTransitive\\BackendOcago.props"
+    }
+  ],
+  "ElementsToRemove": []
+}
