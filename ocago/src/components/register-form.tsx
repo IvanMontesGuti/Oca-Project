@@ -13,32 +13,56 @@ export function RegisterForm({
   onClose,
   ...props
 }: React.ComponentProps<"div"> & { onClose: () => void }) {
-  const [avatar, setAvatar] = useState<string | null>(null);
+  const [avatar, setAvatar] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     const form = e.currentTarget;
+
+    const nickname = form.nickname.value;
+    
     const user = {
       mail: form.email.value,
-      nickname: form.nickname.value,
+      nickname: nickname,
       password: form.password.value,
-      role: null
-      // avatar,
+      role: null,
+      avatarurl: `images/${nickname}.png`,
     };
 
     try {
-      const response = await fetch('https://localhost:7107/api/Auth/Register', {
+      // Registrar usuario
+      const userResponse = await fetch('https://localhost:7107/api/Auth/Register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(user),
       });
 
-      if (!response.ok) {
-        throw new Error('Error al registrar el usuario.');
-      }
+      if (!userResponse.ok) throw new Error('Error al registrar el usuario.');
 
-      console.log('Usuario registrado con éxito');
+      console.log('Usuario registrado con éxito.');
+
+      // Registrar avatar
+      if (avatar) {
+        const arrayBuffer = await avatar.arrayBuffer();
+        const blob = new Blob([arrayBuffer], { type: 'image/png' });
+        const renamedFile = new File([blob], `${nickname}.png`, { type: 'image/png' });
+        
+        const formData = new FormData();
+        formData.append('name', `${nickname}.png`); // Incluye el nombre explícito
+        formData.append('file', renamedFile);
+      
+        const imageResponse = await fetch('https://localhost:7107/api/Images', {
+          method: 'POST',
+          body: formData,
+        });
+      
+        if (!imageResponse.ok) throw new Error('Error al registrar el avatar.');
+      
+        console.log('Avatar registrado con éxito.');
+      }
+      
+
       onClose();
     } catch (error) {
       console.error('Error:', error);
@@ -48,9 +72,8 @@ export function RegisterForm({
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => setAvatar(reader.result as string);
-      reader.readAsDataURL(file);
+      setAvatar(file);
+      setPreview(URL.createObjectURL(file));
     }
   };
 
@@ -99,7 +122,7 @@ export function RegisterForm({
                 <Label htmlFor="avatar">Avatar</Label>
                 <div className="flex items-center gap-4">
                   <Avatar className="w-16 h-16">
-                    <AvatarImage src={avatar || undefined} alt="Avatar" />
+                    <AvatarImage src={preview || undefined} alt="Avatar" />
                     <AvatarFallback>AV</AvatarFallback>
                   </Avatar>
                   <Input

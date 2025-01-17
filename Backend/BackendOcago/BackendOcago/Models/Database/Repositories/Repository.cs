@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using System.Linq.Expressions;
 namespace BackendOcago.Models.Database.Repositories;
 
 public abstract class Repository<TEntity> : IRepository<TEntity> where TEntity : class
@@ -10,8 +11,13 @@ public abstract class Repository<TEntity> : IRepository<TEntity> where TEntity :
         _dbContext = dbContext;
     }
 
-    //Llamada única a la base de datos con todas las consultas
-    public async Task<ICollection<TEntity>> GetAllAsync()
+    public async Task<TEntity?> GetByConditionAsync(Expression<Func<TEntity, bool>> condition)
+    {
+    return await _dbContext.Set<TEntity>().FirstOrDefaultAsync(condition);
+    }
+
+//Llamada única a la base de datos con todas las consultas
+public async Task<ICollection<TEntity>> GetAllAsync()
     {
         return await _dbContext.Set<TEntity>().ToArrayAsync();
     }

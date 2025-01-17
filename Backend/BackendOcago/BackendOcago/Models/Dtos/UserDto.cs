@@ -7,5 +7,5 @@ public class UserDto
     public required string Nickname { get; set; }
     public string Password { get; set; }
     public required string Role { get; set; }
-    public string Avatar { get; set; }
+    public string AvatarUrl { get; set; }
 }

@@ -20,7 +20,7 @@ public class UserMapper
             Mail = user.Mail,
             Nickname = user.Nickname,
             Role = user.Role,
-            Avatar = user.Avatar
+            AvatarUrl = user.AvatarUrl
             
         };
     }
@@ -40,7 +40,7 @@ public class UserMapper
             Mail = user.Mail,
             Nickname = user.Nickname,
             Role = user.Role,
-            Avatar = user.Avatar
+            AvatarUrl = user.AvatarUrl
         };
     }
 

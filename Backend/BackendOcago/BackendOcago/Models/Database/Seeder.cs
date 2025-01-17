@@ -31,21 +31,28 @@ public class Seeder
                 Mail = "yasir@gmail.es",
                 Password = AuthService.HashPassword("Yasir#123456789") ,
                 Nickname = "Yasir",
-                Role = "admin"
+                Role = "admin",
+                AvatarUrl = "images/Yasir.png" 
+
             },
             new User {
                 Mail = "ivan@gmail.es",
                 Password = AuthService.HashPassword("Ivan#123456789") ,
                 Nickname = "Ivan",
-                Role = "admin"
+                Role = "admin",
+                AvatarUrl = "images/Ivan.png"
+
             },
             new User {
                 Mail = "jose@gmail.es",
                 Password = AuthService.HashPassword("Jose#123456789"),
                 Nickname = "José",
-                Role = "admin"
+                Role = "admin",
+                AvatarUrl = "images/José.png"
+
             }
         ];
+
 
         //Users
 
