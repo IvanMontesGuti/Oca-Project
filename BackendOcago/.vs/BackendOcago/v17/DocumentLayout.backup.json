@@ -1,29 +1,29 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\Backend\\BackendOcago\\",
+  "WorkspaceRootPath": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\BackendOcago\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|c:\\users\\yasir\\desktop\\oca-project\\oca-project\\backend\\backendocago\\backendocago\\models\\database\\entities\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|c:\\users\\yasir\\desktop\\oca-project\\oca-project\\backendocago\\backendocago\\models\\database\\entities\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|solutionrelative:backendocago\\models\\database\\entities\\user.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|c:\\users\\yasir\\desktop\\oca-project\\oca-project\\backend\\backendocago\\backendocago\\services\\imageservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|c:\\users\\yasir\\desktop\\oca-project\\oca-project\\backendocago\\backendocago\\services\\imageservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|solutionrelative:backendocago\\services\\imageservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|c:\\users\\yasir\\desktop\\oca-project\\oca-project\\backend\\backendocago\\backendocago\\services\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|c:\\users\\yasir\\desktop\\oca-project\\oca-project\\backendocago\\backendocago\\services\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|solutionrelative:backendocago\\services\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|c:\\users\\yasir\\desktop\\oca-project\\oca-project\\backend\\backendocago\\backendocago\\models\\dtos\\registerrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|c:\\users\\yasir\\desktop\\oca-project\\oca-project\\backendocago\\backendocago\\models\\dtos\\registerrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|solutionrelative:backendocago\\models\\dtos\\registerrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|c:\\users\\yasir\\desktop\\oca-project\\oca-project\\backend\\backendocago\\backendocago\\models\\database\\seeder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|c:\\users\\yasir\\desktop\\oca-project\\oca-project\\backendocago\\backendocago\\models\\database\\seeder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|solutionrelative:backendocago\\models\\database\\seeder.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|c:\\users\\yasir\\desktop\\oca-project\\oca-project\\backend\\backendocago\\backendocago\\controllers\\usercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|c:\\users\\yasir\\desktop\\oca-project\\oca-project\\backendocago\\backendocago\\controllers\\usercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|solutionrelative:backendocago\\controllers\\usercontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
@@ -34,15 +34,19 @@
       "DocumentGroups": [
         {
           "DockedWidth": 822,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 1,
           "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
+            },
             {
               "$type": "Document",
               "DocumentIndex": 0,
               "Title": "User.cs",
-              "DocumentMoniker": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\Models\\Database\\Entities\\User.cs",
+              "DocumentMoniker": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\BackendOcago\\BackendOcago\\Models\\Database\\Entities\\User.cs",
               "RelativeDocumentMoniker": "BackendOcago\\Models\\Database\\Entities\\User.cs",
-              "ToolTip": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\Models\\Database\\Entities\\User.cs",
+              "ToolTip": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\BackendOcago\\BackendOcago\\Models\\Database\\Entities\\User.cs",
               "RelativeToolTip": "BackendOcago\\Models\\Database\\Entities\\User.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAmAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
@@ -53,9 +57,9 @@
               "$type": "Document",
               "DocumentIndex": 2,
               "Title": "UserService.cs",
-              "DocumentMoniker": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\Services\\UserService.cs",
+              "DocumentMoniker": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\BackendOcago\\BackendOcago\\Services\\UserService.cs",
               "RelativeDocumentMoniker": "BackendOcago\\Services\\UserService.cs",
-              "ToolTip": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\Services\\UserService.cs",
+              "ToolTip": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\BackendOcago\\BackendOcago\\Services\\UserService.cs",
               "RelativeToolTip": "BackendOcago\\Services\\UserService.cs",
               "ViewState": "AgIAADEAAAAAAAAAAAAtwEEAAAAtAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
@@ -65,9 +69,9 @@
               "$type": "Document",
               "DocumentIndex": 3,
               "Title": "RegisterRequest.cs",
-              "DocumentMoniker": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\Models\\Dtos\\RegisterRequest.cs",
+              "DocumentMoniker": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\BackendOcago\\BackendOcago\\Models\\Dtos\\RegisterRequest.cs",
               "RelativeDocumentMoniker": "BackendOcago\\Models\\Dtos\\RegisterRequest.cs",
-              "ToolTip": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\Models\\Dtos\\RegisterRequest.cs",
+              "ToolTip": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\BackendOcago\\BackendOcago\\Models\\Dtos\\RegisterRequest.cs",
               "RelativeToolTip": "BackendOcago\\Models\\Dtos\\RegisterRequest.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
@@ -77,9 +81,9 @@
               "$type": "Document",
               "DocumentIndex": 1,
               "Title": "ImageService.cs",
-              "DocumentMoniker": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\Services\\ImageService.cs",
+              "DocumentMoniker": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\BackendOcago\\BackendOcago\\Services\\ImageService.cs",
               "RelativeDocumentMoniker": "BackendOcago\\Services\\ImageService.cs",
-              "ToolTip": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\Services\\ImageService.cs",
+              "ToolTip": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\BackendOcago\\BackendOcago\\Services\\ImageService.cs",
               "RelativeToolTip": "BackendOcago\\Services\\ImageService.cs",
               "ViewState": "AgIAAA8AAAAAAAAAAAAAACMAAAAIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
@@ -89,9 +93,9 @@
               "$type": "Document",
               "DocumentIndex": 4,
               "Title": "Seeder.cs",
-              "DocumentMoniker": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\Models\\Database\\Seeder.cs",
+              "DocumentMoniker": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\BackendOcago\\BackendOcago\\Models\\Database\\Seeder.cs",
               "RelativeDocumentMoniker": "BackendOcago\\Models\\Database\\Seeder.cs",
-              "ToolTip": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\Models\\Database\\Seeder.cs",
+              "ToolTip": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\BackendOcago\\BackendOcago\\Models\\Database\\Seeder.cs",
               "RelativeToolTip": "BackendOcago\\Models\\Database\\Seeder.cs",
               "ViewState": "AgIAAAgAAAAAAAAAAAAAAC4AAAAlAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
@@ -101,9 +105,9 @@
               "$type": "Document",
               "DocumentIndex": 5,
               "Title": "UserController.cs",
-              "DocumentMoniker": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\Controllers\\UserController.cs",
+              "DocumentMoniker": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\BackendOcago\\BackendOcago\\Controllers\\UserController.cs",
               "RelativeDocumentMoniker": "BackendOcago\\Controllers\\UserController.cs",
-              "ToolTip": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\Controllers\\UserController.cs",
+              "ToolTip": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\BackendOcago\\BackendOcago\\Controllers\\UserController.cs",
               "RelativeToolTip": "BackendOcago\\Controllers\\UserController.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
