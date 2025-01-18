@@ -1,0 +1,5 @@
+.vscode/
+.vs/
+BackendOcago/bin/
+BackendOcago/obj/
+*.user
