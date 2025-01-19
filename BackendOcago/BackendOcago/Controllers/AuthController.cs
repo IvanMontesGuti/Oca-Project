@@ -41,7 +41,7 @@ public class AuthController : ControllerBase
     public async Task<ActionResult> Register([FromBody] RegisterRequest userRequest)
     {
         if (userRequest == null) return BadRequest(new { Message = "Los datos de usuario son inválidos." });
-        if ((await _userService.GetByMailAsync(userRequest.Mail) != null) || (await _userService.GetByNicknameAsync(userRequest.Nickname) != null))
+        if ((await _userService.GetByMailAsync(userRequest.Mail) != null) || (await _userService.GetByNickNameAsync(userRequest.Nickname) != null))
         {
             return BadRequest(new { message = "El usuario ya existe" });
         }
