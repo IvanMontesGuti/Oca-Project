@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\BackendOcago.csproj": {}
+    "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\BackendOcago.csproj": {}
   },
   "projects": {
-    "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\BackendOcago.csproj": {
+    "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\BackendOcago.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\BackendOcago.csproj",
+        "projectUniqueName": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\BackendOcago.csproj",
         "projectName": "BackendOcago",
-        "projectPath": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\BackendOcago.csproj",
-        "packagesPath": "C:\\Users\\yasir\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\obj\\",
+        "projectPath": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\BackendOcago.csproj",
+        "packagesPath": "C:\\Users\\Usuario\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\yasir\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\Usuario\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
@@ -108,7 +108,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.400/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.403/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
