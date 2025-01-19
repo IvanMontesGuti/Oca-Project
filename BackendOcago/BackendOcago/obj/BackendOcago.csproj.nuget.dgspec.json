@@ -1,6 +1,7 @@
 {
   "format": 1,
   "restore": {
+<<<<<<< HEAD
     "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\BackendOcago.csproj": {}
   },
   "projects": {
@@ -12,6 +13,19 @@
         "projectPath": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\BackendOcago.csproj",
         "packagesPath": "C:\\Users\\Usuario\\.nuget\\packages\\",
         "outputPath": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\obj\\",
+=======
+    "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\BackendOcago\\BackendOcago\\BackendOcago.csproj": {}
+  },
+  "projects": {
+    "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\BackendOcago\\BackendOcago\\BackendOcago.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\BackendOcago\\BackendOcago\\BackendOcago.csproj",
+        "projectName": "BackendOcago",
+        "projectPath": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\BackendOcago\\BackendOcago\\BackendOcago.csproj",
+        "packagesPath": "C:\\Users\\yasir\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\BackendOcago\\BackendOcago\\obj\\",
+>>>>>>> yasir
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Usuario\\AppData\\Roaming\\NuGet\\NuGet.Config",

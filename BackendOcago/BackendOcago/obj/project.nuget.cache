@@ -1,8 +1,14 @@
 {
   "version": 2,
+<<<<<<< HEAD
   "dgSpecHash": "G2pAZGcf2gs=",
   "success": true,
   "projectFilePath": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\BackendOcago\\BackendOcago\\BackendOcago.csproj",
+=======
+  "dgSpecHash": "UCfgUI0U3Yo=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\BackendOcago\\BackendOcago\\BackendOcago.csproj",
+>>>>>>> yasir
   "expectedPackageFiles": [
     "C:\\Users\\Usuario\\.nuget\\packages\\castle.core\\5.1.1\\castle.core.5.1.1.nupkg.sha512",
     "C:\\Users\\Usuario\\.nuget\\packages\\f23.stringsimilarity\\6.0.0\\f23.stringsimilarity.6.0.0.nupkg.sha512",
