@@ -39,6 +39,12 @@ public class UserRepository : Repository<User>
         .Where(user => user.Mail == mail).SingleOrDefaultAsync();
     }
 
+    public async Task<User> GetByNicknameAsync(string nickname)
+    {
+        return await GetQueryable()
+        .Where(user => user.Nickname == nickname).SingleOrDefaultAsync();
+    }
+
     public async Task<string> GetRoleByMailAsync(string mail)
     {
         User user = await GetByMailAsync(mail);
@@ -49,7 +55,15 @@ public class UserRepository : Repository<User>
     {
         User existedUser = await GetByMailAsync(mail);
 
-        if (existedUser == null) return false;
+        if (existedUser == null)
+        {
+            existedUser = await GetByNicknameAsync(mail);
+            if (existedUser == null)
+            {
+                return false;
+            }
+        }
+        
 
         return existedUser.Password == password;
     }

@@ -3567,19 +3567,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-<<<<<<< HEAD
-      "projectUniqueName": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\BackendOcago.csproj",
+      "projectUniqueName": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\BackendOcago\\BackendOcago\\BackendOcago.csproj",
       "projectName": "BackendOcago",
-      "projectPath": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\BackendOcago.csproj",
+      "projectPath": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\BackendOcago\\BackendOcago\\BackendOcago.csproj",
       "packagesPath": "C:\\Users\\Usuario\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\Backend\\BackendOcago\\BackendOcago\\obj\\",
-=======
-      "projectUniqueName": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\BackendOcago\\BackendOcago\\BackendOcago.csproj",
-      "projectName": "BackendOcago",
-      "projectPath": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\BackendOcago\\BackendOcago\\BackendOcago.csproj",
-      "packagesPath": "C:\\Users\\yasir\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\BackendOcago\\BackendOcago\\obj\\",
->>>>>>> yasir
+      "outputPath": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\BackendOcago\\BackendOcago\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
         "C:\\Users\\Usuario\\AppData\\Roaming\\NuGet\\NuGet.Config",
@@ -3679,5 +3671,13 @@
         "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.403/PortableRuntimeIdentifierGraph.json"
       }
     }
-  }
+  },
+  "logs": [
+    {
+      "code": "Undefined",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Problem reading the cache file C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\BackendOcago\\BackendOcago\\obj\\project.nuget.cache : Invalid property identifier character: <. Path 'version', line 3, position 0."
+    }
+  ]
 }
