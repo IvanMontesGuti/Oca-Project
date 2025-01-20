@@ -1,6 +1,7 @@
-'use client'
+'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation'; // Importa useRouter de Next.js
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,13 +10,14 @@ import { Label } from "@/components/ui/label";
 
 export function LoginForm({
   className,
-  onClose,
   ...props
-}: React.ComponentProps<"div"> & { onClose: () => void }) {
+}: React.ComponentProps<"div">) {
   const [email, setEmail] = useState('');
   const [nickname, setNickname] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+
+  const router = useRouter(); // Hook de Next.js para la navegación
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -42,7 +44,10 @@ export function LoginForm({
       }
 
       console.log('Sesión iniciada con éxito');
-      onClose();
+      
+      // Redirige al usuario a la página de menú o la página principal
+      router.push('/menu'); // Cambia '/menu' a la ruta que desees
+
     } catch (error) {
       console.error('Error:', error);
     }
@@ -104,7 +109,7 @@ export function LoginForm({
               </Button>
               <div className="text-center text-sm">
                 ¿No tienes cuenta?{" "}
-                <a href="#" className="underline underline-offset-4">
+                <a className="underline underline-offset-4">
                   Regístrate
                 </a>
               </div>

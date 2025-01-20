@@ -31,7 +31,6 @@ export function RegisterForm({
     };
 
     try {
-      // Registrar usuario
       const userResponse = await fetch('https://localhost:7107/api/Auth/Register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -42,14 +41,13 @@ export function RegisterForm({
 
       console.log('Usuario registrado con éxito.');
 
-      // Registrar avatar
       if (avatar) {
         const arrayBuffer = await avatar.arrayBuffer();
         const blob = new Blob([arrayBuffer], { type: 'image/png' });
         const renamedFile = new File([blob], `${nickname}.png`, { type: 'image/png' });
         
         const formData = new FormData();
-        formData.append('name', `${nickname}.png`); // Incluye el nombre explícito
+        formData.append('name', `${nickname}.png`); 
         formData.append('file', renamedFile);
       
         const imageResponse = await fetch('https://localhost:7107/api/Images', {

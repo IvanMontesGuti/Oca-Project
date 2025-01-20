@@ -37,6 +37,26 @@ export function Header() {
           >
             Preguntas frecuentes
           </Link>
+          <Link
+            href="/menu"
+            className="text-white hover:text-gray-200 transition-colors font-montserrat"
+          >
+            menu
+          </Link>
+          <Link
+            href="/login"
+            className="text-white hover:text-gray-200 transition-colors font-montserrat"
+            onClick={() => setIsLoginModalOpen(true)}
+          >
+            Inicia Sesión
+          </Link>
+          <Link
+            href="/Register"
+            className="text-white hover:text-gray-200 transition-colors font-montserrat"
+            onClick={() => setIsRegisterModalOpen(true)}
+          >
+            Regístrate
+          </Link>
           <button
             onClick={() => setIsLoginModalOpen(true)}
             className="text-white hover:text-gray-200 transition-colors font-montserrat"
@@ -51,7 +71,7 @@ export function Header() {
           </button>
         </div>
       </nav>
-      <Modal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)}>
+            <Modal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)}>
               <LoginForm onClose={() => setIsLoginModalOpen(false)} />
             </Modal>
             <Modal isOpen={isRegisterModalOpen} onClose={() => setIsRegisterModalOpen(false)}>
