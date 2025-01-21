@@ -1,16 +1,9 @@
-import React, { useState } from 'react';
+import React, { } from 'react';
 import Image from 'next/image'
 import { ArrowRight } from 'lucide-react'
-import { LoginForm } from '@/components/login-form'
-import { RegisterForm } from '@/components/register-form'
-import dynamic from 'next/dynamic'
-
-
-const Modal = dynamic(() => import('@/components/modal').then(mod => mod.Modal), { ssr: false })
 
 export function InfoPage() {
-    const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-      const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+   
   return (
     <>
     <main className="container mx-auto px-12 py-5 md:py-1 flex flex-col md:flex-row items-center justify-between flex-grow">
@@ -56,12 +49,6 @@ export function InfoPage() {
             </div>
           </div>
         </div>
-        <Modal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)}>
-        <LoginForm onClose={() => setIsLoginModalOpen(false)} />
-      </Modal>
-      <Modal isOpen={isRegisterModalOpen} onClose={() => setIsRegisterModalOpen(false)}>
-        <RegisterForm onClose={() => setIsRegisterModalOpen(false)} />
-      </Modal>
       
       </main>
       </>
