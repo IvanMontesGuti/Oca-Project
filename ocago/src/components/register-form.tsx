@@ -45,7 +45,10 @@ export function RegisterForm({ className, onClose, ...props }: React.ComponentPr
         formData.append("name", `${nickname}.png`)
         formData.append("file", avatar,`${nickname}.png`)
 
-        const response = await FETCH_POST(IMAGE_POST_URL, formData)
+        const response = await fetch(IMAGE_POST_URL, {
+          method: "POST",
+          body: formData,
+        });
         if (!response.ok) {
           throw new Error("Error subiendo la imagen.")
         }

@@ -51,6 +51,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (rememberMe) {
                 localStorage.setItem("authToken", data.accessToken);
                 sessionStorage.setItem("authToken", data.accessToken);
+            }else{
+                localStorage.setItem("authToken", data.accessToken);
             }
         } catch (error: any) {
             console.error("Login failed:", error.message || error);
