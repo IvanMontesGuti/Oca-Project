@@ -43,7 +43,7 @@ export function Header() {
             Inicia Sesión
           </Link>
           <Link
-            href="/Register"
+            href="/register"
             className="text-white hover:text-gray-200 transition-colors font-montserrat"
            
           >

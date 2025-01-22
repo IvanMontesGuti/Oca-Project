@@ -7,60 +7,46 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/context/AuthContext";
+import { LOGIN_URL } from "@/lib/endpoints/config";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
-  const [email, setEmail] = useState('');
-  const [nickname, setNickname] = useState('');
-  const [password, setPassword] = useState('');
+  const [emailOrNickname, setEmailOrNickname] = useState("");
+  const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { login } = useAuth();
+  const router = useRouter();
+  // console.log(LOGIN_URL); // Verifica que la URL sea correcta.
 
-  const router = useRouter(); // Hook de Next.js para la navegación
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
-    if ((email && nickname) || (!email && !nickname)) {
-      alert('Por favor, introduce solo tu correo electrónico o tu nickname, no ambos.');
-      return;
-    }
-
-    const user = {
-      identifier: email || nickname,
-      password,
-    };
+    setError(null);
 
     try {
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(user),
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al iniciar sesión.');
-      }
-
-      console.log('Sesión iniciada con éxito');
-      
-      // Redirige al usuario a la página de menú o la página principal
-      router.push('/menu'); // Cambia '/menu' a la ruta que desees
-
+      await login(emailOrNickname, password, rememberMe);
+      //onClose();
+      router.push("/dashboard");
     } catch (error) {
-      console.error('Error:', error);
+      console.error("Error:", error);
+      setError("Error al iniciar sesión. Por favor, verifica tus credenciales.");
     }
   };
 
   return (
     <div className={cn("flex flex-col gap-2", className)} {...props}>
       <Card className="overflow-hidden">
-        <CardContent className="grid p-0 md:grid-cols-2">
+        <CardContent className="grid p-0 md:grid-cols-1">
           <form className="p-6 md:p-8" onSubmit={handleSubmit}>
             <div className="flex flex-col gap-6">
               <div className="flex flex-col items-center text-center">
-                <h1 className="text-2xl font-bold font-fredoka text-blue-950">Bienvenido de vuelta</h1>
+                <h1 className="text-2xl font-bold font-fredoka text-blue-950">
+                  Bienvenido de vuelta
+                </h1>
                 <p className="text-balance text-muted-foreground font-montserrat">
                   Inicia sesión en tu cuenta de OcaGo!
                 </p>
@@ -71,16 +57,8 @@ export function LoginForm({
                   id="email-or-nickname"
                   type="text"
                   placeholder="Correo electrónico o Nickname"
-                  value={email || nickname}
-                  onChange={(e) => {
-                    if (e.target.value.includes('@')) {
-                      setEmail(e.target.value);
-                      setNickname('');
-                    } else {
-                      setNickname(e.target.value);
-                      setEmail('');
-                    }
-                  }}
+                  value={emailOrNickname}
+                  onChange={(e) => setEmailOrNickname(e.target.value)}
                   required
                 />
               </div>
@@ -104,12 +82,13 @@ export function LoginForm({
                 />
                 <Label htmlFor="remember-me">Mantener sesión iniciada</Label>
               </div>
+              {error && <p className="text-red-500 text-sm">{error}</p>}
               <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-900">
                 Iniciar Sesión
               </Button>
               <div className="text-center text-sm">
                 ¿No tienes cuenta?{" "}
-                <a className="underline underline-offset-4">
+                <a href="/register" className="underline underline-offset-4" /*onClick={onClose}*/>
                   Regístrate
                 </a>
               </div>
@@ -125,8 +104,8 @@ export function LoginForm({
         </CardContent>
       </Card>
       <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-primary">
-        Al hacer click en continuar aceptas nuestros <a href="#">Términos de Servicio</a>{" "}
-        y nuestra <a href="#">Política de Privacidad</a>.
+        Al hacer click en continuar aceptas nuestros <a href="#">Términos de Servicio</a> y nuestra{" "}
+        <a href="#">Política de Privacidad</a>.
       </div>
     </div>
   );
