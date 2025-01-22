@@ -62,6 +62,10 @@ public class UserRepository : Repository<User>
             {
                 return false;
             }
+            else
+            {
+                existedUser = await GetByNicknameAsync(mail);
+            }
         }
         
 
