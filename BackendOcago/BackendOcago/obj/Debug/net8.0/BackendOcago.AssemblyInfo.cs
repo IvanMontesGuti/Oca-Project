@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("BackendOcago")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+64eb69ce901078938bf2112c1f358e76c4f2aec7")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8aedc509704094273b4e6f3cbcdbb81b55845789")]
 [assembly: System.Reflection.AssemblyProductAttribute("BackendOcago")]
 [assembly: System.Reflection.AssemblyTitleAttribute("BackendOcago")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
