@@ -3,6 +3,14 @@
   "WorkspaceRootPath": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\BackendOcago\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|c:\\users\\usuario\\documents\\github\\oca-project\\backendocago\\backendocago\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|solutionrelative:backendocago\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|c:\\users\\usuario\\documents\\github\\oca-project\\backendocago\\backendocago\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|solutionrelative:backendocago\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|c:\\users\\usuario\\documents\\github\\oca-project\\backendocago\\backendocago\\services\\imageservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|solutionrelative:backendocago\\services\\imageservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -13,14 +21,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|c:\\users\\usuario\\documents\\github\\oca-project\\backendocago\\backendocago\\services\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|solutionrelative:backendocago\\services\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|c:\\users\\usuario\\documents\\github\\oca-project\\backendocago\\backendocago\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|solutionrelative:backendocago\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|c:\\users\\usuario\\documents\\github\\oca-project\\backendocago\\backendocago\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|solutionrelative:backendocago\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{AD8E796D-3235-4E3E-BCF3-B8CB5DDED81D}|BackendOcago\\BackendOcago.csproj|c:\\users\\usuario\\documents\\github\\oca-project\\backendocago\\backendocago\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
@@ -54,7 +54,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 822,
-          "SelectedChildIndex": 8,
+          "SelectedChildIndex": 3,
           "Children": [
             {
               "$type": "Bookmark",
@@ -86,19 +86,20 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 0,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\BackendOcago\\BackendOcago\\Program.cs",
               "RelativeDocumentMoniker": "BackendOcago\\Program.cs",
               "ToolTip": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\BackendOcago\\BackendOcago\\Program.cs",
               "RelativeToolTip": "BackendOcago\\Program.cs",
-              "ViewState": "AgIAAAwAAAAAAAAAAAAMwBYAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAA0AAAAAAAAAAAD4vw8AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-19T19:06:16.299Z"
+              "WhenOpened": "2025-01-19T19:06:16.299Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 3,
               "Title": "UserRepository.cs",
               "DocumentMoniker": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\BackendOcago\\BackendOcago\\Models\\Database\\Repositories\\UserRepository.cs",
               "RelativeDocumentMoniker": "BackendOcago\\Models\\Database\\Repositories\\UserRepository.cs",
@@ -110,13 +111,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 1,
               "Title": "AuthController.cs",
               "DocumentMoniker": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\BackendOcago\\BackendOcago\\Controllers\\AuthController.cs",
               "RelativeDocumentMoniker": "BackendOcago\\Controllers\\AuthController.cs",
               "ToolTip": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\BackendOcago\\BackendOcago\\Controllers\\AuthController.cs",
               "RelativeToolTip": "BackendOcago\\Controllers\\AuthController.cs",
-              "ViewState": "AgIAABIAAAAAAAAAAAAWwB8AAAA6AAAAAAAAAA==",
+              "ViewState": "AgIAAD8AAAAAAAAAAAAowCcAAAAEAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-01-19T18:57:19.248Z"
             },
@@ -134,7 +135,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 4,
               "Title": "UserService.cs",
               "DocumentMoniker": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\BackendOcago\\BackendOcago\\Services\\UserService.cs",
               "RelativeDocumentMoniker": "BackendOcago\\Services\\UserService.cs",
@@ -146,16 +147,15 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 2,
               "Title": "ImageService.cs",
               "DocumentMoniker": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\BackendOcago\\BackendOcago\\Services\\ImageService.cs",
               "RelativeDocumentMoniker": "BackendOcago\\Services\\ImageService.cs",
               "ToolTip": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\BackendOcago\\BackendOcago\\Services\\ImageService.cs",
               "RelativeToolTip": "BackendOcago\\Services\\ImageService.cs",
-              "ViewState": "AgIAABgAAAAAAAAAAAAYwCQAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAACYAAAAAAAAAAAAYwDIAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-17T10:40:55.945Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-17T10:40:55.945Z"
             },
             {
               "$type": "Document",
