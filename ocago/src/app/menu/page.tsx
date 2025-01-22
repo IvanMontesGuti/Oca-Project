@@ -54,6 +54,8 @@ export default function OcaGame() {
 
   return (
     <>
+    
+    <div className="min-h-screen bg-[#2E1B6B] text-white">
     <nav className="container mx-auto px-4 py-6 flex justify-between items-center">
         <div className="flex items-center gap-2 ">
         <Image
@@ -73,16 +75,13 @@ export default function OcaGame() {
             href="/dashboard"
             className="text-white hover:text-gray-200 transition-colors font-montserrat"
           >
-            <p className="text-gray-700 text-center mb-2">
-                    {email}
+            <p className="text-white text-center mb-2">
                     {unique_name}
-
             </p>
           </Link>
           
         </div>
       </nav>
-    <div className="min-h-screen bg-[#2E1B6B] text-white">
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Game Board - Left Side */}
