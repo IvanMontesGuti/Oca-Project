@@ -30,7 +30,7 @@ export function LoginForm({
     try {
       await login(emailOrNickname, password, rememberMe);
       //onClose();
-      router.push("/dashboard");
+      router.push("/menu");
     } catch (error) {
       console.error("Error:", error);
       setError("Error al iniciar sesión. Por favor, verifica tus credenciales.");
