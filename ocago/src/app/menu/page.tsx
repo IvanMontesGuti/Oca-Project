@@ -75,14 +75,22 @@ export default function OcaGame() {
             href="/dashboard"
             className="text-white hover:text-gray-200 transition-colors font-montserrat"
           >
+            <div className="flex flex-col lg:flex-row gap-8 items-center justify-center">
             <p className="text-white text-center mb-2">
                     {unique_name}
+                    
             </p>
+            <p><img
+                        src={"https://localhost:7107/"}
+                        alt="Avatar"
+                        className="w-14 h-14 rounded-full mx-auto mb-4 border border-gray-300"
+                    /></p>
+            </div>
           </Link>
           
         </div>
       </nav>
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 ">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Game Board - Left Side */}
           <div className="lg:w-1/2">
@@ -102,9 +110,9 @@ export default function OcaGame() {
           <div className="lg:w-1/3 flex flex-col justify-center gap-8">
             {/* Logo and Title */}
             <div className="flex flex-col items-center lg:items-start gap-4">
-              <div className="w-24 h-24">
+              <div className="w-24 h-24 items-center">
                 <Image
-                  src="/logo.svg"
+                  src="/images/logo.svg"
                   alt="OcaGo logo"
                   width={96}
                   height={96}
@@ -112,7 +120,7 @@ export default function OcaGame() {
                 />
               </div>
               <div className="text-center lg:text-left">
-                <h1 className="text-2xl md:text-3xl font-bold mb-2">
+                <h1 className="text-2xl md:text-3xl font-bold mb-2 items-center">
                   Juega al juego clásico de la oca con amigos <span className="text-[#4ADE80]">online</span>.
                 </h1>
                 <div className="flex items-center gap-4 text-sm text-gray-300">
