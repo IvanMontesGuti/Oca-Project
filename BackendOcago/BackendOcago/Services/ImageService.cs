@@ -1,19 +1,33 @@
-﻿using BackendOcago.Models.Database.Entities;
+﻿using BackendOcago.Helpers;
 using BackendOcago.Models.Database;
-using BackendOcago.Helpers;
+using BackendOcago.Models.Database.Entities;
 using BackendOcago.Models.Dtos;
 
 namespace BackendOcago.Services;
-
 public class ImageService
 {
     private const string IMAGES_FOLDER = "images";
 
     private readonly UnitOfWork _unitOfWork;
+    private readonly string _rootPath;
 
     public ImageService(UnitOfWork unitOfWork)
     {
         _unitOfWork = unitOfWork;
+
+        // Configurar el directorio raíz
+        _rootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", IMAGES_FOLDER);
+
+        // Crear el directorio si no existe
+        EnsureImagesDirectoryExists();
+    }
+
+    private void EnsureImagesDirectoryExists()
+    {
+        if (!Directory.Exists(_rootPath))
+        {
+            Directory.CreateDirectory(_rootPath);
+        }
     }
 
     public Task<ICollection<Image>> GetAllAsync()
@@ -57,7 +71,6 @@ public class ImageService
         return newImage;
     }
 
-
     public async Task<Image> UpdateAsync(string name, CreateUpdateImageRequest image)
     {
         Image? entity = await _unitOfWork.ImageRepository.GetByConditionAsync(img => img.Name == name);
@@ -93,22 +106,11 @@ public class ImageService
 
     private async Task StoreImageAsync(string relativePath, IFormFile file)
     {
-        // Ruta absoluta a la carpeta donde se guardará la imagen
-        string rootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", IMAGES_FOLDER);
-
-        // Crear el directorio si no existe
-        if (!Directory.Exists(rootPath))
-        {
-            Directory.CreateDirectory(rootPath);
-        }
-
         // Ruta completa del archivo
-        string filePath = Path.Combine(rootPath, file.FileName);
+        string filePath = Path.Combine(_rootPath, file.FileName);
 
         // Guardar el archivo en la ruta especificada
         using Stream stream = file.OpenReadStream();
         await FileHelper.SaveAsync(stream, filePath);
     }
-
-
 }
