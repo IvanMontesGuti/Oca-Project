@@ -37,20 +37,25 @@ public class AuthController : ControllerBase
         return Ok(new LoginResult { AccessToken = stringToken });
     }
 
+    
     [HttpPost("Register")]
     public async Task<ActionResult> Register([FromBody] RegisterRequest userRequest)
     {
+        if (userRequest == null)
+            return BadRequest(new { Message = "Los datos de usuario son inválidos." });
+
         try
         {
-            if (userRequest == null) return BadRequest(new { message = "Los datos de usuario son inválidos." });
+            // Verificar si ya existe un usuario con el mismo correo o nombre de usuario
+            var existingUserByMail = await _userService.GetByMailAsync(userRequest.Mail);
+            var existingUserByNickname = await _userService.GetByNickNameAsync(userRequest.Nickname);
 
-            var existingUser = await _userService.GetByMailAsync(userRequest.Mail);
-            if (existingUser != null)
+            if (existingUserByMail != null || existingUserByNickname != null)
             {
-                return BadRequest(new { message = "El usuario ya existe." });
+                return BadRequest(new { message = "El usuario con ese correo o nombre de usuario ya existe." });
             }
 
-            // Intenta registrar al usuario
+            // Registrar al nuevo usuario
             string stringToken = await _authService.Register(userRequest);
 
             return Ok(new LoginResult { AccessToken = stringToken });
@@ -62,5 +67,6 @@ public class AuthController : ControllerBase
             return StatusCode(500, new { message = "Ocurrió un error inesperado durante el registro." });
         }
     }
+
 
 }

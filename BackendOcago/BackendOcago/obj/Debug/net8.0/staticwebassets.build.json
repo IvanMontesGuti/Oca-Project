@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "Iq3CdGinfubE5T8TnBcAO1S5eb88pCKxkNHp6xtlGlQ=",
+  "Hash": "BpedpzRp8jT+vVgveny+Q7bANrb6mDREpfHQSu7CMeU=",
   "Source": "BackendOcago",
   "BasePath": "_content/BackendOcago",
   "Mode": "Default",
@@ -10,7 +10,7 @@
     {
       "Name": "BackendOcago\\wwwroot",
       "Source": "BackendOcago",
-      "ContentRoot": "C:\\Users\\yasir\\Desktop\\Oca-Project\\Oca-Project\\BackendOcago\\BackendOcago\\wwwroot\\",
+      "ContentRoot": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\BackendOcago\\BackendOcago\\wwwroot\\",
       "BasePath": "_content/BackendOcago",
       "Pattern": "**"
     }

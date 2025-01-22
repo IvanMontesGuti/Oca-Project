@@ -11,11 +11,11 @@ import { FETCH_POST } from "@/lib/endpoints/useFetch";
 import { IMAGE_POST_URL } from "@/lib/endpoints/config";
 import { useRouter } from "next/navigation";
 
+
 export function RegisterForm({
   className,
-  onClose,
   ...props
-}: React.ComponentProps<"div"> & { onClose: () => void }) {
+}: React.ComponentProps<"div">) {
   const { register } = useAuth();
   const [avatar, setAvatar] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -64,8 +64,8 @@ export function RegisterForm({
         }
       }
 
-      router.push("/dashboard");
-      onClose();
+      router.push("/dashboard")
+      
     } catch (error) {
       console.error("Error durante el registro o la subida de imagen:", error);
     }
@@ -125,9 +125,7 @@ export function RegisterForm({
                   type="password"
                   required
                 />
-                {passwordError && (
-                  <p className="text-sm text-red-600">{passwordError}</p>
-                )}
+                
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="avatar">Avatar</Label>
@@ -152,7 +150,7 @@ export function RegisterForm({
               </Button>
               <div className="text-center text-sm">
                 ¿Ya tienes una cuenta?{" "}
-                <a href="#" className="underline underline-offset-4">
+                <a href="/login" className="underline underline-offset-4">
                   Inicia sesión
                 </a>
               </div>

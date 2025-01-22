@@ -165,12 +165,12 @@ public class Program
         app.UseAuthorization();
 
         //Permite transmitir archivos estáticos
-        /*
+       
         app.UseStaticFiles(new StaticFileOptions
         {
             FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"))
         });
-        */
+        
         app.MapControllers();
 
         //Llamamos al método de creación de base de datos de respaldo (seed)
