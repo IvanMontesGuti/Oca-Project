@@ -1,7 +1,7 @@
 "use client"
 
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ArrowRight } from 'lucide-react'
@@ -14,13 +14,23 @@ import {
 import dynamic from 'next/dynamic'
 import { LoginForm } from '@/components/login-form'
 import { RegisterForm } from '@/components/register-form'
+import { useRouter } from 'next/navigation'
 
 const Modal = dynamic(() => import('@/components/modal').then(mod => mod.Modal), { ssr: false })
 
 export default function Home() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false);
+  const router = useRouter();
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("authToken") || sessionStorage.getItem("authToken");
+      if (token) {
+        router.push("/dashboard");
+      }
+    }
+  }, [router]);
   return (
     <div className="bg-svg bg-cover bg-no-repeat h-full min-h-screen w-full flex flex-col">
       <nav className="container mx-auto px-4 py-6 flex justify-between items-center">

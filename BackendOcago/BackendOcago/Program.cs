@@ -43,7 +43,7 @@ public class Program
         builder.Services.AddScoped<UserRepository>();
         builder.Services.AddScoped<ImageRepository>();
 
-        builder.Services.AddTransient<ExampleMiddleware>();
+        //builder.Services.AddTransient<ExampleMiddleware>();
         builder.Services.AddTransient<ImageService>();
 
 
@@ -135,7 +135,7 @@ public class Program
         //Configuración de Cors para aceptar cualquier petición
         app.UseCors();
 
-        app.UseMiddleware<ExampleMiddleware>();
+        //app.UseMiddleware<ExampleMiddleware>();
         /*Ejemplo de middleware
         app.Use(async (context, next) =>
         {

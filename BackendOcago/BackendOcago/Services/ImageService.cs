@@ -33,6 +33,12 @@ public class ImageService
 
     public async Task<Image> InsertAsync(CreateUpdateImageRequest image)
     {
+        if (image == null || image.File == null)
+        {
+            string fileName = image?.File?.FileName ?? "default.png";
+            throw new ArgumentNullException(nameof(image), "Image or File cannot be null.");
+        }
+
         string relativePath = $"{IMAGES_FOLDER}/{image.File.FileName}";
 
         Image newImage = new Image
@@ -87,8 +93,22 @@ public class ImageService
 
     private async Task StoreImageAsync(string relativePath, IFormFile file)
     {
-        using Stream stream = file.OpenReadStream();
+        // Ruta absoluta a la carpeta donde se guardará la imagen
+        string rootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", IMAGES_FOLDER);
 
-        await FileHelper.SaveAsync(stream, relativePath);
+        // Crear el directorio si no existe
+        if (!Directory.Exists(rootPath))
+        {
+            Directory.CreateDirectory(rootPath);
+        }
+
+        // Ruta completa del archivo
+        string filePath = Path.Combine(rootPath, file.FileName);
+
+        // Guardar el archivo en la ruta especificada
+        using Stream stream = file.OpenReadStream();
+        await FileHelper.SaveAsync(stream, filePath);
     }
+
+
 }

@@ -38,6 +38,8 @@ public class AuthService
                 { ClaimTypes.Email, model.Mail },
                 { ClaimTypes.Role, user.Role },
                 { ClaimTypes.Name, user.Nickname },
+                { ClaimTypes.Surname, user.AvatarUrl },
+
 
             },
 
