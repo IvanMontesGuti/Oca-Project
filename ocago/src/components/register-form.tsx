@@ -13,7 +13,7 @@ import { FETCH_POST } from "@/lib/endpoints/useFetch"
 import { IMAGE_POST_URL } from "@/lib/endpoints/config"
 import { useRouter } from "next/navigation"
 
-export function RegisterForm({ className, onClose, ...props }: React.ComponentProps<"div"> & { onClose: () => void }) {
+export function RegisterForm({ className, ...props }: React.ComponentProps<"div"> ) {
   const { register } = useAuth()
   const [avatar, setAvatar] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
@@ -55,7 +55,7 @@ export function RegisterForm({ className, onClose, ...props }: React.ComponentPr
       }
 
       router.push("/dashboard")
-      onClose()
+      
     } catch (error) {
       console.error("Error durante el registro o la subida de imagen:", error)
     }

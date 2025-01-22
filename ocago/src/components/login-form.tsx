@@ -13,7 +13,7 @@ import { LOGIN_URL } from "@/lib/endpoints/config";
 export function LoginForm({
   className,
   ...props
-}: React.ComponentProps<"div"> & { onClose: () => void }) {
+}: React.ComponentProps<"div">) {
   const [emailOrNickname, setEmailOrNickname] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -29,7 +29,7 @@ export function LoginForm({
 
     try {
       await login(emailOrNickname, password, rememberMe);
-      onClose();
+      //onClose();
       router.push("/dashboard");
     } catch (error) {
       console.error("Error:", error);
@@ -88,7 +88,7 @@ export function LoginForm({
               </Button>
               <div className="text-center text-sm">
                 ¿No tienes cuenta?{" "}
-                <a href="#" className="underline underline-offset-4" onClick={onClose}>
+                <a href="#" className="underline underline-offset-4" /*onClick={onClose}*/>
                   Regístrate
                 </a>
               </div>
