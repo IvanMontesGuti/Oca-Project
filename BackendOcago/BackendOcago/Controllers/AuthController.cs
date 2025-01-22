@@ -42,11 +42,27 @@ public class AuthController : ControllerBase
     {
         if (userRequest == null) return BadRequest(new { Message = "Los datos de usuario son inválidos." });
         if ((await _userService.GetByMailAsync(userRequest.Mail) != null) || (await _userService.GetByNickNameAsync(userRequest.Nickname) != null))
+        try
         {
-            return BadRequest(new { message = "El usuario ya existe" });
-        }
+            if (userRequest == null) return BadRequest(new { message = "Los datos de usuario son inválidos." });
 
-        string stringToken = await _authService.Register(userRequest);
-        return Ok(new LoginResult { AccessToken = stringToken });
+            var existingUser = await _userService.GetByMailAsync(userRequest.Mail);
+            if (existingUser != null)
+            {
+                return BadRequest(new { message = "El usuario ya existe." });
+            }
+
+            // Intenta registrar al usuario
+            string stringToken = await _authService.Register(userRequest);
+
+            return Ok(new LoginResult { AccessToken = stringToken });
+        }
+        catch (Exception ex)
+        {
+            // Registrar el error para depuración
+            Console.WriteLine($"Error en el registro: {ex.Message}");
+            return StatusCode(500, new { message = "Ocurrió un error inesperado durante el registro." });
+        }
     }
+
 }

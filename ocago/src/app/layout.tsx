@@ -2,7 +2,7 @@ import './globals.css'
 import type { Metadata } from 'next'
 import { Fredoka } from 'next/font/google'
 import { Montserrat } from 'next/font/google'
-
+import { AuthProvider } from '@/context/AuthContext'
 
 const fredoka = Fredoka({ 
   subsets: ['latin'],
@@ -28,7 +28,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <body className={`${fredoka.variable} ${montserrat.variable}`}>{children}</body>
+      <body className={`${fredoka.variable} ${montserrat.variable}`}>
+      <AuthProvider>{children}</AuthProvider>
+      </body>
+
     </html>
   )
 }
