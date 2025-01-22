@@ -12,16 +12,10 @@ import { IMAGE_POST_URL } from "@/lib/endpoints/config";
 import { useRouter } from "next/navigation";
 
 
-export function RegisterForm({ className, ...props }: React.ComponentProps<"div"> ) {
-  const { register } = useAuth()
-  const [avatar, setAvatar] = useState<File | null>(null)
-  const [preview, setPreview] = useState<string | null>(null)
-  const router = useRouter()
 export function RegisterForm({
   className,
-  onClose,
   ...props
-}: React.ComponentProps<"div"> & { onClose: () => void }) {
+}: React.ComponentProps<"div">) {
   const { register } = useAuth();
   const [avatar, setAvatar] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -156,7 +150,7 @@ export function RegisterForm({
               </Button>
               <div className="text-center text-sm">
                 ¿Ya tienes una cuenta?{" "}
-                <a href="#" className="underline underline-offset-4">
+                <a href="/login" className="underline underline-offset-4">
                   Inicia sesión
                 </a>
               </div>
@@ -171,5 +165,4 @@ export function RegisterForm({
       </div>
     </div>
   );
-}
 }

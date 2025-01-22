@@ -88,7 +88,7 @@ export function LoginForm({
               </Button>
               <div className="text-center text-sm">
                 ¿No tienes cuenta?{" "}
-                <a href="#" className="underline underline-offset-4" /*onClick={onClose}*/>
+                <a href="/register" className="underline underline-offset-4" /*onClick={onClose}*/>
                   Regístrate
                 </a>
               </div>
