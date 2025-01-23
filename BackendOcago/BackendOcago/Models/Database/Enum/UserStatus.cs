@@ -1,4 +1,4 @@
-﻿namespace BackendOcago.Models.Database
+﻿namespace BackendOcago.Models.Database.Enum
 {
     public enum UserStatus
     {

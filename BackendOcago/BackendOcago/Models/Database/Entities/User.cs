@@ -13,6 +13,8 @@ public class User
     public string Password { get; set; }
     public required string Role { get; set; }
     public string AvatarUrl { get; set; }
-    public UserStatus Status { get; set; } = UserStatus.Desconectado; // Valor predeterminado
-    //public <List<User>> Friends {get; set;}
+    public UserStatus Status { get; set; } = UserStatus.Desconectado;
+
+    public List<Friendship> SentFriendships { get; set; } = new List<Friendship>();
+    public List<Friendship> ReceivedFriendships { get; set; } = new List<Friendship>();
 }
