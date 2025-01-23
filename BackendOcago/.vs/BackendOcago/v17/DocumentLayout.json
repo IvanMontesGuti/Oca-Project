@@ -72,7 +72,7 @@
               "RelativeDocumentMoniker": "BackendOcago\\Services\\AuthService.cs",
               "ToolTip": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\BackendOcago\\BackendOcago\\Services\\AuthService.cs",
               "RelativeToolTip": "BackendOcago\\Services\\AuthService.cs",
-              "ViewState": "AgIAABMAAAAAAAAAAAA+wBsAAAAeAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-01-22T17:13:41.247Z",
               "EditorCaption": ""
@@ -111,8 +111,7 @@
               "RelativeToolTip": "BackendOcago\\Program.cs",
               "ViewState": "AgIAAKUAAAAAAAAAAAAuwLAAAAApAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-19T19:06:16.299Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-19T19:06:16.299Z"
             },
             {
               "$type": "Document",
@@ -124,8 +123,7 @@
               "RelativeToolTip": "BackendOcago\\Models\\Database\\Repositories\\UserRepository.cs",
               "ViewState": "AgIAADMAAAAAAAAAAAAuwDUAAAAcAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-19T18:58:20.619Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-19T18:58:20.619Z"
             },
             {
               "$type": "Document",
@@ -137,8 +135,7 @@
               "RelativeToolTip": "BackendOcago\\Controllers\\AuthController.cs",
               "ViewState": "AgIAABkAAAAAAAAAAAAQwCMAAAA1AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-19T18:57:19.248Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-19T18:57:19.248Z"
             },
             {
               "$type": "Document",
@@ -150,8 +147,7 @@
               "RelativeToolTip": "BackendOcago\\Models\\Database\\Entities\\User.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-17T14:42:23.133Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-17T14:42:23.133Z"
             },
             {
               "$type": "Document",
@@ -163,8 +159,7 @@
               "RelativeToolTip": "BackendOcago\\Services\\UserService.cs",
               "ViewState": "AgIAAHAAAAAAAAAAAAAuwHgAAAA4AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-17T10:49:07.488Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-17T10:49:07.488Z"
             },
             {
               "$type": "Document",
@@ -200,8 +195,7 @@
               "RelativeToolTip": "BackendOcago\\Controllers\\UserController.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-17T10:30:36.273Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-17T10:30:36.273Z"
             },
             {
               "$type": "Document",
@@ -213,8 +207,7 @@
               "RelativeToolTip": "BackendOcago\\Models\\Dtos\\RegisterRequest.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-17T10:43:13.209Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-17T10:43:13.209Z"
             }
           ]
         }
