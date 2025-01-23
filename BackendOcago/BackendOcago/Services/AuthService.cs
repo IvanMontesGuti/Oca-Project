@@ -27,7 +27,15 @@ public class AuthService
 
     public async Task<string> Login(Models.Dtos.LoginRequest model)
     {
-        User user = await _unitOfWork.UserRepository.GetByMailAsync(model.Mail);
+        User user;
+        if (await _unitOfWork.UserRepository.GetByMailAsync(model.Mail) == null)
+        {
+            user = await _unitOfWork.UserRepository.GetByNicknameAsync(model.Mail);
+        }
+        else
+        {
+            user =  await _unitOfWork.UserRepository.GetByMailAsync(model.Mail);
+        }
 
         SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor
         {

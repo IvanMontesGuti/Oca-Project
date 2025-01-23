@@ -17,4 +17,5 @@ public class User
 
     public List<Friendship> SentFriendships { get; set; } = new List<Friendship>();
     public List<Friendship> ReceivedFriendships { get; set; } = new List<Friendship>();
+    
 }

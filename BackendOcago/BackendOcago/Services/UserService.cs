@@ -125,4 +125,8 @@ public class UserService
     {
         return _unitOfWork.UserRepository.GetByMailAsync(mail);
     }
+    public Task<User> GetByNickNameAsync(string mail)
+    {
+        return _unitOfWork.UserRepository.GetByNicknameAsync(mail);
+    }
 }

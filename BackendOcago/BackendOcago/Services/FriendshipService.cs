@@ -1,107 +1,108 @@
 ﻿using BackendOcago.Models.Database.Entities;
+using BackendOcago.Models.Database;
+using BackendOcago.Models.Dtos;
+using BackendOcago.Models.Mappers;
 using BackendOcago.Models.Database.Enum;
-using Microsoft.EntityFrameworkCore;
 
 namespace BackendOcago.Services;
 
 public class FriendshipService
 {
-    private readonly DbContext _dbContext;
+    private readonly UnitOfWork _unitOfWork;
+    private readonly FriendshipMapper _mapper;
 
-    public FriendshipService(DbContext dbContext)
+    public FriendshipService(UnitOfWork unitOfWork, FriendshipMapper mapper)
     {
-        _dbContext = dbContext;
+        _unitOfWork = unitOfWork;
+        _mapper = mapper;
     }
 
-    // Enviar una solicitud de amistad
+    /* ----- INSERT ----- */
+
     public async Task<bool> SendFriendRequestAsync(long senderId, long receiverId)
     {
-        // Verificar que no exista ya una solicitud pendiente o aceptada
-        var existingRequest = await _dbContext.Set<Friendship>()
-            .FirstOrDefaultAsync(f =>
-                (f.SenderId == senderId && f.ReceiverId == receiverId) ||
-                (f.SenderId == receiverId && f.ReceiverId == senderId));
+        // Verificar si ya existe una solicitud o son amigos
+        var existingFriendship = await _unitOfWork.FriendshipRepository.GetFriendshipAsync(senderId, receiverId);
 
-        if (existingRequest != null)
+        if (existingFriendship != null)
         {
-            if (existingRequest.Status == FriendshipInvitationStatus.Pendiente)
+            if (existingFriendship.Status == FriendshipInvitationStatus.Pendiente)
                 return false; // Ya hay una solicitud pendiente
 
-            if (existingRequest.Status == FriendshipInvitationStatus.Aceptada)
+            if (existingFriendship.Status == FriendshipInvitationStatus.Aceptada)
                 return false; // Ya son amigos
         }
 
+        // Crear una nueva solicitud de amistad
         var newFriendship = new Friendship
         {
             SenderId = senderId,
             ReceiverId = receiverId,
-            SentAt = DateTime.UtcNow
+            SentAt = DateTime.UtcNow,
+            Status = FriendshipInvitationStatus.Pendiente
         };
 
-        _dbContext.Set<Friendship>().Add(newFriendship);
-        await _dbContext.SaveChangesAsync();
-        return true;
+        await _unitOfWork.FriendshipRepository.InsertAsync(newFriendship);
+        return await _unitOfWork.SaveAsync();
     }
 
-    // Obtener solicitudes enviadas por un usuario
-    public async Task<List<Friendship>> GetSentRequestsAsync(long userId)
+    /* ----- GET ----- */
+
+    public async Task<IEnumerable<FriendshipDto>> GetSentRequestsAsync(long userId)
     {
-        return await _dbContext.Set<Friendship>()
-            .Where(f => f.SenderId == userId)
-            .ToListAsync();
+        var sentRequests = await _unitOfWork.FriendshipRepository.GetSentRequestsAsync(userId);
+        return _mapper.ToDto(sentRequests);
     }
 
-    // Obtener solicitudes recibidas por un usuario
-    public async Task<List<Friendship>> GetReceivedRequestsAsync(long userId)
+    public async Task<IEnumerable<FriendshipDto>> GetReceivedRequestsAsync(long userId)
     {
-        return await _dbContext.Set<Friendship>()
-            .Where(f => f.ReceiverId == userId && f.Status == FriendshipInvitationStatus.Pendiente)
-            .ToListAsync();
+        var receivedRequests = await _unitOfWork.FriendshipRepository.GetReceivedRequestsAsync(userId);
+        return _mapper.ToDto(receivedRequests);
     }
 
-    // Aceptar una solicitud de amistad
+    //public async Task<IEnumerable<UserDto>> GetFriendsAsync(long userId)
+    //{
+    //    var friendships = await _unitOfWork.FriendshipRepository.GetAcceptedFriendshipsAsync(userId);
+    //    var friends = friendships.Select(f => f.SenderId == userId ? f.Receiver : f.Sender);
+    //    return friends.Select(friend => _mapper.ToDto(friend)).ToList();
+    //}
+
+    /* ----- UPDATE ----- */
+
     public async Task<bool> AcceptFriendRequestAsync(long friendshipId, long userId)
     {
-        var friendship = await _dbContext.Set<Friendship>()
-            .FirstOrDefaultAsync(f => f.Id == friendshipId && f.ReceiverId == userId);
+        var friendship = await _unitOfWork.FriendshipRepository.GetByIdAsync(friendshipId);
 
-        if (friendship == null || friendship.Status != FriendshipInvitationStatus.Pendiente)
+        if (friendship == null || friendship.ReceiverId != userId || friendship.Status != FriendshipInvitationStatus.Pendiente)
             return false;
 
         friendship.Status = FriendshipInvitationStatus.Aceptada;
-        await _dbContext.SaveChangesAsync();
-        return true;
+
+        _unitOfWork.FriendshipRepository.Update(friendship);
+        return await _unitOfWork.SaveAsync();
     }
 
-    // Rechazar una solicitud de amistad
     public async Task<bool> RejectFriendRequestAsync(long friendshipId, long userId)
     {
-        var friendship = await _dbContext.Set<Friendship>()
-            .FirstOrDefaultAsync(f => f.Id == friendshipId && f.ReceiverId == userId);
+        var friendship = await _unitOfWork.FriendshipRepository.GetByIdAsync(friendshipId);
 
-        if (friendship == null || friendship.Status != FriendshipInvitationStatus.Pendiente)
+        if (friendship == null || friendship.ReceiverId != userId || friendship.Status != FriendshipInvitationStatus.Pendiente)
             return false;
 
-        _dbContext.Set<Friendship>().Remove(friendship);
-        await _dbContext.SaveChangesAsync();
-        return true;
+        _unitOfWork.FriendshipRepository.Delete(friendship);
+        return await _unitOfWork.SaveAsync();
     }
 
-    // Obtener lista de amigos
-    public async Task<List<User>> GetFriendsAsync(long userId)
+    /* ----- DELETE ----- */
+
+    public async Task<bool> DeleteFriendshipAsync(long friendshipId, long userId)
     {
-        var friendships = await _dbContext.Set<Friendship>()
-            .Where(f =>
-                (f.SenderId == userId || f.ReceiverId == userId) &&
-                f.Status == FriendshipInvitationStatus.Aceptada)
-            .ToListAsync();
+        var friendship = await _unitOfWork.FriendshipRepository.GetByIdAsync(friendshipId);
 
-        var friendIds = friendships
-            .Select(f => f.SenderId == userId ? f.ReceiverId : f.SenderId)
-            .ToList();
+        if (friendship == null || (friendship.SenderId != userId && friendship.ReceiverId != userId))
+            return false;
 
-        return await _dbContext.Set<User>()
-            .Where(u => friendIds.Contains(u.Id))
-            .ToListAsync();
+        _unitOfWork.FriendshipRepository.Delete(friendship);
+        return await _unitOfWork.SaveAsync();
     }
 }

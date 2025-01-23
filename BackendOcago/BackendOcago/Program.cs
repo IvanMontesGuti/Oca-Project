@@ -42,6 +42,7 @@ public class Program
         builder.Services.AddScoped<UnitOfWork>();
         builder.Services.AddScoped<UserRepository>();
         builder.Services.AddScoped<ImageRepository>();
+        builder.Services.AddScoped<FriendshipRepository>();
 
         //builder.Services.AddTransient<ExampleMiddleware>();
         builder.Services.AddTransient<ImageService>();
@@ -61,6 +62,7 @@ public class Program
         //Mappers
         builder.Services.AddTransient<UserMapper>();
         builder.Services.AddTransient<ImageMapper>();
+        builder.Services.AddScoped<FriendshipMapper>();
 
 
         //Swagger/OpenApi

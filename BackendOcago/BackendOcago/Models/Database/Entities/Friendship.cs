@@ -1,4 +1,5 @@
 ﻿using BackendOcago.Models.Database.Enum;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BackendOcago.Models.Database.Entities
 {
@@ -6,9 +7,13 @@ namespace BackendOcago.Models.Database.Entities
     {
         public long Id { get; set; }
 
+        [ForeignKey("Sender")]
+        [NotMapped]
         public long SenderId { get; set; }
-        public User Sender { get; set; } 
+        public User Sender { get; set; }
 
+        [ForeignKey("Receiver")]
+        [NotMapped]
         public long ReceiverId { get; set; }
         public User Receiver { get; set; }
 
