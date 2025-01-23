@@ -32,6 +32,26 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "BackendOcago.Controllers.GameController",
+    "Method": "StartGame",
+    "RelativePath": "api/Game/start",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "BackendOcago.Controllers.GameController",
+    "Method": "GetGameStatus",
+    "RelativePath": "api/Game/status",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "BackendOcago.Controllers.ImagesController",
     "Method": "GetAllAsync",
     "RelativePath": "api/Images",

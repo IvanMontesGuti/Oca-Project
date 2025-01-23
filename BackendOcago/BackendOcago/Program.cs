@@ -52,6 +52,7 @@ public class Program
         // builder.Services.AddScoped<TextComparer>();
         builder.Services.AddScoped<AuthService>();
         builder.Services.AddScoped<UserService>();
+        builder.Services.AddScoped<GameService>();
 
         //Los servicios websocket son singleton siempre
         builder.Services.AddSingleton<ProcessWebSocket>();

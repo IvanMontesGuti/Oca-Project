@@ -153,12 +153,26 @@ export default function OcaGame() {
 
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+            
               <Button size="lg" className="bg-[#E633FF] hover:bg-[#D020E9] text-white px-8">
-                Play Online
+              <Link
+              href="/gamePrueba"
+              
+              
+            >
+              Play Online
+            </Link>
               </Button>
               <Button size="lg" className="bg-[#33FFE6] hover:bg-[#20E9D0] text-black px-8">
-                Play Bot
+              <Link
+              href="/gamePrueba"
+              
+              
+            >
+              Play Bot
+            </Link>
               </Button>
+              
             </div>
           </div>
 
@@ -184,9 +198,7 @@ export default function OcaGame() {
                           <div className="text-sm text-gray-400">Connected</div>
                         </div>
                       </div>
-                      <button className="opacity-0 group-hover:opacity-100 transition-opacity">
-                        <PlusCircleIcon className="h-5 w-5 text-gray-400 hover:text-white" />
-                      </button>
+                      
                     </div>
                   ))}
                 </div>
@@ -200,24 +212,5 @@ export default function OcaGame() {
   )
 }
 
-function PlusCircleIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="12" cy="12" r="10" />
-      <path d="M8 12h8" />
-      <path d="M12 8v8" />
-    </svg>
-  )
-}
+
 
