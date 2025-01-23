@@ -31,6 +31,7 @@ namespace BackendOcago.Services
                         Jugador = 1,
                         Ficha1 = ficha1,
                         Ficha2 = ficha2,
+                        
                         Mensaje = "Turno jugador 1"
                     });
                     if (turnosRestantes1 <= 0)
@@ -72,6 +73,7 @@ namespace BackendOcago.Services
                 Ficha2 = ficha2,
                 Ganador = ficha1 >= 63 ? "Jugador 1" : "Jugador 2",
                 TurnoNum = turnoNum,
+
                 DetallesTurnos = Turnos // Agregar los detalles de los turnos al resultado final
             };
         }
@@ -174,6 +176,7 @@ namespace BackendOcago.Services
             public int Jugador { get; set; }
             public int Ficha1 { get; set; }
             public int Ficha2 { get; set; }
+            public int DadoResult { get; set; }
             public string Mensaje { get; set; }
         }
     }
