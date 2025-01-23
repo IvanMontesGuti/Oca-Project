@@ -59,7 +59,7 @@ export default function OcaGame() {
         );
     }
 
-  const { email, unique_name} = userInfo;
+  const { family_name, unique_name} = userInfo;
 
   return (
     <>
@@ -92,7 +92,7 @@ export default function OcaGame() {
                     
             </p>
             <p><img
-                        src={"https://localhost:7107/"}
+                        src={"https://localhost:7107/" + family_name}
                         alt="Avatar"
                         className="w-14 h-14 rounded-full mx-auto mb-4 border border-gray-300"
                     /></p>

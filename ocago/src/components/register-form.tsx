@@ -64,7 +64,7 @@ export function RegisterForm({
         }
       }
 
-      router.push("/dashboard")
+      router.push("/menu")
       
     } catch (error) {
       console.error("Error durante el registro o la subida de imagen:", error);
