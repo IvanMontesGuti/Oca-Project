@@ -5,6 +5,7 @@ namespace BackendOcago.Services
 {
     public class GameService
     {
+        private int dado;
         private int ficha1 = 0;
         private int ficha2 = 0;
         private int turnoNum = 1;
@@ -31,8 +32,7 @@ namespace BackendOcago.Services
                         Jugador = 1,
                         Ficha1 = ficha1,
                         Ficha2 = ficha2,
-                        
-                        Mensaje = "Turno jugador 1"
+                        Mensaje = $"Jugador 1 ha lanzado un dado con valor {dado}."
                     });
                     if (turnosRestantes1 <= 0)
                     {
@@ -49,7 +49,7 @@ namespace BackendOcago.Services
                         Jugador = 2,
                         Ficha1 = ficha1,
                         Ficha2 = ficha2,
-                        Mensaje = "Turno jugador 2"
+                        Mensaje = $"Jugador 2 ha lanzado un dado con valor {dado}."
                     });
                     if (turnosRestantes2 <= 0)
                     {
@@ -81,6 +81,7 @@ namespace BackendOcago.Services
         private void JugarTurno(ref int ficha, ref int turnosRestantes, ref int turnosRestantesOponente, int jugador)
         {
             ficha = LanzarDado(ficha, jugador);
+            dado = jugador;
 
             if (ficha > 63)
             {
@@ -176,7 +177,6 @@ namespace BackendOcago.Services
             public int Jugador { get; set; }
             public int Ficha1 { get; set; }
             public int Ficha2 { get; set; }
-            public int DadoResult { get; set; }
             public string Mensaje { get; set; }
         }
     }

@@ -110,9 +110,9 @@
               "Title": "GameService.cs",
               "DocumentMoniker": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\BackendOcago\\BackendOcago\\Services\\GameService.cs",
               "RelativeDocumentMoniker": "BackendOcago\\Services\\GameService.cs",
-              "ToolTip": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\BackendOcago\\BackendOcago\\Services\\GameService.cs",
-              "RelativeToolTip": "BackendOcago\\Services\\GameService.cs",
-              "ViewState": "AgIAAJoAAAAAAAAAAAAQwKEAAAAJAAAAAAAAAA==",
+              "ToolTip": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\BackendOcago\\BackendOcago\\Services\\GameService.cs*",
+              "RelativeToolTip": "BackendOcago\\Services\\GameService.cs*",
+              "ViewState": "AgIAAEgAAAAAAAAAAAAYwFMAAAAaAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-01-23T16:17:53.467Z",
               "EditorCaption": ""
@@ -127,7 +127,8 @@
               "RelativeToolTip": "BackendOcago\\Controllers\\GameController.cs",
               "ViewState": "AgIAABAAAAAAAAAAAAAQwBgAAAA1AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-23T16:17:23.646Z"
+              "WhenOpened": "2025-01-23T16:17:23.646Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -221,9 +222,10 @@
               "RelativeDocumentMoniker": "BackendOcago\\Program.cs",
               "ToolTip": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\BackendOcago\\BackendOcago\\Program.cs",
               "RelativeToolTip": "BackendOcago\\Program.cs",
-              "ViewState": "AgIAAA8AAAAAAAAAAAAAADMAAAA2AAAAAAAAAA==",
+              "ViewState": "AgIAAIUAAAAAAAAAAAAQwG8AAAAiAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-19T19:06:16.299Z"
+              "WhenOpened": "2025-01-19T19:06:16.299Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
