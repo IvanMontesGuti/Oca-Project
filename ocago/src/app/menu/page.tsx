@@ -5,7 +5,9 @@ import { jwtDecode } from "jwt-decode";
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import Image from "next/image"
+import { Toaster, toast } from 'sonner'
 import { Button } from "@/components/ui/button"
+
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 interface DecodedToken {
@@ -24,11 +26,14 @@ export default function OcaGame() {
   useEffect(() => {
           if (typeof window !== "undefined") {
               const token = localStorage.getItem("authToken");
-  
+              
               if (token) {
                   try {
                       const decodedToken = jwtDecode<DecodedToken>(token);
                       setUserInfo(decodedToken);
+                      setTimeout(() => {
+                        toast.success('Sesión iniciada correctamente.')
+                      }, 100)
                   } catch (error) {
                       console.error("Error al decodificar el token:", error);
                   }
@@ -38,15 +43,19 @@ export default function OcaGame() {
 
       if (!userInfo) {
         return (
-            <div className="flex items-center justify-center h-screen bg-gray-100">
-                <p className="text-xl text-red-600">¡Inicia Sesion para poder entrar!</p>
-                <button
-                    
-                    className="flex items-center mt-4 w-full bg-red-500 text-white font-semibold py-2 px-4 rounded hover:bg-red-700"
-                >
-                    Volver Inicio
-                </button>
-            </div>
+          <div className="flex items-center justify-center h-screen bg-gray-100">
+          <div className="text-center bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+            <p className="text-2xl font-semibold text-red-600 mb-6 font-fredoka">
+              ¡Inicia sesión para poder entrar!
+            </p>
+            <Link
+              href="/"
+              className="text-lg text-blue-600 hover:text-blue-500 transition-colors font-montserrat"
+            >
+              Volver al inicio
+            </Link>
+          </div>
+        </div>
         );
     }
 
@@ -56,7 +65,9 @@ export default function OcaGame() {
     <>
     
     <div className="min-h-screen bg-[#2E1B6B] text-white">
+    
     <nav className="container mx-auto px-4 py-6 flex justify-between items-center">
+      
         <div className="flex items-center gap-2 ">
         <Image
                   src="/images/logo.svg"
@@ -90,7 +101,10 @@ export default function OcaGame() {
           
         </div>
       </nav>
+      <Toaster />
       <div className="container mx-auto px-4 py-8 ">
+        
+      
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Game Board - Left Side */}
           <div className="lg:w-1/2">
@@ -100,7 +114,7 @@ export default function OcaGame() {
                 alt="OcaGo game board"
                 width={600}
                 height={400}
-                className="w-full h-auto rounded-lg"
+                className="animate-float w-full h-auto rounded-lg"
                 priority
               />
             </div>
@@ -125,10 +139,13 @@ export default function OcaGame() {
                 </h1>
                 <div className="flex items-center gap-4 text-sm text-gray-300">
                   <span>
-                    <strong className="text-white">222</strong> Personas conectadas
+                    <strong className="text-white">?</strong> Personas conectadas
                   </span>
                   <span>
-                    <strong className="text-white">2</strong> Partidas activas
+                    <strong className="text-white">?</strong> Personas en partida
+                  </span>
+                  <span>
+                    <strong className="text-white">?</strong> Partidas activas
                   </span>
                 </div>
               </div>

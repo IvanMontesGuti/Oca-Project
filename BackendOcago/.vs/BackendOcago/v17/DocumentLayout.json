@@ -72,7 +72,7 @@
               "RelativeDocumentMoniker": "BackendOcago\\Services\\AuthService.cs",
               "ToolTip": "C:\\Users\\Usuario\\Documents\\GitHub\\Oca-Project\\BackendOcago\\BackendOcago\\Services\\AuthService.cs",
               "RelativeToolTip": "BackendOcago\\Services\\AuthService.cs",
-              "ViewState": "AgIAABUAAAAAAAAAAAAuwCYAAAAIAAAAAAAAAA==",
+              "ViewState": "AgIAABUAAAAAAAAAAAAuwB8AAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-01-22T17:13:41.247Z",
               "EditorCaption": ""
@@ -123,8 +123,7 @@
               "RelativeToolTip": "BackendOcago\\Models\\Database\\Repositories\\UserRepository.cs",
               "ViewState": "AgIAADMAAAAAAAAAAAAowEIAAAA9AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-19T18:58:20.619Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-19T18:58:20.619Z"
             },
             {
               "$type": "Document",
@@ -136,8 +135,7 @@
               "RelativeToolTip": "BackendOcago\\Controllers\\AuthController.cs",
               "ViewState": "AgIAABkAAAAAAAAAAAAQwB8AAAA6AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-19T18:57:19.248Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-19T18:57:19.248Z"
             },
             {
               "$type": "Document",
@@ -161,8 +159,7 @@
               "RelativeToolTip": "BackendOcago\\Services\\UserService.cs",
               "ViewState": "AgIAAG0AAAAAAAAAAAAuwHgAAAA4AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-17T10:49:07.488Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-17T10:49:07.488Z"
             },
             {
               "$type": "Document",
@@ -186,8 +183,7 @@
               "RelativeToolTip": "BackendOcago\\Models\\Database\\Seeder.cs",
               "ViewState": "AgIAABcAAAAAAAAAAAAgwCcAAABDAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-17T10:31:24.449Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-17T10:31:24.449Z"
             },
             {
               "$type": "Document",
