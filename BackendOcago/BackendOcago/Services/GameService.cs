@@ -175,7 +175,6 @@ namespace BackendOcago.Services
             public int Ficha1 { get; set; }
             public int Ficha2 { get; set; }
             public string Mensaje { get; set; }
-            public int Dado { get; set; }
         }
     }
 }
