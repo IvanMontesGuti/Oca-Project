@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using BackendOcago.Models.Database.Enum;
+using Microsoft.EntityFrameworkCore;
 
 namespace BackendOcago.Models.Database.Entities;
 
@@ -11,5 +12,7 @@ public class User
     public required string Nickname { get; set; }
     public string Password { get; set; }
     public required string Role { get; set; }
-    public string AvatarUrl { get; set; } 
+    public string AvatarUrl { get; set; }
+    public UserStatus Status { get; set; } = UserStatus.Desconectado; // Valor predeterminado
+    //public <List<User>> Friends {get; set;}
 }

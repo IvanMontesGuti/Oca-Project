@@ -7,6 +7,8 @@ namespace BackendOcago.Controllers
     [ApiController]
     public class WebSocketsController : ControllerBase
     {
+
+
     }
     /*
     LEER MENSAJE DE TEXTO
