@@ -56,6 +56,14 @@ public class UserService
     public async Task<UserDto> InsertByMailAsync(RegisterRequest userRequest)
     {
         
+        if (await GetByMailAsync(userRequest.Mail) != null)
+        {
+            throw new Exception("El correo ya está en uso");
+        }
+        else if(await GetByNickNameAsync(userRequest.Nickname) != null)
+        {
+            throw new Exception("El nickname ya está en uso");
+        }
 
         User newUser = new User
         {
