@@ -52,31 +52,40 @@ public class UserService
 
         return user;
     }
-    
+
     public async Task<UserDto> InsertByMailAsync(RegisterRequest userRequest)
     {
-        
-        if (await GetByMailAsync(userRequest.Mail) != null)
+        // Normalizamos el nickname y el correo para compararlos de manera insensible a mayúsculas/minúsculas.
+        string normalizedMail = userRequest.Mail.Trim().ToLower();
+        string normalizedNickname = userRequest.Nickname.Trim().ToLower();
+
+        // Comprobamos si el correo ya está en uso.
+        if (await _unitOfWork.UserRepository.GetByMailAsync(normalizedMail) != null)
         {
             throw new Exception("El correo ya está en uso");
         }
-        else if(await GetByNickNameAsync(userRequest.Nickname) != null)
+
+        // Comprobamos si el nickname ya está en uso.
+        if ((await _unitOfWork.UserRepository.GetAllAsync())
+            .Any(u => u.Nickname.Trim().ToLower() == normalizedNickname))
         {
             throw new Exception("El nickname ya está en uso");
         }
 
+        // Creación del nuevo usuario.
         User newUser = new User
         {
-            Mail = userRequest.Mail,
+            Mail = normalizedMail,
             Password = AuthService.HashPassword(userRequest.Password),
-            Nickname = userRequest.Nickname,
+            Nickname = userRequest.Nickname, // Almacenamos el nickname tal como lo ingresó el usuario.
             Role = null,
             AvatarUrl = userRequest.AvatarUrl
         };
 
         return _mapper.ToDto(await InsertAsync(newUser));
     }
-    
+
+
 
 
     /* ----- UPDATE ----- */
@@ -126,7 +135,7 @@ public class UserService
     public Task<bool> IsLoginCorrect(string mail, string password)
     {
         string hashedPassword = AuthService.HashPassword(password);
-        return _unitOfWork.UserRepository.IsLoginCorrect(mail.ToLowerInvariant(), hashedPassword);
+        return _unitOfWork.UserRepository.IsLoginCorrect(mail.Normalize(), hashedPassword);
     }
 
     public Task<User> GetByMailAsync(string mail)
