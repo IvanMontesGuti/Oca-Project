@@ -1,5 +1,6 @@
 ﻿using BackendOcago.Models.Database.Enum;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BackendOcago.Models.Database.Entities;
 
@@ -15,7 +16,11 @@ public class User
     public string AvatarUrl { get; set; }
     public UserStatus Status { get; set; } = UserStatus.Desconectado;
 
-    public List<Friendship> SentFriendships { get; set; } = new List<Friendship>();
-    public List<Friendship> ReceivedFriendships { get; set; } = new List<Friendship>();
-    
+    // Relaciones
+    [InverseProperty("Sender")]
+    public List<Friendship> SentFriendships { get; set; } = new List<Friendship>();  // Relaciones enviadas
+
+    [InverseProperty("Receiver")]
+    public List<Friendship> ReceivedFriendships { get; set; } = new List<Friendship>();  // Relaciones recibidas
+
 }

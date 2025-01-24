@@ -1,4 +1,5 @@
 ﻿using BackendOcago.Models.Database.Entities;
+using BackendOcago.Models.Database.Enum;
 using BackendOcago.Services;
 using System.Net;
 using System.Text.Json;
@@ -58,12 +59,23 @@ public class Seeder
                 SentFriendships = new List<Friendship>()      
             }
         };
-
-
         //Users
-
         await _dbContext.Users.AddRangeAsync(users);
         await _dbContext.SaveChangesAsync();
+
+        Friendship friendship = new Friendship
+        {
+            SenderId = users[1].Id, 
+            ReceiverId = users[2].Id, 
+            SentAt = DateTime.UtcNow,
+            Status = FriendshipInvitationStatus.Pendiente
+        };
+        //Amistades
+        await _dbContext.Friendships.AddAsync(friendship);
+        await _dbContext.SaveChangesAsync();
+
+
+
 
     }
 }

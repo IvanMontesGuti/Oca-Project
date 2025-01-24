@@ -9,13 +9,14 @@ namespace BackendOcago.Models.Database.Entities
 
         [ForeignKey("Sender")]
         public long SenderId { get; set; }
-        public User Sender { get; set; }
+        public User Sender { get; set; }  // Amistades enviadas
 
         [ForeignKey("Receiver")]
         public long ReceiverId { get; set; }
-        public User Receiver { get; set; }
+        public User Receiver { get; set; }  // Amistades recibidas
 
         public DateTime SentAt { get; set; }
         public FriendshipInvitationStatus Status { get; set; } = FriendshipInvitationStatus.Pendiente;
     }
+
 }

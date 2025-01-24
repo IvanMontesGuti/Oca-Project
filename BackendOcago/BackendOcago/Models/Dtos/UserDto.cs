@@ -1,4 +1,7 @@
-﻿namespace BackendOcago.Models.Dtos;
+﻿using BackendOcago.Models.Database.Entities;
+using BackendOcago.Models.Database.Enum;
+
+namespace BackendOcago.Models.Dtos;
 
 public class UserDto
 {
@@ -8,4 +11,10 @@ public class UserDto
     public string Password { get; set; }
     public required string Role { get; set; }
     public string AvatarUrl { get; set; }
+    public UserStatus Status { get; set; } = UserStatus.Desconectado;
+
+    public List<Friendship> SentFriendships { get; set; } = new List<Friendship>();  // Relaciones enviadas
+    public List<Friendship> ReceivedFriendships { get; set; } = new List<Friendship>();  // Relaciones recibidas
+
+
 }

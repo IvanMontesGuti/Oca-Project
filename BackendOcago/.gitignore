@@ -1,5 +1,26 @@
+# Ignorar configuraciones de entornos locales
 .vscode/
 .vs/
+
+# Ignorar carpetas de compilación
 BackendOcago/bin/
 BackendOcago/obj/
+
+# Ignorar configuraciones de usuario específicas
 *.user
+
+# Ignorar archivos de configuración temporal de Visual Studio
+*.suo
+*.cache
+*.log
+
+# Ignorar paquetes de NuGet
+packages/
+
+# Ignorar carpetas generadas por herramientas
+*.DS_Store
+Thumbs.db
+
+# Ignorar otros archivos innecesarios
+*.bak
+*.tmp
