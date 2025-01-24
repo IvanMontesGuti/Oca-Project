@@ -3,7 +3,7 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
 
-namespace Examples.WebApi.WebSocketAdvanced;
+namespace BackendOcago.WebSocketAdvanced;
 
 public class WebSocketHandler : IDisposable
 {

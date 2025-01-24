@@ -2,7 +2,7 @@
 using BackendOcago.Models.Database.Enum;
 using System.Net.WebSockets;
 
-namespace Examples.WebApi.WebSocketAdvanced;
+namespace BackendOcago.WebSocketAdvanced;
 
 public class WebSocketNetwork
 {
