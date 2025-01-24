@@ -19,7 +19,7 @@ namespace BackendOcago.Controllers
         public async Task<IActionResult> SendRequest(long senderId, long receiverId)
         {
             var success = await _friendshipService.SendFriendRequestAsync(senderId, receiverId);
-            if (!success) return BadRequest("Solicitud ya existente o amistad ya aceptada.");
+            //if (!success) return BadRequest("Solicitud ya existente o amistad ya aceptada.");
             return Ok("Solicitud enviada con éxito.");
         }
 

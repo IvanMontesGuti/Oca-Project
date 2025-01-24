@@ -29,12 +29,12 @@ export function Header() {
           >
             Preguntas frecuentes
           </Link>
-          <Link
+          {/* <Link
             href="/menu"
             className="text-white hover:text-gray-200 transition-colors font-montserrat"
           >
             menú
-          </Link>
+          </Link> */}
           <Link
             href="/login"
             className="text-white hover:text-gray-200 transition-colors font-montserrat"
