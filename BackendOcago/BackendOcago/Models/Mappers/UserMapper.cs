@@ -20,8 +20,10 @@ public class UserMapper
             Mail = user.Mail,
             Nickname = user.Nickname,
             Role = user.Role,
-            AvatarUrl = user.AvatarUrl
-            
+            AvatarUrl = user.AvatarUrl,
+            Status = user.Status,
+            SentFriendships = user.SentFriendships,
+            ReceivedFriendships = user.ReceivedFriendships,
         };
     }
 
@@ -40,7 +42,10 @@ public class UserMapper
             Mail = user.Mail,
             Nickname = user.Nickname,
             Role = user.Role,
-            AvatarUrl = user.AvatarUrl
+            AvatarUrl = user.AvatarUrl,
+            Status = user.Status,
+            SentFriendships = user.SentFriendships,
+            ReceivedFriendships = user.ReceivedFriendships,
         };
     }
 

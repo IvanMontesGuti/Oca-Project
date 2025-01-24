@@ -34,9 +34,8 @@ public class AuthService
         }
         else
         {
-            user = await _unitOfWork.UserRepository.GetByMailAsync(model.Mail);
+            user =  await _unitOfWork.UserRepository.GetByMailAsync(model.Mail);
         }
-        
 
         SecurityTokenDescriptor tokenDescriptor = new SecurityTokenDescriptor
         {

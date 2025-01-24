@@ -2,6 +2,7 @@ import React, { } from 'react';
 import Image from 'next/image'
 import { ArrowRight } from 'lucide-react'
 
+
 export function InfoPage() {
    
   return (
@@ -18,24 +19,24 @@ export function InfoPage() {
           <p className="text-white text-xl font-montserrat">
             El juego clásico de la oca, con amigos.
           </p>
-          
+         
           <button className="bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-lg flex items-center gap-2 hover:bg-white/30 transition-colors font-montserrat">
             Empezar a jugar
             <ArrowRight className="h-5 w-5"/>
           </button>
         </div>
-        
+       
         <div className="md:w-1/2 mt-8 md:mt-0 relative">
           <div className="relative w-full aspect-square flex justify-end items-center">
             <div className="marquee relative w-[80%] h-[80%]">
               <Image
-                
+               
                 src="/images/tablero.svg"
                 alt="Game Board"
                 layout="fill"
                 objectFit="contain"
                 className="animate-float"
-                
+               
               />
               <div className="absolute -top-12 -right-2 z--20 ">
                 <Image
@@ -49,7 +50,7 @@ export function InfoPage() {
             </div>
           </div>
         </div>
-      
+     
       </main>
       </>
   );

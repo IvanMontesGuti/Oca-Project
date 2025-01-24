@@ -11,6 +11,9 @@ export default function Home() {
       <InfoPage/>
       <Preguntas/>
       </div>
+
+      
+    
   )
 }
 

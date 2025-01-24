@@ -126,15 +126,15 @@ public class UserService
     public Task<bool> IsLoginCorrect(string mail, string password)
     {
         string hashedPassword = AuthService.HashPassword(password);
-        return _unitOfWork.UserRepository.IsLoginCorrect(mail.Normalize(), hashedPassword);
+        return _unitOfWork.UserRepository.IsLoginCorrect(mail.ToLowerInvariant(), hashedPassword);
     }
 
     public Task<User> GetByMailAsync(string mail)
     {
         return _unitOfWork.UserRepository.GetByMailAsync(mail);
     }
-    public Task<User> GetByNickNameAsync(string nickname)
+    public Task<User> GetByNickNameAsync(string mail)
     {
-        return _unitOfWork.UserRepository.GetByNicknameAsync(nickname);
+        return _unitOfWork.UserRepository.GetByNicknameAsync(mail);
     }
 }

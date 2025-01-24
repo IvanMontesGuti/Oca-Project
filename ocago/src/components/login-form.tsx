@@ -14,6 +14,8 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+
+  
   const [emailOrNickname, setEmailOrNickname] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
@@ -30,7 +32,7 @@ export function LoginForm({
     try {
       await login(emailOrNickname, password, rememberMe);
       //onClose();
-      router.push("/menu");
+      router.push("/dashboard");
     } catch (error) {
       console.error("Error:", error);
       setError("Error al iniciar sesión. Por favor, verifica tus credenciales.");

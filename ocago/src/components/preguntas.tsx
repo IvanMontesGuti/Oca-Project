@@ -6,11 +6,12 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion"
 
+
 export function Preguntas() {
   return (
     <>
     <div className="mt-auto m-right-8 mb-8 md:-right-16 w-full md:w-1/2 mx-auto text-white hover:text-gray-200 transition-colors font-montserrat">
-        <h1 className='text-3xl	font-size: 1.875rem'>Preguntas Frecuentes</h1>
+        <h1 className='text-3xl font-size: 1.875rem'>Preguntas Frecuentes</h1>
         <Accordion type="single" collapsible>
           <AccordionItem value="item-1">
             <AccordionTrigger id="faq">¿Como se juega?</AccordionTrigger>
