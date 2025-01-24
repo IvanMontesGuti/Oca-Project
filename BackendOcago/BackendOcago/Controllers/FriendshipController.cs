@@ -37,6 +37,13 @@ namespace BackendOcago.Controllers
             if (!success) return BadRequest("Solicitud no encontrada o ya gestionada.");
             return Ok("Solicitud aceptada.");
         }
-    }
 
+        // Endpoint para obtener todas las solicitudes de amistad
+        [HttpGet("all/{userId}")]
+        public async Task<IActionResult> GetAllRequests(long userId)
+        {
+            var requests = await _friendshipService.GetAllFriendshipRequestsAsync(userId);
+            return Ok(requests);
+        }
+    }
 }

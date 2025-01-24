@@ -21,19 +21,22 @@ public class FriendshipService
 
     public async Task<bool> SendFriendRequestAsync(long senderId, long receiverId)
     {
-        // Verificar si ya existe una solicitud o son amigos
+        Console.WriteLine($"Intentando crear una amistad entre {senderId} y {receiverId}.");
+
+        if (_unitOfWork.FriendshipRepository == null)
+        {
+            Console.WriteLine("Error: FriendshipRepository es null.");
+            return false;
+        }
+
         var existingFriendship = await _unitOfWork.FriendshipRepository.GetFriendshipAsync(senderId, receiverId);
 
         if (existingFriendship != null)
         {
-            if (existingFriendship.Status == FriendshipInvitationStatus.Pendiente)
-                return false; // Ya hay una solicitud pendiente
-
-            if (existingFriendship.Status == FriendshipInvitationStatus.Aceptada)
-                return false; // Ya son amigos
+            Console.WriteLine("Ya existe una solicitud o amistad.");
+            return false;
         }
 
-        // Crear una nueva solicitud de amistad
         var newFriendship = new Friendship
         {
             SenderId = senderId,
@@ -43,8 +46,12 @@ public class FriendshipService
         };
 
         await _unitOfWork.FriendshipRepository.InsertAsync(newFriendship);
-        return await _unitOfWork.SaveAsync();
+        var saved = await _unitOfWork.SaveAsync();
+        Console.WriteLine(saved ? "Amistad creada con éxito." : "Error al guardar la amistad.");
+        return saved;
     }
+
+
 
     /* ----- GET ----- */
 
@@ -66,6 +73,16 @@ public class FriendshipService
     //    var friends = friendships.Select(f => f.SenderId == userId ? f.Receiver : f.Sender);
     //    return friends.Select(friend => _mapper.ToDto(friend)).ToList();
     //}
+    public async Task<IEnumerable<FriendshipDto>> GetAllFriendshipRequestsAsync(long userId)
+    {
+        var sentRequests = await GetSentRequestsAsync(userId); // Obtener solicitudes enviadas
+        var receivedRequests = await GetReceivedRequestsAsync(userId); // Obtener solicitudes recibidas
+
+        // Combinar ambas listas
+        var allRequests = sentRequests.Concat(receivedRequests);
+
+        return allRequests;
+    }
 
     /* ----- UPDATE ----- */
 

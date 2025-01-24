@@ -13,10 +13,12 @@ public class UnitOfWork
     
 
 
-    public UnitOfWork(DataContext dataContext, ImageRepository imageRepository)
+    public UnitOfWork(DataContext dataContext, ImageRepository imageRepository, FriendshipRepository friendshipRepository)
     {
         _dataContext = dataContext;
         ImageRepository = imageRepository;
+        FriendshipRepository = friendshipRepository;
+
     }
 
     public async Task<bool> SaveAsync()
