@@ -9,14 +9,14 @@ interface DecodedToken {
     email: string;
     role: string;
     unique_name: string;
-    family_name?: string; // URL del avatar
+    family_name?: string; 
     nbf: number;
     exp: number;
     iat: number;
 }
 
 export default function Dashboard() {
-    const { logout } = useAuth(); // Obtenemos la función de logout del contexto
+    const { logout } = useAuth(); 
     const [userInfo, setUserInfo] = useState<DecodedToken | null>(null);
     const router = useRouter()
     

@@ -14,7 +14,7 @@ interface DecodedToken {
     email: string;
     role: string;
     unique_name: string;
-    family_name?: string; // URL del avatar
+    family_name?: string; 
     nbf: number;
     exp: number;
     iat: number;
@@ -106,7 +106,7 @@ export default function OcaGame() {
         
       
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Game Board - Left Side */}
+          
           <div className="lg:w-1/2">
             <div className="relative w-full">
               <Image
@@ -120,9 +120,9 @@ export default function OcaGame() {
             </div>
           </div>
 
-          {/* Content - Center */}
+          
           <div className="lg:w-1/3 flex flex-col justify-center gap-8">
-            {/* Logo and Title */}
+           
             <div className="flex flex-col items-center lg:items-start gap-4">
               <div className="w-24 h-24 items-center">
                 <Image
@@ -151,7 +151,7 @@ export default function OcaGame() {
               </div>
             </div>
 
-            {/* Action Buttons */}
+           
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
             
               <Button size="lg" className="bg-[#E633FF] hover:bg-[#D020E9] text-white px-8">
@@ -176,7 +176,7 @@ export default function OcaGame() {
             </div>
           </div>
 
-          {/* Friends Sidebar - Right */}
+          
           <div className="hidden lg:block lg:w-1/6">
             <div className="bg-[#231356] rounded-lg p-4">
               <div className="flex justify-between items-center mb-4">

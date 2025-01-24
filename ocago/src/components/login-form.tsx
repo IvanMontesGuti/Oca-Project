@@ -20,7 +20,7 @@ export function LoginForm({
   const [error, setError] = useState<string | null>(null);
   const { login } = useAuth();
   const router = useRouter();
-  // console.log(LOGIN_URL); // Verifica que la URL sea correcta.
+  
 
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -88,7 +88,7 @@ export function LoginForm({
               </Button>
               <div className="text-center text-sm">
                 ¿No tienes cuenta?{" "}
-                <a href="/register" className="underline underline-offset-4" /*onClick={onClose}*/>
+                <a href="/register" className="underline underline-offset-4" >
                   Regístrate
                 </a>
               </div>
