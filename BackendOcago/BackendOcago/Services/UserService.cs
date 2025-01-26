@@ -2,6 +2,7 @@
 using BackendOcago.Models.Database;
 using BackendOcago.Models.Dtos;
 using BackendOcago.Models.Mappers;
+using BackendOcago.Models.Database.Enum;
 namespace BackendOcago.Services;
 
 public class UserService
@@ -35,6 +36,8 @@ public class UserService
         User user = await _unitOfWork.UserRepository.GetUserDataByIdAsync(id);
         return _mapper.ToDto(user);
     }
+
+
 
     public async Task<IEnumerable<UserDto>> GetAllAsync()
     {
@@ -119,6 +122,18 @@ public class UserService
     }
     */
 
+    public async Task<UserDto> UpdateStatus(UserStatus Status, long userId)
+    {
+        User userEntity = await _unitOfWork.UserRepository.GetByIdAsync(userId) ?? throw new Exception("El usuario no existe");
+        userEntity.Status = Status;
+
+        _unitOfWork.UserRepository.Update(userEntity);
+
+        await _unitOfWork.UserRepository.SaveAsync();
+
+        return _mapper.ToDto(userEntity);
+    }
+
     /* ----- DELETE ----- */
 
     public async Task<bool> DeleteAsyncUserById(long id)
@@ -145,5 +160,10 @@ public class UserService
     public Task<User> GetByNickNameAsync(string mail)
     {
         return _unitOfWork.UserRepository.GetByNicknameAsync(mail);
+    }
+
+    internal async Task<int> UpdateStatus(UserStatus userStatusRequest)
+    {
+        throw new NotImplementedException();
     }
 }
