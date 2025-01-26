@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
 
 interface Ficha {
   casillaX: number
@@ -10,26 +9,14 @@ interface Ficha {
 }
 
 interface TableroProps {
-  onMove: (x: number, y: number) => void
+  fichas: Ficha[]
 }
 
-const Tablero: React.FC<TableroProps> = ({ onMove }) => {
+const Tablero: React.FC<TableroProps> = ({ fichas }) => {
   const numCasillasAncho = 12
   const numCasillasAlto = 8
   const anchoCasilla = 96
   const altoCasilla = 108
-
-  const [fichas, setFichas] = useState<Ficha[]>([
-    { casillaX: 4, casillaY: 5, color: "red" },
-    { casillaX: 3, casillaY: 7, color: "blue" },
-  ])
-
-  const moverFicha = (casillaX: number, casillaY: number, color: string) => {
-    setFichas((prevFichas) => {
-      return prevFichas.map((ficha) => (ficha.color === color ? { ...ficha, casillaX, casillaY } : ficha))
-    })
-    onMove(casillaX, casillaY)
-  }
 
   return (
     <svg
@@ -57,7 +44,6 @@ const Tablero: React.FC<TableroProps> = ({ onMove }) => {
             fill="transparent"
             stroke="gray"
             strokeWidth="1"
-            onClick={() => moverFicha(columna, fila, "red")}
             className="cursor-pointer hover:fill-gray-200 hover:fill-opacity-30 transition-colors duration-200"
           />
         )),
@@ -74,10 +60,6 @@ const Tablero: React.FC<TableroProps> = ({ onMove }) => {
             cy={y}
             r={20}
             fill={ficha.color}
-            onClick={(e) => {
-              e.stopPropagation()
-              moverFicha(ficha.casillaX, ficha.casillaY, ficha.color)
-            }}
             className="cursor-pointer hover:stroke-white hover:stroke-2 transition-all duration-200"
           />
         )
