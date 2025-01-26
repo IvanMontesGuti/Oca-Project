@@ -3,6 +3,7 @@ using BackendOcago.Models.Database;
 using BackendOcago.Models.Dtos;
 using BackendOcago.Models.Mappers;
 using BackendOcago.Models.Database.Enum;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace BackendOcago.Services;
 
@@ -21,22 +22,25 @@ public class FriendshipService
 
     public async Task<bool> SendFriendRequestAsync(long senderId, long receiverId)
     {
-        Console.WriteLine($"Intentando crear una amistad entre {senderId} y {receiverId}.");
 
-        if (_unitOfWork.FriendshipRepository == null)
+        try
         {
-            Console.WriteLine("Error: FriendshipRepository es null.");
-            return false;
+            var existingFriendship = await _unitOfWork.FriendshipRepository.GetFriendshipAsync(senderId, receiverId);
+
+            if (existingFriendship != null)
+            {
+                Console.WriteLine("Ya existe una solicitud o amistad.");
+                return false;
+            }
+            else
+            {
+
+            }
         }
-
-        var existingFriendship = await _unitOfWork.FriendshipRepository.GetFriendshipAsync(senderId, receiverId);
-
-        if (existingFriendship != null)
+        catch
         {
-            Console.WriteLine("Ya existe una solicitud o amistad.");
-            return false;
+            
         }
-
         var newFriendship = new Friendship
         {
             SenderId = senderId,
