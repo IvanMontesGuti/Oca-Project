@@ -35,8 +35,10 @@ namespace BackendOcago.Models.Database.Repositories
             return await _dbContext.Friendships
                 .Where(f => f.ReceiverId == userId && f.Status == FriendshipInvitationStatus.Pendiente)
                 .Include(f => f.Sender)
+                .Where(f => f.Sender != null) 
                 .ToListAsync();
         }
+
 
         public async Task<IEnumerable<Friendship>> GetAcceptedFriendshipsAsync(long userId)
         {

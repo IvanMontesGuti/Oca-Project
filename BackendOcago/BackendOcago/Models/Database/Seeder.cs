@@ -63,16 +63,16 @@ public class Seeder
         await _dbContext.Users.AddRangeAsync(users);
         await _dbContext.SaveChangesAsync();
 
-        Friendship friendship = new Friendship
-        {
-            SenderId = users[1].Id, 
-            ReceiverId = users[2].Id, 
-            SentAt = DateTime.UtcNow,
-            Status = FriendshipInvitationStatus.Pendiente
-        };
-        //Amistades
-        await _dbContext.Friendships.AddAsync(friendship);
-        await _dbContext.SaveChangesAsync();
+        //Friendship friendship = new Friendship
+        //{
+        //    SenderId = users[1].Id, 
+        //    ReceiverId = users[2].Id, 
+        //    SentAt = DateTime.UtcNow,
+        //    Status = FriendshipInvitationStatus.Pendiente
+        //};
+        ////Amistades
+        //await _dbContext.Friendships.AddAsync(friendship);
+        //await _dbContext.SaveChangesAsync();
 
 
 

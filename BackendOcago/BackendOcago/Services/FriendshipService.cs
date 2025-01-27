@@ -22,31 +22,21 @@ public class FriendshipService
 
     public async Task<bool> SendFriendRequestAsync(long senderId, long receiverId)
     {
+       var existingFriendship = await _unitOfWork.FriendshipRepository.GetFriendshipAsync(senderId, receiverId);
 
-        try
-        {
-            var existingFriendship = await _unitOfWork.FriendshipRepository.GetFriendshipAsync(senderId, receiverId);
-
-            if (existingFriendship != null)
-            {
+       if (existingFriendship != null)
+       {
                 Console.WriteLine("Ya existe una solicitud o amistad.");
                 return false;
-            }
-            else
-            {
+       }
 
-            }
-        }
-        catch
-        {
-            
-        }
         var newFriendship = new Friendship
         {
             SenderId = senderId,
             ReceiverId = receiverId,
             SentAt = DateTime.UtcNow,
             Status = FriendshipInvitationStatus.Pendiente
+       
         };
 
         await _unitOfWork.FriendshipRepository.InsertAsync(newFriendship);
