@@ -1,7 +1,7 @@
 ﻿using System.Net.WebSockets;
 using System.Text;
 
-namespace Examples.WebApi.Services;
+namespace BackendOcago.Services;
 
 public class WebSocketService
 {

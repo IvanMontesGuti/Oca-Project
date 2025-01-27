@@ -12,6 +12,7 @@ public class UserDto
     public required string Role { get; set; }
     public string AvatarUrl { get; set; }
     public UserStatus Status { get; set; } = UserStatus.Desconectado;
+    public List<User> Friends { get; set; } = new List<User>();
 
     public List<Friendship> SentFriendships { get; set; } = new List<Friendship>();  // Relaciones enviadas
     public List<Friendship> ReceivedFriendships { get; set; } = new List<Friendship>();  // Relaciones recibidas

@@ -1,9 +1,9 @@
 ﻿using System.Net.WebSockets;
+using BackendOcago.Services;
 using BackendOcago.WebSocketAdvanced;
-using Examples.WebApi.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace Examples.WebApi.Controllers;
+namespace BackendOcago.Controllers;
 
 [Route("socket")]
 [ApiController]
