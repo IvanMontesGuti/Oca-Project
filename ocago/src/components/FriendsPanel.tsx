@@ -4,7 +4,8 @@ import { useState, useEffect } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { PlusCircleIcon, UserPlusIcon } from "lucide-react"
-import { FRIENDSHIP_GET_ALL_URL } from "@/lib/endpoints/config";
+//import { FRIENDSHIP_GET_ALL_URL } from "@/lib/endpoints/config";
+
 
 interface Friend {
   id: string
@@ -29,7 +30,7 @@ export default function FriendsPanel() {
     fetchFriends()
     fetchFriendRequests()
   }, [])
-/*
+
   useEffect(() => {
     const filtered = friends.filter((friend) => friend.name.toLowerCase().includes(searchQuery.toLowerCase()))
     setFilteredFriends(filtered)
@@ -37,7 +38,6 @@ export default function FriendsPanel() {
 
   const fetchFriends = async () => {
     try {
-      // Replace with your actual API endpoint
       const response = await fetch(FRIENDSHIP_GET_ALL_URL)
       const data = await response.json()
       setFriends(data)
