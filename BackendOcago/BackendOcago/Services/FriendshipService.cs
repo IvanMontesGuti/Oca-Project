@@ -48,6 +48,11 @@ public class FriendshipService
 
 
     /* ----- GET ----- */
+    public async Task<IEnumerable<Friendship>> GetAllRequestsAsync()
+    {
+        var sentRequests = await _unitOfWork.FriendshipRepository.GetAllRequestsAsync();
+        return sentRequests;
+    }
 
     public async Task<IEnumerable<FriendshipDto>> GetSentRequestsAsync(long userId)
     {
@@ -55,19 +60,23 @@ public class FriendshipService
         return _mapper.ToDto(sentRequests);
     }
 
-    public async Task<IEnumerable<FriendshipDto>> GetReceivedRequestsAsync(long userId)
+    public async Task<IEnumerable<Friendship>> GetReceivedRequestsAsync(long userId)
     {
         var receivedRequests = await _unitOfWork.FriendshipRepository.GetReceivedRequestsAsync(userId);
-        return _mapper.ToDto(receivedRequests);
+        
+        return receivedRequests.ToList();
     }
 
-    public async Task<IEnumerable<FriendshipDto>> GetAllFriendshipRequestsAsync(long userId)
+    //public async Task<IEnumerable<UserDto>> GetFriendsAsync(long userId)
+    //{
+    //    var friendships = await _unitOfWork.FriendshipRepository.GetAcceptedFriendshipsAsync(userId);
+    //    var friends = friendships.Select(f => f.SenderId == userId ? f.Receiver : f.Sender);
+    //    return friends.Select(friend => _mapper.ToDto(friend)).ToList();
+    //}
+    public async Task<IEnumerable<Friendship>> GetAllFriendshipRequestsAsync()
     {
-        var sentRequests = await GetSentRequestsAsync(userId);
-        var receivedRequests = await GetReceivedRequestsAsync(userId); 
-
-        // Combinar ambas listas
-        var allRequests = sentRequests.Concat(receivedRequests);
+        var allRequests = await GetAllRequestsAsync();
+        
 
         return allRequests;
     }

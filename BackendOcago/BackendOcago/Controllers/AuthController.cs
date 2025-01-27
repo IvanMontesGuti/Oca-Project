@@ -59,6 +59,7 @@ public class AuthController : ControllerBase
             string stringToken = await _authService.Register(userRequest);
 
             return Ok(new LoginResult { AccessToken = stringToken });
+            
         }
         catch (Exception ex)
         {
