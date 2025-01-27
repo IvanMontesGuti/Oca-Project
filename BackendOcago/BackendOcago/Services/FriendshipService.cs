@@ -60,11 +60,11 @@ public class FriendshipService
         return _mapper.ToDto(sentRequests);
     }
 
-    public async Task<IEnumerable<FriendshipDto>> GetReceivedRequestsAsync(long userId)
+    public async Task<IEnumerable<Friendship>> GetReceivedRequestsAsync(long userId)
     {
         var receivedRequests = await _unitOfWork.FriendshipRepository.GetReceivedRequestsAsync(userId);
-        var requests = _mapper.ToDto(receivedRequests);
-        return requests.ToList();
+        
+        return receivedRequests.ToList();
     }
 
     //public async Task<IEnumerable<UserDto>> GetFriendsAsync(long userId)
