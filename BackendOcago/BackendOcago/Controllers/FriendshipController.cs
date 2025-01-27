@@ -30,9 +30,15 @@ namespace BackendOcago.Controllers
             if (userId <= 0) return BadRequest("El ID del usuario debe ser válido.");
 
             var requests = await _friendshipService.GetReceivedRequestsAsync(userId);
-            if (requests == null) return NotFound("No se encontraron solicitudes de amistad recibidas.");
-
-            return Ok(requests);
+            if (requests == null)
+            {
+                return NotFound("No se encontraron solicitudes de amistad recibidas.");
+            }
+            else
+            {
+                return Ok(requests.ToList());
+            }
+            
         }
 
 
@@ -47,10 +53,10 @@ namespace BackendOcago.Controllers
 
 
         // Endpoint para obtener todas las solicitudes de amistad
-        [HttpGet("all/{userId}")]
-        public async Task<IActionResult> GetAllRequests(long userId)
+        [HttpGet("all/")]
+        public async Task<IActionResult> GetAllRequests()
         {
-            var requests = await _friendshipService.GetAllFriendshipRequestsAsync(userId);
+            var requests = await _friendshipService.GetAllFriendshipRequestsAsync();
             if (requests == null || !requests.Any())
                 return NotFound("No se encontraron solicitudes de amistad.");
 
