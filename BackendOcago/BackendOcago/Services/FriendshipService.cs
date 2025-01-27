@@ -90,9 +90,24 @@ public class FriendshipService
         if (friendship == null || friendship.ReceiverId != userId || friendship.Status != FriendshipInvitationStatus.Pendiente)
             return false;
 
+        // Actualiza el estado a aceptado
         friendship.Status = FriendshipInvitationStatus.Aceptada;
 
+        // Obtén los usuarios y añádelos como amigos mutuamente
+        var sender = await _unitOfWork.UserRepository.GetByIdAsync(friendship.SenderId);
+        var receiver = await _unitOfWork.UserRepository.GetByIdAsync(friendship.ReceiverId);
+
+        if (sender == null || receiver == null)
+            return false;
+
+        sender.Friends.Add(receiver);
+        receiver.Friends.Add(sender);
+
+        // Guarda los cambios
         _unitOfWork.FriendshipRepository.Update(friendship);
+        _unitOfWork.UserRepository.Update(sender);
+        _unitOfWork.UserRepository.Update(receiver);
+
         return await _unitOfWork.SaveAsync();
     }
 
@@ -103,9 +118,13 @@ public class FriendshipService
         if (friendship == null || friendship.ReceiverId != userId || friendship.Status != FriendshipInvitationStatus.Pendiente)
             return false;
 
-        _unitOfWork.FriendshipRepository.Delete(friendship);
+        // Cambia el estado a Rechazada
+        friendship.Status = FriendshipInvitationStatus.Rechazada;
+
+        _unitOfWork.FriendshipRepository.Update(friendship);
         return await _unitOfWork.SaveAsync();
     }
+
 
     /* ----- DELETE ----- */
 
