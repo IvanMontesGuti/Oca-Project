@@ -61,16 +61,10 @@ public class FriendshipService
         return _mapper.ToDto(receivedRequests);
     }
 
-    //public async Task<IEnumerable<UserDto>> GetFriendsAsync(long userId)
-    //{
-    //    var friendships = await _unitOfWork.FriendshipRepository.GetAcceptedFriendshipsAsync(userId);
-    //    var friends = friendships.Select(f => f.SenderId == userId ? f.Receiver : f.Sender);
-    //    return friends.Select(friend => _mapper.ToDto(friend)).ToList();
-    //}
     public async Task<IEnumerable<FriendshipDto>> GetAllFriendshipRequestsAsync(long userId)
     {
-        var sentRequests = await GetSentRequestsAsync(userId); // Obtener solicitudes enviadas
-        var receivedRequests = await GetReceivedRequestsAsync(userId); // Obtener solicitudes recibidas
+        var sentRequests = await GetSentRequestsAsync(userId);
+        var receivedRequests = await GetReceivedRequestsAsync(userId); 
 
         // Combinar ambas listas
         var allRequests = sentRequests.Concat(receivedRequests);
