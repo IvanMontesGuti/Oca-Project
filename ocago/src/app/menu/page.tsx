@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button"
 
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import FriendsPanel from "@/components/FriendsPanel";
 interface DecodedToken {
     email: string;
     role: string;
@@ -153,46 +154,25 @@ export default function OcaGame() {
 
            
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Button size="lg" className="bg-[#E633FF] hover:bg-[#D020E9] text-white px-8">
-                Play Online
-              </Button>
-              <Button size="lg" className="bg-[#33FFE6] hover:bg-[#20E9D0] text-black px-8">
-                Play Bot
-              </Button>
+            <Link
+              href="/gamePrueba"
+              className="bg-[#E633FF] hover:bg-[#D020E9] text-white px-8 rounded-lg font-fredoka"
+            >
+              Play Online
+            </Link>
+            <Link
+              href="/gamePrueba"
+              className="bg-[#33FFE6] hover:bg-[#20E9D0] text-black px-8 rounded-lg font-fredoka"
+              
+            >
+              Play Bot
+            </Link>
+              
             </div>
           </div>
 
+          <FriendsPanel />
           
-          <div className="hidden lg:block lg:w-1/6">
-            <div className="bg-[#231356] rounded-lg p-4">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="font-semibold">Friends</h2>
-                <button className="text-sm text-gray-400 hover:text-white">view all</button>
-              </div>
-              <div className="text-sm text-gray-400 mb-4">Buscar por nickname...</div>
-              
-                <div className="space-y-4">
-                  {["JoseA3928b4", "RamonGamer", "IvanMontes8", "smurf_pedro"].map((name) => (
-                    <div key={name} className="flex items-center justify-between group">
-                      <div className="flex items-center gap-3">
-                        <Avatar>
-                          <AvatarImage src="/placeholder.svg" />
-                          <AvatarFallback>{name.slice(0, 2).toUpperCase()}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="font-medium leading-none">{name}</div>
-                          <div className="text-sm text-gray-400">Connected</div>
-                        </div>
-                      </div>
-                      <button className="opacity-0 group-hover:opacity-100 transition-opacity">
-                        <PlusCircleIcon className="h-5 w-5 text-gray-400 hover:text-white" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -200,24 +180,4 @@ export default function OcaGame() {
   )
 }
 
-function PlusCircleIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="12" cy="12" r="10" />
-      <path d="M8 12h8" />
-      <path d="M12 8v8" />
-    </svg>
-  )
-}
 
