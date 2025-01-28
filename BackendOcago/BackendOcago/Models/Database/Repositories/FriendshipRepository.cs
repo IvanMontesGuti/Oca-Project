@@ -53,5 +53,6 @@ namespace BackendOcago.Models.Database.Repositories
             return await _dbContext.Friendships
                 .ToListAsync();
         }
+
     }
 }

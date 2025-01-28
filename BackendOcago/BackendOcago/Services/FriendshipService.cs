@@ -70,6 +70,14 @@ public class FriendshipService
     public async Task<IEnumerable<Friendship>> GetAllFriendshipRequestsAsync() =>
         await GetAllRequestsAsync();
 
+    public async Task<IEnumerable<FriendshipDto>> GetAllFriendshipsAsync(long UserId)
+    {
+        var friends = await _unitOfWork.FriendshipRepository.GetAcceptedFriendshipsAsync(UserId);
+        return _mapper.ToDto(friends);
+    }
+
+        
+
     /* ----- UPDATE ----- */
     public async Task<bool> AcceptFriendRequestAsync(long friendshipId, long userId)
     {

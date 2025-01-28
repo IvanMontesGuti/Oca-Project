@@ -85,5 +85,15 @@ namespace BackendOcago.Controllers
 
             return Ok(requests);
         }
+
+        [HttpGet("all/{userId}")]
+        public async Task<IActionResult> GetAllFriends(long userId)
+        {
+            var friends = await _friendshipService.GetAllFriendshipsAsync(userId);
+            if (friends == null || !friends.Any())
+                return NotFound("No se encontraron amistades.");
+
+            return Ok(friends);
+        }
     }
 }

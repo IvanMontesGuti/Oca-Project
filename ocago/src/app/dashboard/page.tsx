@@ -53,6 +53,7 @@ export default function Dashboard() {
     }
 
     const { email, role, unique_name, family_name } = userInfo;
+    console.log(userInfo);
 
     const handleLogout = () => {
         logout();

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
-import { FRIENDSHIP_GET_ALL_URL, API_SEARCH_URL } from "@/lib/endpoints/config"
+import { FRIENDSHIP_GET_ALL_URL, API_SEARCH_URL, FRIENDSHIP_GET_BY_ID_URL } from "@/lib/endpoints/config"
 
 interface Friend {
   id: string
@@ -61,34 +61,36 @@ export default function FriendsPanel() {
   const [error, setError] = useState<string | null>(null)
 
   const fetchFriends = useCallback(async (page = 0, search = "") => {
-    const searchQuery = search.trim() === "" ? "all" : search; // Establecer un valor predeterminado si está vacío
-  
-    setIsLoading(true);
-    setError(null);
-    
+    setIsLoading(true)
+    setError(null)
+
     try {
-      const response = await fetch(`${API_SEARCH_URL}?page=${page + 1}&limit=10&search=${searchQuery}`);
-      
-      if (!response.ok) {
-        const errorMessage = await response.text();
-        throw new Error(`Failed to fetch friends: ${errorMessage}`);
+      let url
+      if (search.trim() === "") {
+        url = `${FRIENDSHIP_GET_BY_ID_URL()}?page=${page + 1}&limit=10`
+      } else {
+        url = `${API_SEARCH_URL}?page=${page + 1}&limit=10&search=${search}`
       }
-      
-      const data = await response.json();
-      setFriends(data.users || []);
-      setTotalPages(data.totalPages || 1);
-      
+
+      const response = await fetch(url)
+
+      if (!response.ok) {
+        const errorMessage = await response.text()
+        throw new Error(`Failed to fetch friends: ${errorMessage}`)
+      }
+
+      const data = await response.json()
+      console.log(data)
+      setFriends(data.users || [])
+      setTotalPages(data.totalPages || 1)
     } catch (error) {
-      console.error("Error fetching friends:", error);
-      setError("Failed to load friends. Please try again later.");
-      setFriends([]);
+      console.error("Error fetching friends:", error)
+      setError("Failed to load friends. Please try again later.")
+      setFriends([])
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, []);
-  
-  
-  
+  }, [])
 
   useEffect(() => {
     fetchFriends(currentPage, searchQuery)
@@ -148,3 +150,4 @@ export default function FriendsPanel() {
     </div>
   )
 }
+
