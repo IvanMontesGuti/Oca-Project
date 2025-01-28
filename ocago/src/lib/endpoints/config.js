@@ -9,6 +9,7 @@ export const REGISTER_URL = `${API_AUTH_URL}/Register`;
 /* --- USER CONTROLLER --- */
 const API_USER_URL = `${API_BASE_URL}/api/User`;
 export const GET_USER_BY_ID_URL = (id) => `${API_USER_URL}/${id}`; 
+export const UPDATE_USER_STATE = (num, id) => `${API_USER_URL}/Status?userStatusRequest=${num}&userId=${id}`;
 
 
 /* --- IMAGE CONTROLLER --- */
@@ -32,3 +33,4 @@ export const FRIENDSHIP_GET_BY_ID_URL = (userId) => `${API_FRIENDSHIP_URL}/all/$
 /* --- SEARCH CONTROLLER --- */
 
 export const API_SEARCH_URL = `${API_BASE_URL}/api/Search/users`;
+

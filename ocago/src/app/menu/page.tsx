@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import FriendsPanel from "@/components/FriendsPanel";
 import {WebInfo} from "@/components/WebInfo";
+import { UPDATE_USER_STATE } from "@/lib/endpoints/config";
+import { FETCH_PUT } from "@/lib/endpoints/useFetch";
 interface DecodedToken {
     email: string;
     role: string;
@@ -18,10 +20,21 @@ interface DecodedToken {
     nbf: number;
     exp: number;
     iat: number;
+    id: number;
 }
 export default function OcaGame() {
   
   const [userInfo, setUserInfo] = useState<DecodedToken | null>(null);
+  const url = UPDATE_USER_STATE(1, userInfo?.id);
+
+  FETCH_PUT(url)
+    .then(response => response.json())
+    .then(data => {
+      console.log("Respuesta:", data);
+    })
+    .catch(error => {
+      console.error("Error en la solicitud:", error);
+    });
 
   useEffect(() => {
           if (typeof window !== "undefined") {

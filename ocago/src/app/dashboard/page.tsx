@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
+import { UPDATE_USER_STATE } from "@/lib/endpoints/config";
+import { FETCH_PUT } from "@/lib/endpoints/useFetch";
 
 interface DecodedToken {
     email: string;
@@ -13,12 +15,14 @@ interface DecodedToken {
     nbf: number;
     exp: number;
     iat: number;
+    id: number;
 }
 
 export default function Dashboard() {
     const { logout } = useAuth(); 
     const [userInfo, setUserInfo] = useState<DecodedToken | null>(null);
     const router = useRouter()
+    const url = UPDATE_USER_STATE(0, userInfo?.id);
     
     const handleNavigateHome = () => {
         router.push("/");
@@ -57,6 +61,14 @@ export default function Dashboard() {
 
     const handleLogout = () => {
         logout();
+        FETCH_PUT(url)
+          .then(response => response.json())
+          .then(data => {
+            console.log("Respuesta:", data);
+          })
+          .catch(error => {
+            console.error("Error en la solicitud:", error);
+          });
         handleNavigateHome()
         };
 
