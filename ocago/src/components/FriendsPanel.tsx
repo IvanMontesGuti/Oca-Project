@@ -107,8 +107,10 @@ export default function FriendsPanel() {
       }
 
       const data = await response.json()
+      console.log(data)
       console.log("data 1",data, "senders", data[0])
       setFriends(data || [])
+      console.log(friends)
       setTotalPages(data.totalPages || 1)
     } catch (error) {
       console.error("Error fetching friends:", error)
@@ -180,4 +182,3 @@ export default function FriendsPanel() {
     </div>
   )
 }
-
