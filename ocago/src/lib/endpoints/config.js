@@ -10,7 +10,7 @@ export const REGISTER_URL = `${API_AUTH_URL}/Register`;
 const API_USER_URL = `${API_BASE_URL}/api/User`;
 export const GET_USER_BY_ID_URL = (id) => `${API_USER_URL}/${id}`; 
 export const UPDATE_USER_STATE = (num, id) => `${API_USER_URL}/Status?userStatusRequest=${num}&userId=${id}`;
-
+export const GET_COUNT_STATUS = (num) => `${API_USER_URL}/CountStatus?estado=${num}`;
 
 /* --- IMAGE CONTROLLER --- */
 const API_IMAGE_URL = `${API_BASE_URL}/api/Images`;
