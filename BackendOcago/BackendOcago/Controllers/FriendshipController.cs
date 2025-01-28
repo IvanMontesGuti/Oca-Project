@@ -60,6 +60,19 @@ namespace BackendOcago.Controllers
             return Ok("Solicitud rechazada.");
         }
 
+        [HttpDelete("remove/{userId}/{friendId}")]
+        public async Task<IActionResult> RemoveFriend(long userId, long friendId)
+        {
+            if (userId <= 0 || friendId <= 0)
+                return BadRequest("IDs de usuario y amigo deben ser válidos.");
+
+            var success = await _friendshipService.RemoveFriendAsync(userId, friendId);
+            if (!success)
+                return BadRequest("No se pudo eliminar la amistad. Verifica que la relación de amistad exista.");
+
+            return Ok("Amigo eliminado con éxito.");
+        }
+
 
 
         // Endpoint para obtener todas las solicitudes de amistad

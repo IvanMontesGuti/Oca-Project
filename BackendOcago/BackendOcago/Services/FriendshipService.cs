@@ -128,14 +128,32 @@ public class FriendshipService
 
     /* ----- DELETE ----- */
 
-    public async Task<bool> DeleteFriendshipAsync(long friendshipId, long userId)
+    public async Task<bool> RemoveFriendAsync(long userId, long friendId)
     {
-        var friendship = await _unitOfWork.FriendshipRepository.GetByIdAsync(friendshipId);
+        // Busca la relación de amistad entre ambos usuarios
+        var friendship = await _unitOfWork.FriendshipRepository.GetFriendshipAsync(userId, friendId);
 
-        if (friendship == null || (friendship.SenderId != userId && friendship.ReceiverId != userId))
+        if (friendship == null || friendship.Status != FriendshipInvitationStatus.Aceptada)
             return false;
 
+        // Obtén los usuarios de la amistad
+        var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
+        var friend = await _unitOfWork.UserRepository.GetByIdAsync(friendId);
+
+        if (user == null || friend == null)
+            return false;
+
+        // Elimina la amistad de las listas de ambos usuarios
+        user.Friends.Remove(friend);
+        friend.Friends.Remove(user);
+
+        // Elimina la relación de amistad
         _unitOfWork.FriendshipRepository.Delete(friendship);
+
+        // Guarda los cambios
+        _unitOfWork.UserRepository.Update(user);
+        _unitOfWork.UserRepository.Update(friend);
         return await _unitOfWork.SaveAsync();
     }
+
 }
