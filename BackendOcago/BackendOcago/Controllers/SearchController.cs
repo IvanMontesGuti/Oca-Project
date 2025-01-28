@@ -1,5 +1,4 @@
 ﻿using BackendOcago.Models.Database;
-using BackendOcago.Models.Database.Entities;
 using BackendOcago.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,36 +16,27 @@ public class SearchController : ControllerBase
     }
 
     [HttpGet("users")]
-    public async Task<IActionResult> SearchUsers([FromQuery] string query, [FromQuery] int page = 1, [FromQuery] int limit = 10)
+    public async Task<IActionResult> SearchUsers([FromQuery] string query)
     {
+        if (string.IsNullOrWhiteSpace(query))
+        {
+            return BadRequest("La consulta de búsqueda no puede estar vacía.");
+        }
+
         try
         {
-            // Si la consulta está vacía, no hacer nada y devolver resultados vacíos.
-            if (string.IsNullOrWhiteSpace(query))
+            // Traer los usuarios como Enumerable para procesarlos en memoria
+            var users = _context.Users.AsEnumerable().ToList(); // Cambié a ToList()
+
+            // Realizar la búsqueda en memoria
+            var searchResults = await _searchService.SearchUsersAsync(users.AsQueryable(), query);
+
+            if (!searchResults.Any())
             {
-                return Ok(new { friends = new List<User>(), totalPages = 0 });
+                return NotFound("No se encontraron usuarios que coincidan con la consulta.");
             }
 
-            // Calcular el salto y la cantidad de usuarios a traer según la paginación
-            var skip = (page - 1) * limit;
-
-            // Filtrar y buscar usuarios
-            var usersQuery = _context.Users.AsQueryable();
-            var filteredUsers = await _searchService.SearchUsersAsync(usersQuery, query);
-
-            // Paginar los resultados
-            var paginatedUsers = filteredUsers.Skip(skip).Take(limit).ToList();
-
-            // Calcular el total de páginas
-            var totalUsers = filteredUsers.Count();
-            var totalPages = (int)Math.Ceiling(totalUsers / (double)limit);
-
-            // Devolver los resultados junto con la paginación
-            return Ok(new
-            {
-                friends = paginatedUsers,
-                totalPages
-            });
+            return Ok(searchResults);
         }
         catch (Exception ex)
         {
