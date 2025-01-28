@@ -78,7 +78,7 @@ export default function FriendsPanel() {
 
   const currentUser = {
     id: userInfo?.id ,
-    unique_name: userInfo?.unique_name,
+    unique_name: userInfo?.nickname,
     status: 0,
   };
 

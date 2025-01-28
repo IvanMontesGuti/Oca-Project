@@ -9,6 +9,7 @@ import { Toaster, toast } from 'sonner'
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import FriendsPanel from "@/components/FriendsPanel";
+import {WebInfo} from "@/components/WebInfo";
 interface DecodedToken {
     email: string;
     role: string;
@@ -136,17 +137,8 @@ export default function OcaGame() {
                 <h1 className="text-2xl md:text-3xl font-bold mb-2 items-center">
                   Juega al juego clásico de la oca con amigos <span className="text-[#4ADE80]">online</span>.
                 </h1>
-                <div className="flex items-center gap-4 text-sm text-gray-300">
-                  <span>
-                    <strong className="text-white">?</strong> Personas conectadas
-                  </span>
-                  <span>
-                    <strong className="text-white">?</strong> Personas en partida
-                  </span>
-                  <span>
-                    <strong className="text-white">?</strong> Partidas activas
-                  </span>
-                </div>
+                <WebInfo />
+                
               </div>
             </div>
 
