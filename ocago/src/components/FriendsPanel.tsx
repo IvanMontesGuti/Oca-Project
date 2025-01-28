@@ -1,11 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
-import { PlusCircleIcon, UserPlusIcon } from "lucide-react"
-//import { FRIENDSHIP_GET_ALL_URL } from "@/lib/endpoints/config";
-
+import { FRIENDSHIP_GET_ALL_URL, API_SEARCH_URL } from "@/lib/endpoints/config"
 
 interface Friend {
   id: string
@@ -14,52 +12,95 @@ interface Friend {
   avatar?: string
 }
 
-interface FriendRequest {
-  id: string
-  name: string
-  avatar?: string
+interface PaginationProps {
+  currentPage: number
+  totalPages: number
+  onPageChange: (page: number) => void
+}
+
+const Pagination = ({ currentPage, totalPages, onPageChange }: PaginationProps) => {
+  const pages = Array.from({ length: totalPages }, (_, i) => i + 1)
+
+  return (
+    <div className="flex items-center justify-center mt-6 gap-2">
+      <button
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 0}
+        className="px-3 py-2 rounded-lg text-sm font-medium bg-gray-200 hover:bg-gray-300 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        ← Anterior
+      </button>
+
+      {pages.map((page) => (
+        <button
+          key={page}
+          onClick={() => onPageChange(page - 1)}
+          className={`px-3 py-2 rounded-lg text-sm font-medium ${page - 1 === currentPage ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+        >
+          {page}
+        </button>
+      ))}
+
+      <button
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages - 1}
+        className="px-3 py-2 rounded-lg text-sm font-medium bg-gray-200 hover:bg-gray-300 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        Siguiente →
+      </button>
+    </div>
+  )
 }
 
 export default function FriendsPanel() {
   const [friends, setFriends] = useState<Friend[]>([])
-  const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([])
+  const [currentPage, setCurrentPage] = useState(0)
+  const [totalPages, setTotalPages] = useState(1)
   const [searchQuery, setSearchQuery] = useState("")
-  const [filteredFriends, setFilteredFriends] = useState<Friend[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchFriends = useCallback(async (page = 0, search = "") => {
+    const searchQuery = search.trim() === "" ? "all" : search; // Establecer un valor predeterminado si está vacío
+  
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(`${API_SEARCH_URL}?page=${page + 1}&limit=10&search=${searchQuery}`);
+      
+      if (!response.ok) {
+        const errorMessage = await response.text();
+        throw new Error(`Failed to fetch friends: ${errorMessage}`);
+      }
+      
+      const data = await response.json();
+      setFriends(data.users || []);
+      setTotalPages(data.totalPages || 1);
+      
+    } catch (error) {
+      console.error("Error fetching friends:", error);
+      setError("Failed to load friends. Please try again later.");
+      setFriends([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+  
+  
+  
 
   useEffect(() => {
-    fetchFriends()
-    fetchFriendRequests()
-  }, [])
-
-  useEffect(() => {
-    const filtered = friends.filter((friend) => friend.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    setFilteredFriends(filtered)
-  }, [friends, searchQuery])
-
-  const fetchFriends = async () => {
-    try {
-      const response = await fetch(FRIENDSHIP_GET_ALL_URL)
-      const data = await response.json()
-      setFriends(data)
-    } catch (error) {
-      console.error("Error fetching friends:", error)
-    }
-  }
-
-  const fetchFriendRequests = async () => {
-    try {
-      
-      const response = await fetch(FRIENDSHIP_GET_ALL_URL)
-      
-      const data = await response.json()
-      setFriendRequests(data)
-    } catch (error) {
-      console.error("Error fetching friend requests:", error)
-    }
-  }
+    fetchFriends(currentPage, searchQuery)
+  }, [currentPage, searchQuery, fetchFriends])
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value)
+    setCurrentPage(0)
+  }
+
+  const handlePageClick = (selected: number) => {
+    setCurrentPage(selected)
   }
 
   return (
@@ -76,50 +117,34 @@ export default function FriendsPanel() {
           onChange={handleSearch}
           className="w-full bg-gray-700 text-white placeholder-gray-400"
         />
-        <div className="space-y-4">
-          {filteredFriends.map((friend) => (
-            <div key={friend.id} className="flex items-center justify-between group">
-              <div className="flex items-center gap-3">
-                <Avatar>
-                  <AvatarImage src={friend.avatar || "/placeholder.svg"} alt={friend.name} />
-                  <AvatarFallback>{friend.name.slice(0, 2).toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <div className="font-medium leading-none text-white">{friend.name}</div>
-                  <div className="text-sm text-gray-400">{friend.status}</div>
+        {isLoading ? (
+          <div className="text-white text-center">Loading...</div>
+        ) : error ? (
+          <div className="text-red-500 text-center">{error}</div>
+        ) : friends.length === 0 ? (
+          <div className="text-white text-center">No friends found</div>
+        ) : (
+          <div className="space-y-4">
+            {friends.map((friend) => (
+              <div key={friend.id} className="flex items-center justify-between group">
+                <div className="flex items-center gap-3">
+                  <Avatar>
+                    <AvatarImage src={friend.avatar || "/placeholder.svg"} alt={friend.name} />
+                    <AvatarFallback>{friend.name ? friend.name.slice(0, 2).toUpperCase() : "NA"}</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <div className="font-medium leading-none text-white">{friend.name}</div>
+                    <div className="text-sm text-gray-400">{friend.status}</div>
+                  </div>
                 </div>
               </div>
-              <button className="opacity-0 group-hover:opacity-100 transition-opacity">
-                <PlusCircleIcon className="h-5 w-5 text-gray-400 hover:text-white" />
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        <div className="flex justify-between items-center">
-          <h2 className="font-semibold text-white">Solicitudes de amistad</h2>
-          <button className="text-sm text-gray-400 hover:text-white">Ver todas</button>
-        </div>
-        <div className="space-y-4">
-          {friendRequests.map((request) => (
-            <div key={request.id} className="flex items-center justify-between group">
-              <div className="flex items-center gap-3">
-                <Avatar>
-                  <AvatarImage src={request.avatar || "/placeholder.svg"} alt={request.name} />
-                  <AvatarFallback>{request.name.slice(0, 2).toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <div className="font-medium leading-none text-white">{request.name}</div>
-              </div>
-              <button className="opacity-0 group-hover:opacity-100 transition-opacity">
-                <UserPlusIcon className="h-5 w-5 text-gray-400 hover:text-white" />
-              </button>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
+        {!isLoading && !error && friends.length > 0 && (
+          <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageClick} />
+        )}
       </div>
     </div>
   )
 }
-

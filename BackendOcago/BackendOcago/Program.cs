@@ -54,6 +54,7 @@ public class Program
         builder.Services.AddScoped<AuthService>();
         builder.Services.AddScoped<UserService>();
         builder.Services.AddScoped<FriendshipService>();
+        builder.Services.AddScoped<SmartSearchService>();
 
         //Los servicios websocket son singleton siempre
         builder.Services.AddSingleton<ProcessWebSocket>();

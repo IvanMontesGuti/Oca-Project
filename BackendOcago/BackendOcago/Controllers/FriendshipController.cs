@@ -46,10 +46,33 @@ namespace BackendOcago.Controllers
         public async Task<IActionResult> AcceptRequest(long friendshipId, long userId)
         {
             var success = await _friendshipService.AcceptFriendRequestAsync(friendshipId, userId);
+            if (!success) return BadRequest("Solicitud no encontrada, ya gestionada o los usuarios no son válidos.");
+
+            return Ok("Solicitud aceptada. Los usuarios ahora son amigos.");
+        }
+
+        [HttpPost("reject/{friendshipId}")]
+        public async Task<IActionResult> RejectRequest(long friendshipId, long userId)
+        {
+            var success = await _friendshipService.RejectFriendRequestAsync(friendshipId, userId);
             if (!success) return BadRequest("Solicitud no encontrada o ya gestionada.");
 
-            return Ok("Solicitud aceptada.");
+            return Ok("Solicitud rechazada.");
         }
+
+        [HttpDelete("remove/{userId}/{friendId}")]
+        public async Task<IActionResult> RemoveFriend(long userId, long friendId)
+        {
+            if (userId <= 0 || friendId <= 0)
+                return BadRequest("IDs de usuario y amigo deben ser válidos.");
+
+            var success = await _friendshipService.RemoveFriendAsync(userId, friendId);
+            if (!success)
+                return BadRequest("No se pudo eliminar la amistad. Verifica que la relación de amistad exista.");
+
+            return Ok("Amigo eliminado con éxito.");
+        }
+
 
 
         // Endpoint para obtener todas las solicitudes de amistad
