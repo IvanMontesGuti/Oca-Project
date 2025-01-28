@@ -1,28 +1,27 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { jwtDecode } from "jwt-decode";
+import { jwtDecode } from "jwt-decode"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { API_SEARCH_URL, FRIENDSHIP_GET_BY_ID_URL } from "@/lib/endpoints/config"
 
+interface User {
+  id: number
+  mail: string
+  nickname: string
+  avatarUrl: string
+  status: number
+}
 
-interface Friend {
-  id: string;
-  sender: {
-    nickname: string;
-    avatarUrl: string;
-    friends: {
-      id: string;
-      nickname: string;
-      avatarUrl: string;
-    }[];
-  };
-  status: string;
+interface Friend extends User {
+  friends: User[]
+  sentFriendships: any[]
+  receivedFriendships: any[]
 }
 
 interface DecodedToken {
-  id: number;
+  id: number
 }
 
 interface PaginationProps {
@@ -48,7 +47,9 @@ const Pagination = ({ currentPage, totalPages, onPageChange }: PaginationProps) 
         <button
           key={page}
           onClick={() => onPageChange(page - 1)}
-          className={`px-3 py-2 rounded-lg text-sm font-medium ${page - 1 === currentPage ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+          className={`px-3 py-2 rounded-lg text-sm font-medium ${
+            page - 1 === currentPage ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+          }`}
         >
           {page}
         </button>
@@ -66,7 +67,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }: PaginationProps) 
 }
 
 export default function FriendsPanel() {
-  const [userInfo, setUserInfo] = useState<DecodedToken | null>(null);
+  const [userInfo, setUserInfo] = useState<DecodedToken | null>(null)
   const [friends, setFriends] = useState<Friend[]>([])
   const [currentPage, setCurrentPage] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
@@ -74,60 +75,79 @@ export default function FriendsPanel() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-
-  const fetchFriends = useCallback(async (page = 0, search = "") => {
-    setIsLoading(true)
-    setError(null)
-
+  useEffect(() => {
     if (typeof window !== "undefined") {
-      const token = localStorage.getItem("authToken");
-
+      const token = localStorage.getItem("authToken")
       if (token) {
         try {
-          const decodedToken = jwtDecode<DecodedToken>(token);
-          setUserInfo(decodedToken);
+          const decodedToken = jwtDecode<DecodedToken>(token)
+          setUserInfo(decodedToken)
         } catch (error) {
-          console.error("Error al decodificar el token:", error);
+          console.error("Error al decodificar el token:", error)
         }
       }
     }
+  }, [])
 
+  const fetchFriends = useCallback(
+    async (page = 0, search = "") => {
+      setIsLoading(true)
+      setError(null)
 
-
-
-    try {
-      let url
-      if (search.trim() === "") {
-        url = `${FRIENDSHIP_GET_BY_ID_URL(userInfo.id)}`
-      } else {
-        url = `${API_SEARCH_URL}?page=${page + 1}&limit=10&search=${search}`
+      if (!userInfo?.id) {
+        setError("No se pudo obtener la información del usuario")
+        setIsLoading(false)
+        return
       }
 
-      const response = await fetch(url)
+      try {
+        let url = ""
+        if (search.trim().length <= 1) {
+          url = `${FRIENDSHIP_GET_BY_ID_URL(userInfo.id)}?page=${page + 1}&limit=10`
+        } else {
+          url = `${API_SEARCH_URL}?query=${search}`
+        }
 
-      if (!response.ok) {
-        const errorMessage = await response.text()
-        throw new Error(`Failed to fetch friends: ${errorMessage}`)
+        const response = await fetch(url)
+        console.log("URL de la solicitud:", url)
+
+        if (!response.ok) {
+          if (response.status === 404) {
+            // No users found
+            setFriends([])
+            setTotalPages(1)
+            return
+          }
+          const errorMessage = await response.text()
+          throw new Error(`Error al obtener amigos: ${errorMessage}`)
+        }
+
+        const data = await response.json()
+        console.log("Datos recibidos:", data)
+
+        if (search.trim().length <= 1) {
+          setFriends(data.friends || [])
+          setTotalPages(data.totalPages || 1)
+        } else {
+          setFriends(data)
+          setTotalPages(1)
+        }
+      } catch (error) {
+        console.error("Error fetching friends:", error)
+        setError("Hubo un error al cargar los amigos. Por favor, inténtalo más tarde.")
+        setFriends([])
+      } finally {
+        setIsLoading(false)
       }
-
-      const data = await response.json()
-      console.log(data)
-      console.log("data 1", data, "senders", data[0])
-      setFriends(data || [])
-      console.log(friends)
-      setTotalPages(data.totalPages || 1)
-    } catch (error) {
-      console.error("Error fetching friends:", error)
-      setError("Failed to load friends. Please try again later.")
-      setFriends([])
-    } finally {
-      setIsLoading(false)
-    }
-  }, [userInfo?.id])
+    },
+    [userInfo?.id],
+  )
 
   useEffect(() => {
-    fetchFriends(currentPage, searchQuery)
-  }, [currentPage, searchQuery, fetchFriends])
+    if (userInfo?.id) {
+      fetchFriends(currentPage, searchQuery)
+    }
+  }, [currentPage, searchQuery, fetchFriends, userInfo?.id])
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value)
@@ -138,9 +158,6 @@ export default function FriendsPanel() {
     setCurrentPage(selected)
   }
 
-
-
-
   return (
     <div className="bg-[#231356] rounded-lg p-4 space-y-6">
       <div className="space-y-4">
@@ -150,39 +167,46 @@ export default function FriendsPanel() {
         </div>
         <Input
           type="text"
-          placeholder="Search by nickname..."
+          placeholder="Buscar por nickname..."
           value={searchQuery}
           onChange={handleSearch}
           className="w-full bg-gray-700 text-white placeholder-gray-400"
         />
         {isLoading ? (
-          <div className="text-white text-center">Loading...</div>
+          <div className="text-white text-center">Cargando...</div>
         ) : error ? (
           <div className="text-red-500 text-center">{error}</div>
         ) : friends.length === 0 ? (
-          <div className="text-white text-center">No friends found</div>
+          <div className="text-white text-center">
+            {searchQuery.trim().length > 1
+              ? "No se encontraron usuarios que coincidan con la búsqueda."
+              : "No tienes amigos aún."}
+          </div>
         ) : (
           <div className="space-y-4">
             {friends.map((friend) => (
               <div key={friend.id} className="flex items-center justify-between group">
                 <div className="flex items-center gap-3">
                   <Avatar>
-                    <AvatarImage src={friend.sender.avatarUrl || "/placeholder.svg"} alt={friend.sender.nickname} />
-                    <AvatarFallback>{friend.sender.nickname ? friend.sender.nickname.slice(0, 2).toUpperCase() : "NA"}</AvatarFallback>
+                    <AvatarImage src={"https://localhost:7107/"+friend.avatarUrl || "/placeholder.svg"} alt={friend.nickname} />
+                    <AvatarFallback>
+                      {friend.nickname ? friend.nickname.slice(0, 2).toUpperCase() : "NA"}
+                    </AvatarFallback>
                   </Avatar>
                   <div>
-                    <div className="font-medium leading-none text-white">{friend.sender.nickname}</div>
-                    <div className="text-sm text-gray-400">{friend.status}</div>
+                    <div className="font-medium leading-none text-white">{friend.nickname}</div>
+                    <div className="text-sm text-gray-400">{friend.status === 0 ? "Offline" : "Online"}</div>
                   </div>
                 </div>
               </div>
             ))}
           </div>
         )}
-        {!isLoading && !error && friends.length > 0 && (
+        {!isLoading && !error && friends.length > 0 && searchQuery.trim().length <= 1 && (
           <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageClick} />
         )}
       </div>
     </div>
   )
 }
+
