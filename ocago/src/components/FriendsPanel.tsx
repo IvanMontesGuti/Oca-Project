@@ -23,6 +23,7 @@ interface Friend {
 
 interface DecodedToken {
   id: number;
+  nickname: string;
 }
 
 interface PaginationProps {
@@ -75,6 +76,15 @@ export default function FriendsPanel() {
   const [error, setError] = useState<string | null>(null)
 
 
+  const currentUser = {
+    id: userInfo?.id ,
+    unique_name: userInfo?.unique_name,
+    status: 0,
+  };
+
+  
+
+  
   const fetchFriends = useCallback(async (page = 0, search = "") => {
     setIsLoading(true)
     setError(null)
@@ -91,8 +101,9 @@ export default function FriendsPanel() {
         }
       }
     }
-
-
+  
+    console.log("userInfo", userInfo);
+    
 
 
     try {
@@ -138,7 +149,7 @@ export default function FriendsPanel() {
     setCurrentPage(selected)
   }
 
-
+  console.log("friends", friends)
 
 
   return (
@@ -163,20 +174,35 @@ export default function FriendsPanel() {
           <div className="text-white text-center">No friends found</div>
         ) : (
           <div className="space-y-4">
-            {friends.map((friend) => (
-              <div key={friend.id} className="flex items-center justify-between group">
-                <div className="flex items-center gap-3">
-                  <Avatar>
-                    <AvatarImage src={friend.sender.avatarUrl || "/placeholder.svg"} alt={friend.sender.nickname} />
-                    <AvatarFallback>{friend.sender.nickname ? friend.sender.nickname.slice(0, 2).toUpperCase() : "NA"}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <div className="font-medium leading-none text-white">{friend.sender.nickname}</div>
-                    <div className="text-sm text-gray-400">{friend.status}</div>
-                  </div>
-                </div>
-              </div>
-            ))}
+            {friends.map((friend) => {
+  // Determinar quién es el amigo
+  const friendUser = friend.sender.id === currentUser.id ? friend.receiver : friend.sender;
+
+  return (
+    <div key={friend.id} className="flex items-center justify-between group">
+      <div className="flex items-center gap-3">
+        <Avatar>
+          <AvatarImage src={friendUser.avatarUrl || "/placeholder.svg"} alt={friendUser.nickname} />
+          <AvatarFallback>
+            {friendUser.nickname ? friendUser.nickname.slice(0, 2).toUpperCase() : "NA"}
+          </AvatarFallback>
+        </Avatar>
+
+        <div>
+          <div className="font-medium leading-none text-white">{friendUser.nickname}</div>
+          <div className="text-sm text-gray-400">
+            {friendUser.status === 0 ? "Offline" : "Online"}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+})}
+
+
+
+
+
           </div>
         )}
         {!isLoading && !error && friends.length > 0 && (

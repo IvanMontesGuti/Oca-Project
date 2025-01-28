@@ -92,6 +92,7 @@ public class FriendshipService
             return false;
 
         _unitOfWork.FriendshipRepository.Update(friendship);
+        
         return await SaveChangesAsync("Solicitud de amistad aceptada.");
     }
 
@@ -137,6 +138,7 @@ public class FriendshipService
 
         if (user == null || friend == null)
             return false;
+
 
         user.Friends.Add(friend);
         friend.Friends.Add(user);
