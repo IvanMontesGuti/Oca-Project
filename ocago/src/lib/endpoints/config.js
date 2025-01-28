@@ -22,3 +22,7 @@ export const FRIENDSHIP_SEND_REQUEST_URL = `${API_FRIENDSHIP_URL}/send`; // POST
 export const FRIENDSHIP_RECEIVED_REQUEST_URL = (userId) => `${API_FRIENDSHIP_URL}/received/${userId}`; // POST /api/Friendship/received/{userId}
 export const FRIENDSHIP_ACCEPT_REQUEST_URL = (friendsipId) => `${API_FRIENDSHIP_URL}/accept/${friendsipId}`; // POST /api/Friendship/accept/{friendsipId}
 export const FRIENDSHIP_GET_ALL_URL = `${API_FRIENDSHIP_URL}/all`; // GET /api/Friendship/all
+
+/* --- SEARCH CONTROLLER --- */
+
+export const API_SEARCH_URL = `${API_BASE_URL}/api/Search/users`;
