@@ -6,6 +6,11 @@ const API_AUTH_URL = `${API_BASE_URL}/api/Auth`;
 export const LOGIN_URL = `${API_AUTH_URL}/Login`;
 export const REGISTER_URL = `${API_AUTH_URL}/Register`;
 
+/* --- USER CONTROLLER --- */
+const API_USER_URL = `${API_BASE_URL}/api/User`;
+export const GET_USER_BY_ID_URL = (id) => `${API_USER_URL}/${id}`; 
+
+
 /* --- IMAGE CONTROLLER --- */
 const API_IMAGE_URL = `${API_BASE_URL}/api/Images`;
 

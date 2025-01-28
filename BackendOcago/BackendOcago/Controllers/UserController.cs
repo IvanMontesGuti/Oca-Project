@@ -24,6 +24,12 @@ public class UserController : ControllerBase
         var users = await _userService.GetAllAsync();
         return Ok(users);
     }
+    [HttpGet("User/{id}")]
+    public async Task<IActionResult> GetUser(long id)
+    {
+        var user = await _userService.GetByIdAsync(id);
+        return Ok(user);
+    }
 
     [HttpPut("Status")]
     public async Task<UserDto> ChangeStatus(UserStatus userStatusRequest, long userId)

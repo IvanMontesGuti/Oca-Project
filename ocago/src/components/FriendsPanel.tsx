@@ -8,13 +8,17 @@ import { API_SEARCH_URL, FRIENDSHIP_GET_BY_ID_URL } from "@/lib/endpoints/config
 
 
 interface Friend {
-  id: string
-  sender : [
-    nickname: string,
-    avatarUrl: string
-  ]
-  status: string
-  
+  id: string;
+  sender: {
+    nickname: string;
+    avatarUrl: string;
+    friends: {
+      id: string;
+      nickname: string;
+      avatarUrl: string;
+    }[];
+  };
+  status: string;
 }
 
 interface DecodedToken {
@@ -69,7 +73,7 @@ export default function FriendsPanel() {
   const [searchQuery, setSearchQuery] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  
+
 
   const fetchFriends = useCallback(async (page = 0, search = "") => {
     setIsLoading(true)
@@ -79,17 +83,17 @@ export default function FriendsPanel() {
       const token = localStorage.getItem("authToken");
 
       if (token) {
-          try {
-              const decodedToken = jwtDecode<DecodedToken>(token);
-              setUserInfo(decodedToken);
-          } catch (error) {
-              console.error("Error al decodificar el token:", error);
-          }
+        try {
+          const decodedToken = jwtDecode<DecodedToken>(token);
+          setUserInfo(decodedToken);
+        } catch (error) {
+          console.error("Error al decodificar el token:", error);
+        }
       }
-  }
+    }
 
-  
-  
+
+
 
     try {
       let url
@@ -108,7 +112,7 @@ export default function FriendsPanel() {
 
       const data = await response.json()
       console.log(data)
-      console.log("data 1",data, "senders", data[0])
+      console.log("data 1", data, "senders", data[0])
       setFriends(data || [])
       console.log(friends)
       setTotalPages(data.totalPages || 1)
@@ -134,8 +138,8 @@ export default function FriendsPanel() {
     setCurrentPage(selected)
   }
 
-      
-      
+
+
 
   return (
     <div className="bg-[#231356] rounded-lg p-4 space-y-6">
