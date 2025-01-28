@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { jwtDecode } from "jwt-decode"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
-import { API_SEARCH_URL, FRIENDSHIP_GET_BY_ID_URL } from "@/lib/endpoints/config"
+import { API_SEARCH_URL, FRIENDSHIP_GET_BY_ID_URL, API_BASE_URL} from "@/lib/endpoints/config"
 
 interface User {
   id: number
@@ -188,7 +188,7 @@ export default function FriendsPanel() {
               <div key={friend.id} className="flex items-center justify-between group">
                 <div className="flex items-center gap-3">
                   <Avatar>
-                    <AvatarImage src={"https://localhost:7107/"+friend.avatarUrl || "/placeholder.svg"} alt={friend.nickname} />
+                    <AvatarImage src={API_BASE_URL+"/"+friend.avatarUrl || "/placeholder.svg"} alt={friend.nickname} />
                     <AvatarFallback>
                       {friend.nickname ? friend.nickname.slice(0, 2).toUpperCase() : "NA"}
                     </AvatarFallback>
