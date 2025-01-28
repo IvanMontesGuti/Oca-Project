@@ -1,5 +1,6 @@
 ﻿
 using BackendOcago.Models.Database.Entities;
+using BackendOcago.Models.Database.Enum;
 using Microsoft.EntityFrameworkCore;
 namespace BackendOcago.Models.Database.Repositories;
 
@@ -15,6 +16,14 @@ public class UserRepository : Repository<User>
         return await GetQueryable().Where(user => user.Id == (long)id)
         .FirstOrDefaultAsync();
     }
+
+    public async Task<int> CountStatusAsync(UserStatus status)
+    {
+        return await GetQueryable()
+            .CountAsync(user => user.Status == status);
+    }
+
+
 
     public async Task<User> GetByMailAsync(string mail)
     {
