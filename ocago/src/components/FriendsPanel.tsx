@@ -6,11 +6,15 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { API_SEARCH_URL, FRIENDSHIP_GET_BY_ID_URL } from "@/lib/endpoints/config"
 
+
 interface Friend {
   id: string
-  sender : []
+  sender : [
+    nickname: string,
+    avatarUrl: string
+  ]
   status: string
-  avatarUrl?: string
+  
 }
 
 interface DecodedToken {
@@ -65,17 +69,32 @@ export default function FriendsPanel() {
   const [searchQuery, setSearchQuery] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const userId = userInfo?.id;
   
 
   const fetchFriends = useCallback(async (page = 0, search = "") => {
     setIsLoading(true)
     setError(null)
 
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("authToken");
+
+      if (token) {
+          try {
+              const decodedToken = jwtDecode<DecodedToken>(token);
+              setUserInfo(decodedToken);
+          } catch (error) {
+              console.error("Error al decodificar el token:", error);
+          }
+      }
+  }
+
+  
+  
+
     try {
       let url
       if (search.trim() === "") {
-        url = `${FRIENDSHIP_GET_BY_ID_URL(userId)}`
+        url = `${FRIENDSHIP_GET_BY_ID_URL(userInfo.id)}`
       } else {
         url = `${API_SEARCH_URL}?page=${page + 1}&limit=10&search=${search}`
       }
@@ -98,7 +117,7 @@ export default function FriendsPanel() {
     } finally {
       setIsLoading(false)
     }
-  }, [userId])
+  }, [userInfo?.id])
 
   useEffect(() => {
     fetchFriends(currentPage, searchQuery)
@@ -113,35 +132,7 @@ export default function FriendsPanel() {
     setCurrentPage(selected)
   }
 
-  useEffect(() => {
-          if (typeof window !== "undefined") {
-              const token = localStorage.getItem("authToken");
-  
-              if (token) {
-                  try {
-                      const decodedToken = jwtDecode<DecodedToken>(token);
-                      setUserInfo(decodedToken);
-                  } catch (error) {
-                      console.error("Error al decodificar el token:", error);
-                  }
-              }
-          }
-      }, []);
-  
-      if (!userInfo) {
-        return (
-            <div className="flex items-center justify-center h-screen bg-gray-100">
-                <p className="text-xl text-red-600">¡Inicia Sesion para poder entrar!</p>
-                <button
-                    
-                    className="flex items-center mt-4 w-full bg-red-500 text-white font-semibold py-2 px-4 rounded hover:bg-red-700"
-                >
-                    Volver Inicio
-                </button>
-            </div>
-        );
-    }
-      const { id } = userInfo;
+      
       
 
   return (
@@ -170,11 +161,11 @@ export default function FriendsPanel() {
               <div key={friend.id} className="flex items-center justify-between group">
                 <div className="flex items-center gap-3">
                   <Avatar>
-                    <AvatarImage src={friend.avatarUrl || "/placeholder.svg"} alt={friend.nickname} />
-                    <AvatarFallback>{friend.nickname ? friend.nickname.slice(0, 2).toUpperCase() : "NA"}</AvatarFallback>
+                    <AvatarImage src={friend.sender.avatarUrl || "/placeholder.svg"} alt={friend.sender.nickname} />
+                    <AvatarFallback>{friend.sender.nickname ? friend.sender.nickname.slice(0, 2).toUpperCase() : "NA"}</AvatarFallback>
                   </Avatar>
                   <div>
-                    <div className="font-medium leading-none text-white">{friend.nickname}</div>
+                    <div className="font-medium leading-none text-white">{friend.sender.nickname}</div>
                     <div className="text-sm text-gray-400">{friend.status}</div>
                   </div>
                 </div>
