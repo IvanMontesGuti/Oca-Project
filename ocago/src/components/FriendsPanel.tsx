@@ -1,29 +1,21 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { FRIENDSHIP_GET_ALL_URL } from "@/lib/endpoints/config";
-interface Friend {
-  id: string;
-  name: string;
-  status: string;
-  avatar?: string;
-}
 
 export default function FriendsPanel() {
   const [friends, setFriends] = useState<Friend[]>([]);
-  const [currentPage, setCurrentPage] = useState(0);
+  const [currentPage, setCurrentPage] = useState(0); // Empezamos en 0 para que coincida con los índices de paginación basados en cero
   const [totalPages, setTotalPages] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
 
   const fetchFriends = async (page = 0, search = "") => {
     try {
       const response = await fetch(
-        `${FRIENDSHIP_GET_ALL_URL}?page=${page + 1}&limit=10&search=${search}`
+        `${FRIENDSHIP_GET_ALL_URL}?page=${page + 1}&limit=10&search=${search}` // Aumentar page por 1 para que se mantenga el comportamiento correcto de la API
       );
       const data = await response.json();
-      setFriends(data.friends); 
+      setFriends(data.friends);
       setTotalPages(data.totalPages);
     } catch (error) {
       console.error("Error fetching friends:", error);
@@ -39,8 +31,8 @@ export default function FriendsPanel() {
     setCurrentPage(0); // Reinicia a la primera página al buscar
   };
 
-  const handlePageClick = (selected: { selected: number }) => {
-    setCurrentPage(selected.selected);
+  const handlePageClick = (selected: number) => {
+    setCurrentPage(selected); // Pasa la página seleccionada
   };
 
   return (
@@ -58,10 +50,7 @@ export default function FriendsPanel() {
         />
         <div className="space-y-4">
           {friends.map((friend) => (
-            <div
-              key={friend.id}
-              className="flex items-center justify-between group"
-            >
+            <div key={friend.id} className="flex items-center justify-between group">
               <div className="flex items-center gap-3">
                 <Avatar>
                   <AvatarImage
@@ -83,11 +72,10 @@ export default function FriendsPanel() {
           ))}
         </div>
         <Pagination
-          currentPage={currentPage}
+          currentPage={currentPage} 
           totalPages={totalPages}
-          onPageChange={(page) => setCurrentPage(page)}
+          onPageChange={handlePageClick}
         />
-
       </div>
     </div>
   );

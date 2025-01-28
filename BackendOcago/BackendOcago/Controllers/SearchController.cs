@@ -16,7 +16,7 @@ public class SearchController : ControllerBase
     }
 
     [HttpGet("users")]
-    public async Task<IActionResult> SearchUsers([FromQuery] string query)
+    public async Task<IActionResult> SearchUsers([FromQuery] string query, [FromQuery] int page = 1, [FromQuery] int limit = 10)
     {
         if (string.IsNullOrWhiteSpace(query))
         {
@@ -25,18 +25,31 @@ public class SearchController : ControllerBase
 
         try
         {
-            // Traer los usuarios como Enumerable para procesarlos en memoria
-            var users = _context.Users.AsEnumerable().ToList(); // Cambié a ToList()
+            // Calcular el salto y la cantidad de usuarios a traer según la paginación
+            var skip = (page - 1) * limit;
 
-            // Realizar la búsqueda en memoria
-            var searchResults = await _searchService.SearchUsersAsync(users.AsQueryable(), query);
+            // Filtrar y buscar usuarios
+            var usersQuery = _context.Users.AsQueryable();
+            var filteredUsers = await _searchService.SearchUsersAsync(usersQuery, query);
 
-            if (!searchResults.Any())
+            // Paginar los resultados
+            var paginatedUsers = filteredUsers.Skip(skip).Take(limit).ToList();
+
+            // Calcular el total de páginas
+            var totalUsers = filteredUsers.Count();
+            var totalPages = (int)Math.Ceiling(totalUsers / (double)limit);
+
+            if (!paginatedUsers.Any())
             {
                 return NotFound("No se encontraron usuarios que coincidan con la consulta.");
             }
 
-            return Ok(searchResults);
+            // Devolver los resultados junto con la paginación
+            return Ok(new
+            {
+                friends = paginatedUsers,
+                totalPages
+            });
         }
         catch (Exception ex)
         {
