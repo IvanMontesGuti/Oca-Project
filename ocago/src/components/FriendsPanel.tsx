@@ -66,8 +66,8 @@ export default function FriendsPanel() {
     <div className="bg-[#231356] rounded-lg p-4 space-y-6">
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <h2 className="font-semibold text-white">Friends</h2>
-          <button className="text-sm text-gray-400 hover:text-white">view all</button>
+          <h2 className="font-semibold text-white">Amigos</h2>
+          <button className="text-sm text-gray-400 hover:text-white">Ver todos</button>
         </div>
         <Input
           type="text"
@@ -99,8 +99,8 @@ export default function FriendsPanel() {
 
       <div className="space-y-4">
         <div className="flex justify-between items-center">
-          <h2 className="font-semibold text-white">Friend Requests</h2>
-          <button className="text-sm text-gray-400 hover:text-white">view all</button>
+          <h2 className="font-semibold text-white">Solicitudes de amistad</h2>
+          <button className="text-sm text-gray-400 hover:text-white">Ver todas</button>
         </div>
         <div className="space-y-4">
           {friendRequests.map((request) => (
