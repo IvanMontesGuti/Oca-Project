@@ -38,6 +38,7 @@ namespace BackendOcago.Models.Database.Repositories
                 .ToListAsync();
         }
 
+        
 
         public async Task<IEnumerable<Friendship>> GetAcceptedFriendshipsAsync(long userId)
         {
