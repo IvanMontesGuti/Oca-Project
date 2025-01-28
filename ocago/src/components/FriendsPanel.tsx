@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react"
 import { jwtDecode } from "jwt-decode"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
-import { API_SEARCH_URL, FRIENDSHIP_GET_BY_ID_URL, API_BASE_URL} from "@/lib/endpoints/config"
+import { API_SEARCH_URL, FRIENDSHIP_GET_BY_ID_URL, API_BASE_URL } from "@/lib/endpoints/config"
 
 interface User {
   id: number
@@ -21,7 +21,8 @@ interface Friend extends User {
 }
 
 interface DecodedToken {
-  id: number
+  id: number;
+  nickname: string;
 }
 
 interface PaginationProps {
@@ -47,9 +48,8 @@ const Pagination = ({ currentPage, totalPages, onPageChange }: PaginationProps) 
         <button
           key={page}
           onClick={() => onPageChange(page - 1)}
-          className={`px-3 py-2 rounded-lg text-sm font-medium ${
-            page - 1 === currentPage ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-          }`}
+          className={`px-3 py-2 rounded-lg text-sm font-medium ${page - 1 === currentPage ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            }`}
         >
           {page}
         </button>
@@ -75,7 +75,20 @@ export default function FriendsPanel() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
+
+  const currentUser = {
+    id: userInfo?.id,
+    unique_name: userInfo?.unique_name,
+    status: 0,
+  };
+
+
+
+
+  const fetchFriends = useCallback(async (page = 0, search = "") => {
+    setIsLoading(true)
+    setError(null)
+
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("authToken")
       if (token) {
@@ -98,49 +111,52 @@ export default function FriendsPanel() {
         setError("No se pudo obtener la información del usuario")
         setIsLoading(false)
         return
-      }
 
-      try {
-        let url = ""
-        if (search.trim().length <= 1) {
-          url = `${FRIENDSHIP_GET_BY_ID_URL(userInfo.id)}?page=${page + 1}&limit=10`
-        } else {
-          url = `${API_SEARCH_URL}?query=${search}`
-        }
+        console.log("userInfo", userInfo);
 
-        const response = await fetch(url)
-        console.log("URL de la solicitud:", url)
 
-        if (!response.ok) {
-          if (response.status === 404) {
-            // No users found
-            setFriends([])
-            setTotalPages(1)
-            return
+
+        try {
+          let url = ""
+          if (search.trim().length <= 1) {
+            url = `${FRIENDSHIP_GET_BY_ID_URL(userInfo.id)}?page=${page + 1}&limit=10`
+          } else {
+            url = `${API_SEARCH_URL}?query=${search}`
           }
-          const errorMessage = await response.text()
-          throw new Error(`Error al obtener amigos: ${errorMessage}`)
-        }
 
-        const data = await response.json()
-        console.log("Datos recibidos:", data)
+          const response = await fetch(url)
+          console.log("URL de la solicitud:", url)
 
-        if (search.trim().length <= 1) {
-          setFriends(data.friends || [])
-          setTotalPages(data.totalPages || 1)
-        } else {
-          setFriends(data)
-          setTotalPages(1)
+          if (!response.ok) {
+            if (response.status === 404) {
+              // No users found
+              setFriends([])
+              setTotalPages(1)
+              return
+            }
+            const errorMessage = await response.text()
+            throw new Error(`Error al obtener amigos: ${errorMessage}`)
+          }
+
+          const data = await response.json()
+          console.log("Datos recibidos:", data)
+
+          if (search.trim().length <= 1) {
+            setFriends(data.friends || [])
+            setTotalPages(data.totalPages || 1)
+          } else {
+            setFriends(data)
+            setTotalPages(1)
+          }
+        } catch (error) {
+          console.error("Error fetching friends:", error)
+          setError("Hubo un error al cargar los amigos. Por favor, inténtalo más tarde.")
+          setFriends([])
+        } finally {
+          setIsLoading(false)
         }
-      } catch (error) {
-        console.error("Error fetching friends:", error)
-        setError("Hubo un error al cargar los amigos. Por favor, inténtalo más tarde.")
-        setFriends([])
-      } finally {
-        setIsLoading(false)
-      }
-    },
-    [userInfo?.id],
+      },
+      [userInfo?.id],
   )
 
   useEffect(() => {
@@ -184,22 +200,30 @@ export default function FriendsPanel() {
           </div>
         ) : (
           <div className="space-y-4">
-            {friends.map((friend) => (
-              <div key={friend.id} className="flex items-center justify-between group">
-                <div className="flex items-center gap-3">
-                  <Avatar>
-                    <AvatarImage src={API_BASE_URL+"/"+friend.avatarUrl || "/placeholder.svg"} alt={friend.nickname} />
-                    <AvatarFallback>
-                      {friend.nickname ? friend.nickname.slice(0, 2).toUpperCase() : "NA"}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <div className="font-medium leading-none text-white">{friend.nickname}</div>
-                    <div className="text-sm text-gray-400">{friend.status === 0 ? "Offline" : "Online"}</div>
+            {friends.map((friend) => {
+              // Determinar quién es el amigo
+              const friendUser = friend.sender.id === currentUser.id ? friend.receiver : friend.sender;
+
+              return (
+                <div key={friend.id} className="flex items-center justify-between group">
+                  <div className="flex items-center gap-3">
+                    <Avatar>
+                      <AvatarImage src={API_BASE_URL + "/" + friendUser.avatarUrl || "/placeholder.svg"} alt={friendUser.nickname} />
+                      <AvatarFallback>
+                        {friendUser.nickname ? friendUser.nickname.slice(0, 2).toUpperCase() : "NA"}
+                      </AvatarFallback>
+                    </Avatar>
+
+                    <div>
+                      <div className="font-medium leading-none text-white">{friendUser.nickname}</div>
+                      <div className="text-sm text-gray-400">
+                        {friendUser.status === 0 ? "Offline" : "Online"}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
         {!isLoading && !error && friends.length > 0 && searchQuery.trim().length <= 1 && (
