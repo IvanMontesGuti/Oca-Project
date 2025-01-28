@@ -11,6 +11,8 @@ public class FriendshipDto
     public DateTime SentAt { get; set; }
     public FriendshipInvitationStatus Status { get; set; }
 
+   
+
 }
 
 
