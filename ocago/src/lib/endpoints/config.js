@@ -29,7 +29,7 @@ export const FRIENDSHIP_RECEIVED_REQUEST_URL = (userId) => `${API_FRIENDSHIP_URL
 export const FRIENDSHIP_ACCEPT_REQUEST_URL = (friendsipId) => `${API_FRIENDSHIP_URL}/accept/${friendsipId}`; // POST /api/Friendship/accept/{friendsipId}
 export const FRIENDSHIP_GET_ALL_URL = `${API_FRIENDSHIP_URL}/all`; // GET /api/Friendship/all
 export const FRIENDSHIP_GET_BY_ID_URL = (userId) => `${API_FRIENDSHIP_URL}/all/${userId}`; // GET /api/Friendship/all/{friendsipId}
-
+export const FRIENDSHIP_DELETE_REQUEST_URL = (friendsipId) => `${API_FRIENDSHIP_URL}/reject/${friendsipId}`; // DELETE /api/Friendship/delete/{friendsipId}
 /* --- SEARCH CONTROLLER --- */
 
 export const API_SEARCH_URL = `${API_BASE_URL}/api/Search/users`;

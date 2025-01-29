@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback } from "react"
 import { jwtDecode } from "jwt-decode";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
-import { API_SEARCH_URL, FRIENDSHIP_GET_BY_ID_URL } from "@/lib/endpoints/config"
+import { API_SEARCH_URL, FRIENDSHIP_ACCEPT_REQUEST_URL, FRIENDSHIP_DELETE_REQUEST_URL, FRIENDSHIP_GET_BY_ID_URL, FRIENDSHIP_RECEIVED_REQUEST_URL } from "@/lib/endpoints/config"
+import { Button } from "./ui/button";
 
 
 interface Friend {
@@ -19,6 +20,16 @@ interface Friend {
     }[];
   };
   status: string;
+}
+
+interface FriendRequest {
+  id: string
+  sender: {
+    id: string
+    nickname: string
+    avatarUrl: string
+  }
+  status: number
 }
 
 interface DecodedToken {
@@ -67,6 +78,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }: PaginationProps) 
 }
 
 export default function FriendsPanel() {
+  const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([])
   const [userInfo, setUserInfo] = useState<DecodedToken | null>(null);
   const [friends, setFriends] = useState<Friend[]>([])
   const [currentPage, setCurrentPage] = useState(0)
@@ -136,6 +148,21 @@ export default function FriendsPanel() {
     }
   }, [userInfo?.id])
 
+  const fetchFriendRequests = useCallback(async () => {
+    if (!userInfo?.id) return
+
+    try {
+      const response = await fetch(FRIENDSHIP_RECEIVED_REQUEST_URL(userInfo?.id))
+      if (!response.ok) {
+        throw new Error("Failed to fetch friend requests")
+      }
+      const data = await response.json()
+      setFriendRequests(data.filter((request: FriendRequest) => request.status === 0))
+    } catch (error) {
+      console.error("Error fetching friend requests:", error)
+    }
+  }, [userInfo?.id])
+  
   useEffect(() => {
     fetchFriends(currentPage, searchQuery)
   }, [currentPage, searchQuery, fetchFriends])
@@ -150,6 +177,49 @@ export default function FriendsPanel() {
   }
 
   console.log("friends", friends)
+
+  const handleAcceptRequest = async (friendshipId: string) => {
+    if (!userInfo?.id) return
+
+    try {
+      const response = await fetch(FRIENDSHIP_ACCEPT_REQUEST_URL(friendshipId), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId: userInfo.id }),
+      })
+      if (!response.ok) {
+        throw new Error("Failed to accept friend request")
+      }
+      // Refresh friend requests and friends list
+      fetchFriendRequests()
+      fetchFriends(currentPage, searchQuery)
+    } catch (error) {
+      console.error("Error accepting friend request:", error)
+    }
+  }
+
+  const handleRejectRequest = async (friendshipId: string) => {
+    if (!userInfo?.id) return
+
+    try {
+      const response = await fetch(FRIENDSHIP_DELETE_REQUEST_URL(friendshipId), {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId: userInfo.id }),
+      })
+      if (!response.ok) {
+        throw new Error("Failed to reject friend request")
+      }
+      // Refresh friend requests
+      fetchFriendRequests()
+    } catch (error) {
+      console.error("Error rejecting friend request:", error)
+    }
+  }
 
 
   return (
@@ -187,28 +257,55 @@ export default function FriendsPanel() {
             {friendUser.nickname ? friendUser.nickname.slice(0, 2).toUpperCase() : "NA"}
           </AvatarFallback>
         </Avatar>
-
         <div>
-          <div className="font-medium leading-none text-white">{friendUser.nickname}</div>
-          <div className="text-sm text-gray-400">
-            {friendUser.status === 0 ? "Offline" : "Online"}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-})}
-
-
-
-
-
+                      <div className="font-medium leading-none text-white">{friendUser.nickname}</div>
+                      <div className="text-sm text-gray-400">{friendUser.status === 0 ? "Offline" : "Online"}</div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
           </div>
         )}
         {!isLoading && !error && friends.length > 0 && (
           <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageClick} />
         )}
       </div>
+
+      {/* Friend Requests Section */}
+      <div className="space-y-4 mt-6">
+        <h2 className="font-semibold text-white">Solicitudes de amistad</h2>
+        {friendRequests.length === 0 ? (
+          <div className="text-white text-center">No hay solicitudes de amistad pendientes</div>
+        ) : (
+          <div className="space-y-4">
+            {friendRequests.map((request) => (
+              <div key={request.id} className="flex items-center justify-between group">
+                <div className="flex items-center gap-3">
+                  <Avatar>
+                    <AvatarImage src={request.sender.avatarUrl || "/placeholder.svg"} alt={request.sender.nickname} />
+                    <AvatarFallback>
+                      {request.sender.nickname ? request.sender.nickname.slice(0, 2).toUpperCase() : "NA"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <div className="font-medium leading-none text-white">{request.sender.nickname}</div>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="default" onClick={() => handleAcceptRequest(request.id)}>
+                    Aceptar
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => handleRejectRequest(request.id)}>
+                    Rechazar
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
+
