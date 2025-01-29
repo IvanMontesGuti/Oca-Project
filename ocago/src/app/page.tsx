@@ -6,6 +6,10 @@ import { Header2 } from '@/components/navUser'
 import { InfoPage } from '@/components/infoPage'
 import { jwtDecode } from "jwt-decode"
 import { useEffect, useState } from 'react'
+interface DecodedToken {
+  id: number
+  nickname: string
+}
 
 export default function Home() {
   const [userInfo, setUserInfo] = useState<DecodedToken | null>(null);
