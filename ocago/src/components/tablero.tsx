@@ -42,9 +42,9 @@ const Tablero: React.FC<TableroProps> = ({ fichas }) => {
             width={anchoCasilla}
             height={altoCasilla}
             fill="transparent"
-            stroke="gray"
+            stroke="none"
             strokeWidth="1"
-            className="cursor-pointer hover:fill-gray-200 hover:fill-opacity-30 transition-colors duration-200"
+            className="cursor-pointer hover:fill-gray-0 hover:fill-opacity-30 transition-colors duration-200"
           />
         )),
       )}
