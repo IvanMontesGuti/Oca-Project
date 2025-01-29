@@ -1,25 +1,46 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import { jwtDecode } from "jwt-decode";
+import { jwtDecode } from "jwt-decode"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
-import { API_SEARCH_URL, FRIENDSHIP_ACCEPT_REQUEST_URL, FRIENDSHIP_DELETE_REQUEST_URL, FRIENDSHIP_GET_BY_ID_URL, FRIENDSHIP_RECEIVED_REQUEST_URL } from "@/lib/endpoints/config"
-import { Button } from "./ui/button";
-
+import { Button } from "@/components/ui/button"
+import {
+  API_SEARCH_URL,
+  FRIENDSHIP_GET_BY_ID_URL,
+  FRIENDSHIP_RECEIVED_REQUEST_URL,
+  FRIENDSHIP_ACCEPT_REQUEST_URL,
+  FRIENDSHIP_DELETE_REQUEST_URL,
+} from "@/lib/endpoints/config"
 
 interface Friend {
-  id: string;
+  id: string
   sender: {
-    nickname: string;
-    avatarUrl: string;
+    nickname: string
+    avatarUrl: string
     friends: {
-      id: string;
-      nickname: string;
-      avatarUrl: string;
-    }[];
-  };
-  status: string;
+      id: string
+      nickname: string
+      avatarUrl: string
+    }[]
+  }
+  receiver: {
+    id: string
+    nickname: string
+    avatarUrl: string
+  }
+  status: string
+}
+
+interface DecodedToken {
+  id: number
+  nickname: string
+}
+
+interface PaginationProps {
+  currentPage: number
+  totalPages: number
+  onPageChange: (page: number) => void
 }
 
 interface FriendRequest {
@@ -30,17 +51,6 @@ interface FriendRequest {
     avatarUrl: string
   }
   status: number
-}
-
-interface DecodedToken {
-  id: number;
-  nickname: string;
-}
-
-interface PaginationProps {
-  currentPage: number
-  totalPages: number
-  onPageChange: (page: number) => void
 }
 
 const Pagination = ({ currentPage, totalPages, onPageChange }: PaginationProps) => {
@@ -78,94 +88,102 @@ const Pagination = ({ currentPage, totalPages, onPageChange }: PaginationProps) 
 }
 
 export default function FriendsPanel() {
-  const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([])
-  const [userInfo, setUserInfo] = useState<DecodedToken | null>(null);
+  const [userInfo, setUserInfo] = useState<DecodedToken | null>(null)
   const [friends, setFriends] = useState<Friend[]>([])
+  const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([])
   const [currentPage, setCurrentPage] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
   const [searchQuery, setSearchQuery] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-
   const currentUser = {
-    id: userInfo?.id ,
+    id: userInfo?.id,
     unique_name: userInfo?.nickname,
     status: 0,
-  };
+  }
 
-  
+  const fetchFriends = useCallback(
+    async (page = 0, search = "") => {
+      if (!userInfo?.id) {
+        console.log("userInfo.id is not available, skipping fetchFriends")
+        return
+      }
 
-  
-  const fetchFriends = useCallback(async (page = 0, search = "") => {
-    setIsLoading(true)
-    setError(null)
+      setIsLoading(true)
+      setError(null)
 
-    if (typeof window !== "undefined") {
-      const token = localStorage.getItem("authToken");
-
-      if (token) {
-        try {
-          const decodedToken = jwtDecode<DecodedToken>(token);
-          setUserInfo(decodedToken);
-        } catch (error) {
-          console.error("Error al decodificar el token:", error);
+      try {
+        let url
+        if (search.trim() === "") {
+          url = `${FRIENDSHIP_GET_BY_ID_URL(userInfo.id)}`
+        } else {
+          url = `${API_SEARCH_URL}?page=${page + 1}&limit=10&search=${search}`
         }
+
+        const response = await fetch(url)
+
+        if (!response.ok) {
+          const errorMessage = await response.text()
+          throw new Error(`Failed to fetch friends: ${errorMessage}`)
+        }
+
+        const data = await response.json()
+        console.log("Friends data:", data)
+        setFriends(data || [])
+        setTotalPages(data.totalPages || 1)
+      } catch (error) {
+        console.error("Error fetching friends:", error)
+        setError("Failed to load friends. Please try again later.")
+        setFriends([])
+      } finally {
+        setIsLoading(false)
       }
-    }
-  
-    console.log("userInfo", userInfo);
-    
-
-
-    try {
-      let url
-      if (search.trim() === "") {
-        url = `${FRIENDSHIP_GET_BY_ID_URL(userInfo.id)}`
-      } else {
-        url = `${API_SEARCH_URL}?page=${page + 1}&limit=10&search=${search}`
-      }
-
-      const response = await fetch(url)
-
-      if (!response.ok) {
-        const errorMessage = await response.text()
-        throw new Error(`Failed to fetch friends: ${errorMessage}`)
-      }
-
-      const data = await response.json()
-      console.log(data)
-      console.log("data 1", data, "senders", data[0])
-      setFriends(data || [])
-      console.log(friends)
-      setTotalPages(data.totalPages || 1)
-    } catch (error) {
-      console.error("Error fetching friends:", error)
-      setError("Failed to load friends. Please try again later.")
-      setFriends([])
-    } finally {
-      setIsLoading(false)
-    }
-  }, [userInfo?.id])
+    },
+    [userInfo?.id],
+  )
 
   const fetchFriendRequests = useCallback(async () => {
-    if (!userInfo?.id) return
+    if (!userInfo?.id) {
+      console.log("userInfo.id is not available, skipping fetchFriendRequests")
+      return
+    }
 
+    console.log("Fetching friend requests for user ID:", userInfo.id)
     try {
-      const response = await fetch(FRIENDSHIP_RECEIVED_REQUEST_URL(userInfo?.id))
+      const response = await fetch(FRIENDSHIP_RECEIVED_REQUEST_URL(userInfo.id))
+      console.log("Friend requests response:", response)
       if (!response.ok) {
         throw new Error("Failed to fetch friend requests")
       }
       const data = await response.json()
+      console.log("Friend requests data:", data)
       setFriendRequests(data.filter((request: FriendRequest) => request.status === 0))
     } catch (error) {
       console.error("Error fetching friend requests:", error)
     }
   }, [userInfo?.id])
-  
+
   useEffect(() => {
-    fetchFriends(currentPage, searchQuery)
-  }, [currentPage, searchQuery, fetchFriends])
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("authToken")
+      if (token) {
+        try {
+          const decodedToken = jwtDecode<DecodedToken>(token)
+          setUserInfo(decodedToken)
+        } catch (error) {
+          console.error("Error al decodificar el token:", error)
+        }
+      }
+    }
+  }, [])
+
+  useEffect(() => {
+    if (userInfo?.id) {
+      fetchFriends(currentPage, searchQuery)
+      fetchFriendRequests()
+    }
+  }, [userInfo, currentPage, searchQuery, fetchFriends, fetchFriendRequests])
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value)
@@ -176,18 +194,13 @@ export default function FriendsPanel() {
     setCurrentPage(selected)
   }
 
-  console.log("friends", friends)
-
   const handleAcceptRequest = async (friendshipId: string) => {
     if (!userInfo?.id) return
 
     try {
-      const response = await fetch(FRIENDSHIP_ACCEPT_REQUEST_URL(friendshipId), {
+      const url = `${FRIENDSHIP_ACCEPT_REQUEST_URL(friendshipId)}?userId=${userInfo.id}`
+      const response = await fetch(url, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ userId: userInfo.id }),
       })
       if (!response.ok) {
         throw new Error("Failed to accept friend request")
@@ -204,12 +217,9 @@ export default function FriendsPanel() {
     if (!userInfo?.id) return
 
     try {
-      const response = await fetch(FRIENDSHIP_DELETE_REQUEST_URL(friendshipId), {
+      const url = `${FRIENDSHIP_DELETE_REQUEST_URL(friendshipId)}?userId=${userInfo.id}`
+      const response = await fetch(url, {
         method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ userId: userInfo.id }),
       })
       if (!response.ok) {
         throw new Error("Failed to reject friend request")
@@ -221,6 +231,7 @@ export default function FriendsPanel() {
     }
   }
 
+  console.log("friends", friends)
 
   return (
     <div className="bg-[#231356] rounded-lg p-4 space-y-6">
@@ -245,19 +256,19 @@ export default function FriendsPanel() {
         ) : (
           <div className="space-y-4">
             {friends.map((friend) => {
-  // Determinar quién es el amigo
-  const friendUser = friend.sender.id === currentUser.id ? friend.receiver : friend.sender;
+              const friendUser = friend.sender?.id === userInfo?.id ? friend.receiver : friend.sender
+              if (!friendUser) return null
 
-  return (
-    <div key={friend.id} className="flex items-center justify-between group">
-      <div className="flex items-center gap-3">
-        <Avatar>
-          <AvatarImage src={friendUser.avatarUrl || "/placeholder.svg"} alt={friendUser.nickname} />
-          <AvatarFallback>
-            {friendUser.nickname ? friendUser.nickname.slice(0, 2).toUpperCase() : "NA"}
-          </AvatarFallback>
-        </Avatar>
-        <div>
+              return (
+                <div key={friend.id} className="flex items-center justify-between group">
+                  <div className="flex items-center gap-3">
+                    <Avatar>
+                      <AvatarImage src={friendUser.avatarUrl || "/placeholder.svg"} alt={friendUser.nickname} />
+                      <AvatarFallback>
+                        {friendUser.nickname ? friendUser.nickname.slice(0, 2).toUpperCase() : "NA"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
                       <div className="font-medium leading-none text-white">{friendUser.nickname}</div>
                       <div className="text-sm text-gray-400">{friendUser.status === 0 ? "Offline" : "Online"}</div>
                     </div>
