@@ -205,7 +205,7 @@ export default function FriendsPanel() {
       if (!response.ok) {
         throw new Error("Failed to accept friend request")
       }
-      // Refresh friend requests and friends list
+      
       fetchFriendRequests()
       fetchFriends(currentPage, searchQuery)
     } catch (error) {
@@ -219,11 +219,13 @@ export default function FriendsPanel() {
     try {
       const url = `${FRIENDSHIP_DELETE_REQUEST_URL(friendshipId)}?userId=${userInfo.id}`
       const response = await fetch(url, {
-        method: "DELETE",
+        method: "POST",
       })
       if (!response.ok) {
         throw new Error("Failed to reject friend request")
       }
+      console.log(response, "response");
+      
       // Refresh friend requests
       fetchFriendRequests()
     } catch (error) {
@@ -282,8 +284,6 @@ export default function FriendsPanel() {
           <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={handlePageClick} />
         )}
       </div>
-
-      {/* Friend Requests Section */}
       <div className="space-y-4 mt-6">
         <h2 className="font-semibold text-white">Solicitudes de amistad</h2>
         {friendRequests.length === 0 ? (
@@ -307,7 +307,7 @@ export default function FriendsPanel() {
                   <Button size="sm" variant="default" onClick={() => handleAcceptRequest(request.id)}>
                     Aceptar
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => handleRejectRequest(request.id)}>
+                  <Button size="sm" variant="default" onClick={() => handleRejectRequest(request.id)}>
                     Rechazar
                   </Button>
                 </div>
