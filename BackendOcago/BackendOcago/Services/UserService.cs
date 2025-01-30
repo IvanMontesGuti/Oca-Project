@@ -121,7 +121,10 @@ public class UserService
         return _mapper.ToDto(userEntity);
     }
     */
-
+    public async Task<int> GetStatusCount (UserStatus status)
+    {
+        return await _unitOfWork.UserRepository.CountStatusAsync(status);
+    }
     public async Task<UserDto> UpdateStatus(UserStatus Status, long userId)
     {
         User userEntity = await _unitOfWork.UserRepository.GetByIdAsync(userId) ?? throw new Exception("El usuario no existe");

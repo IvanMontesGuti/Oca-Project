@@ -37,5 +37,9 @@ public class UserController : ControllerBase
         return await _userService.UpdateStatus(userStatusRequest, userId);
     }
 
-
+    [HttpGet("CountStatus")]
+    public async Task<int> GetStatusCount (UserStatus estado)
+    {
+        return await _userService.GetStatusCount(estado);
+    }
 }

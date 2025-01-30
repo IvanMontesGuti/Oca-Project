@@ -9,7 +9,8 @@ export const REGISTER_URL = `${API_AUTH_URL}/Register`;
 /* --- USER CONTROLLER --- */
 const API_USER_URL = `${API_BASE_URL}/api/User`;
 export const GET_USER_BY_ID_URL = (id) => `${API_USER_URL}/${id}`; 
-
+export const UPDATE_USER_STATE = (num, id) => `${API_USER_URL}/Status?userStatusRequest=${num}&userId=${id}`;
+export const GET_COUNT_STATUS = (num) => `${API_USER_URL}/CountStatus?estado=${num}`;
 
 /* --- IMAGE CONTROLLER --- */
 const API_IMAGE_URL = `${API_BASE_URL}/api/Images`;
@@ -28,7 +29,8 @@ export const FRIENDSHIP_RECEIVED_REQUEST_URL = (userId) => `${API_FRIENDSHIP_URL
 export const FRIENDSHIP_ACCEPT_REQUEST_URL = (friendsipId) => `${API_FRIENDSHIP_URL}/accept/${friendsipId}`; // POST /api/Friendship/accept/{friendsipId}
 export const FRIENDSHIP_GET_ALL_URL = `${API_FRIENDSHIP_URL}/all`; // GET /api/Friendship/all
 export const FRIENDSHIP_GET_BY_ID_URL = (userId) => `${API_FRIENDSHIP_URL}/all/${userId}`; // GET /api/Friendship/all/{friendsipId}
-
+export const FRIENDSHIP_DELETE_REQUEST_URL = (friendsipId) => `${API_FRIENDSHIP_URL}/reject/${friendsipId}`; // DELETE /api/Friendship/delete/{friendsipId}
 /* --- SEARCH CONTROLLER --- */
 
-export const API_SEARCH_URL = `${API_BASE_URL}/api/Search/users`;
+export const API_SEARCH_URL = (query) => `${API_BASE_URL}/api/Search/users?query=${query}`; // GET /api/Search/users?query={query}
+

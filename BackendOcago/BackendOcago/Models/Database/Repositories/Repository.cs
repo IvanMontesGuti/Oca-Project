@@ -1,6 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using BackendOcago.Models.Database.Entities;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
+using System;
 using System.Linq.Expressions;
+using System.Xml.Linq;
 namespace BackendOcago.Models.Database.Repositories;
 
 public abstract class Repository<TEntity> : IRepository<TEntity> where TEntity : class
@@ -33,6 +36,8 @@ public async Task<ICollection<TEntity>> GetAllAsync()
     {
         return await _dbContext.Set<TEntity>().FindAsync(id);
     }
+
+
     public async Task<TEntity> InsertAsync(TEntity entity)
     {
         EntityEntry<TEntity> entry = await _dbContext.Set<TEntity>().AddAsync(entity);
@@ -47,6 +52,7 @@ public async Task<ICollection<TEntity>> GetAllAsync()
     {
         _dbContext.Set<TEntity>().Remove(entity);
     }
+
 
     public async Task<bool> SaveAsync()
     {

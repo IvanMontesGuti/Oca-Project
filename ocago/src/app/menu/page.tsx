@@ -3,12 +3,14 @@
 import React, { useEffect, useState } from "react";
 import { jwtDecode } from "jwt-decode";
 import Link from 'next/link'
-import { ArrowRight } from 'lucide-react'
 import Image from "next/image"
 import { Toaster, toast } from 'sonner'
-import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import FriendsPanel from "@/components/FriendsPanel";
+import {WebInfo} from "@/components/WebInfo";
+import { UPDATE_USER_STATE } from "@/lib/endpoints/config";
+import { FETCH_PUT } from "@/lib/endpoints/useFetch";
+import { Header2 } from "@/components/navUser";
 interface DecodedToken {
     email: string;
     role: string;
@@ -17,10 +19,21 @@ interface DecodedToken {
     nbf: number;
     exp: number;
     iat: number;
+    id: number;
 }
 export default function OcaGame() {
   
   const [userInfo, setUserInfo] = useState<DecodedToken | null>(null);
+  const url = UPDATE_USER_STATE(1, userInfo?.id);
+
+  FETCH_PUT(url)
+    .then(response => response.json())
+    .then(data => {
+      console.log("Respuesta:", data);
+    })
+    .catch(error => {
+      console.error("Error en la solicitud:", error);
+    });
 
   useEffect(() => {
           if (typeof window !== "undefined") {
@@ -65,41 +78,7 @@ export default function OcaGame() {
     
     <div className="min-h-screen bg-[#2E1B6B] text-white">
     
-    <nav className="container mx-auto px-4 py-6 flex justify-between items-center">
-      
-        <div className="flex items-center gap-2 ">
-        <Image
-                  src="/images/logo.svg"
-                  alt="logo"
-                  width={50}
-                  height={50}
-                  
-                />
-          <span className="text-white text-2xl font-fredoka flex items-center gap-2">
-            OcaGo! <ArrowRight className="h-5 w-5" />
-          </span>
-        </div>
-        <div className="flex gap-4">
-        
-          <Link
-            href="/dashboard"
-            className="text-white hover:text-gray-200 transition-colors font-montserrat"
-          >
-            <div className="flex flex-col lg:flex-row gap-8 items-center justify-center">
-            <p className="text-white text-center mb-2">
-                    {unique_name}
-                    
-            </p>
-            <p><img
-                        src={"https://localhost:7107/" + family_name}
-                        alt="Avatar"
-                        className="w-14 h-14 rounded-full mx-auto mb-4 border border-gray-300"
-                    /></p>
-            </div>
-          </Link>
-          
-        </div>
-      </nav>
+    <Header2 />
       <Toaster />
       <div className="container mx-auto px-4 py-8 ">
         
@@ -136,17 +115,8 @@ export default function OcaGame() {
                 <h1 className="text-2xl md:text-3xl font-bold mb-2 items-center">
                   Juega al juego clásico de la oca con amigos <span className="text-[#4ADE80]">online</span>.
                 </h1>
-                <div className="flex items-center gap-4 text-sm text-gray-300">
-                  <span>
-                    <strong className="text-white">?</strong> Personas conectadas
-                  </span>
-                  <span>
-                    <strong className="text-white">?</strong> Personas en partida
-                  </span>
-                  <span>
-                    <strong className="text-white">?</strong> Partidas activas
-                  </span>
-                </div>
+                <WebInfo />
+                
               </div>
             </div>
 
