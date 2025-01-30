@@ -11,25 +11,24 @@ import {
   FRIENDSHIP_RECEIVED_REQUEST_URL,
   FRIENDSHIP_ACCEPT_REQUEST_URL,
   FRIENDSHIP_DELETE_REQUEST_URL,
+  API_BASE_URL,
 } from "@/lib/endpoints/config"
 
 interface Friend {
   id: string
-  sender: {
-    nickname: string
-    avatarUrl: string
-    friends: {
-      id: string
-      nickname: string
-      avatarUrl: string
-    }[]
-  }
-  receiver: {
+  nickname: string
+  avatarUrl: string
+  status?: string
+  sender?: {
     id: string
     nickname: string
     avatarUrl: string
   }
-  status: string
+  receiver?: {
+    id: string
+    nickname: string
+    avatarUrl: string
+  }
 }
 
 interface DecodedToken {
@@ -115,23 +114,29 @@ export default function FriendsPanel() {
 
       try {
         let url
+        let data
         if (search.trim() === "") {
-          url = `${FRIENDSHIP_GET_BY_ID_URL(userInfo.id)}`
+          url = FRIENDSHIP_GET_BY_ID_URL(userInfo.id)
+          const response = await fetch(url)
+          if (!response.ok) {
+            throw new Error(`Failed to fetch friends: ${response.statusText}`)
+          }
+          data = await response.json()
+          // Asumiendo que la respuesta es un array de amigos
+          setFriends(data || [])
         } else {
-          url = `${API_SEARCH_URL}?page=${page + 1}&limit=10&search=${search}`
+          url = API_SEARCH_URL(search)
+          const response = await fetch(url)
+          if (!response.ok) {
+            throw new Error(`Failed to search users: ${response.statusText}`)
+          }
+          data = await response.json()
+          // Asumiendo que la respuesta de búsqueda es un array de usuarios
+          setFriends(data || [])
         }
 
-        const response = await fetch(url)
-
-        if (!response.ok) {
-          const errorMessage = await response.text()
-          throw new Error(`Failed to fetch friends: ${errorMessage}`)
-        }
-
-        const data = await response.json()
-        console.log("Friends data:", data)
-        setFriends(data || [])
-        setTotalPages(data.totalPages || 1)
+        console.log("Friends/Search data:", data)
+        setTotalPages(1) // Mantenemos esto en 1 ya que no hay información de paginación
       } catch (error) {
         console.error("Error fetching friends:", error)
         setError("Failed to load friends. Please try again later.")
@@ -205,7 +210,7 @@ export default function FriendsPanel() {
       if (!response.ok) {
         throw new Error("Failed to accept friend request")
       }
-      
+
       fetchFriendRequests()
       fetchFriends(currentPage, searchQuery)
     } catch (error) {
@@ -224,8 +229,8 @@ export default function FriendsPanel() {
       if (!response.ok) {
         throw new Error("Failed to reject friend request")
       }
-      console.log(response, "response");
-      
+      console.log(response, "response")
+
       // Refresh friend requests
       fetchFriendRequests()
     } catch (error) {
@@ -244,7 +249,7 @@ export default function FriendsPanel() {
         </div>
         <Input
           type="text"
-          placeholder="Search by nickname..."
+          placeholder="Buscar por nickname..."
           value={searchQuery}
           onChange={handleSearch}
           className="w-full bg-gray-700 text-white placeholder-gray-400"
@@ -258,21 +263,22 @@ export default function FriendsPanel() {
         ) : (
           <div className="space-y-4">
             {friends.map((friend) => {
-              const friendUser = friend.sender?.id === userInfo?.id ? friend.receiver : friend.sender
-              if (!friendUser) return null
-
+              const friendUser = friend.sender?.id === userInfo?.id ? friend.receiver : friend.sender || friend
               return (
-                <div key={friend.id} className="flex items-center justify-between group">
+                <div key={friendUser.id} className="flex items-center justify-between group">
                   <div className="flex items-center gap-3">
                     <Avatar>
-                      <AvatarImage src={friendUser.avatarUrl || "/placeholder.svg"} alt={friendUser.nickname} />
+                      <AvatarImage
+                        src={`${API_BASE_URL}/${friendUser.avatarUrl}` || "/placeholder.svg"}
+                        alt={friendUser.nickname}
+                      />
                       <AvatarFallback>
                         {friendUser.nickname ? friendUser.nickname.slice(0, 2).toUpperCase() : "NA"}
                       </AvatarFallback>
                     </Avatar>
                     <div>
                       <div className="font-medium leading-none text-white">{friendUser.nickname}</div>
-                      <div className="text-sm text-gray-400">{friendUser.status === 0 ? "Offline" : "Online"}</div>
+                      <div className="text-sm text-gray-400">{friendUser.status === "0" ? "Offline" : "Online"}</div>
                     </div>
                   </div>
                 </div>
@@ -294,7 +300,10 @@ export default function FriendsPanel() {
               <div key={request.id} className="flex items-center justify-between group">
                 <div className="flex items-center gap-3">
                   <Avatar>
-                    <AvatarImage src={request.sender.avatarUrl || "/placeholder.svg"} alt={request.sender.nickname} />
+                    <AvatarImage
+                      src={`${API_BASE_URL}/${request.sender.avatarUrl}` || "/placeholder.svg"}
+                      alt={request.sender.nickname}
+                    />
                     <AvatarFallback>
                       {request.sender.nickname ? request.sender.nickname.slice(0, 2).toUpperCase() : "NA"}
                     </AvatarFallback>
