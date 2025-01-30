@@ -100,6 +100,7 @@ export default function FriendsPanel() {
     id: userInfo?.id,
     unique_name: userInfo?.nickname,
     status: 0,
+    avatarUrl: userInfo?.avatarUrl
   }
 
   const fetchFriends = useCallback(
@@ -131,15 +132,15 @@ export default function FriendsPanel() {
             throw new Error(`Failed to search users: ${response.statusText}`)
           }
           data = await response.json()
-          // Asumiendo que la respuesta de búsqueda es un array de usuarios
+          
           setFriends(data || [])
         }
 
         console.log("Friends/Search data:", data)
-        setTotalPages(1) // Mantenemos esto en 1 ya que no hay información de paginación
+        setTotalPages(1) 
       } catch (error) {
         console.error("Error fetching friends:", error)
-        setError("Failed to load friends. Please try again later.")
+        setError("No se encontraron usuarios con este nickname.")
         setFriends([])
       } finally {
         setIsLoading(false)
@@ -239,6 +240,8 @@ export default function FriendsPanel() {
   }
 
   console.log("friends", friends)
+  console.log(`${API_BASE_URL}/${currentUser.avatarUrl}`);
+  
 
   return (
     <div className="bg-[#231356] rounded-lg p-4 space-y-6">
