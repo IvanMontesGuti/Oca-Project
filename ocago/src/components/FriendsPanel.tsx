@@ -245,7 +245,6 @@ export default function FriendsPanel() {
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <h2 className="font-semibold text-white">Amigos</h2>
-          <button className="text-sm text-gray-400 hover:text-white">Ver todos</button>
         </div>
         <Input
           type="text"
