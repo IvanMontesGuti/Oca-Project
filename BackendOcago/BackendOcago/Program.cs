@@ -10,7 +10,6 @@ using BackendOcago.Models.Database;
 using BackendOcago.Models.Database.Repositories;
 using BackendOcago.Services;
 using BackendOcago.Models.Mappers;
-using BackendOcago.WebSocketAdvanced;
 
 namespace BackendOcago;
 
@@ -49,10 +48,8 @@ public class Program
         builder.Services.AddScoped<FriendshipService>();
         builder.Services.AddScoped<SmartSearchService>();
 
-        // WebSocket Services (Scoped, no Singleton)
-        builder.Services.AddScoped<WebSocketService>();
+        builder.Services.AddScoped<WebSocketHandler>();
 
-        // No se registra WebSocketHandler porque cada instancia necesita parámetros dinámicos
 
         // Mappers
         builder.Services.AddTransient<UserMapper>();

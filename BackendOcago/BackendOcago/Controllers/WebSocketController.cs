@@ -1,35 +1,30 @@
 ﻿using BackendOcago.Models.Database;
-using BackendOcago.WebSocketAdvanced;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.DependencyInjection;
-using System.Net.WebSockets;
 
 [Route("socket")]
 [ApiController]
 public class WebSocketController : ControllerBase
 {
-    private readonly IServiceProvider _serviceProvider;
+    private readonly IServiceScopeFactory _serviceScopeFactory;
+    private readonly WebSocketHandler _webSocketHandler;
 
-    public WebSocketController(IServiceProvider serviceProvider)
+    public WebSocketController(IServiceScopeFactory serviceScopeFactory, WebSocketHandler webSocketHandler)
     {
-        _serviceProvider = serviceProvider;
+        _serviceScopeFactory = serviceScopeFactory;
+        _webSocketHandler = webSocketHandler;
     }
 
     [HttpGet("{userId}")]
-    public async Task ConnectAsync(long userId)
+    public async Task<IActionResult> ConnectAsync(string userId)
     {
-        if (HttpContext.WebSockets.IsWebSocketRequest)
+        if (!HttpContext.WebSockets.IsWebSocketRequest)
         {
-            using var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-            using var scope = _serviceProvider.CreateScope();
-            var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
+            return BadRequest("WebSocket connection expected.");
+        }
 
-            var handler = new WebSocketHandler(userId, webSocket, dbContext);
-            await handler.HandleAsync();
-        }
-        else
-        {
-            HttpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
-        }
+        using var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+        await _webSocketHandler.HandleConnection(webSocket, userId);
+
+        return new EmptyResult();
     }
 }
