@@ -1,62 +1,35 @@
-﻿using System.Net.WebSockets;
-using BackendOcago.Services;
+﻿using BackendOcago.Models.Database;
 using BackendOcago.WebSocketAdvanced;
 using Microsoft.AspNetCore.Mvc;
-
-namespace BackendOcago.Controllers;
+using Microsoft.Extensions.DependencyInjection;
+using System.Net.WebSockets;
 
 [Route("socket")]
 [ApiController]
 public class WebSocketController : ControllerBase
 {
-    private readonly WebSocketService _websocketService;
-    private readonly WebSocketNetwork _websocketNetwork;
+    private readonly IServiceProvider _serviceProvider;
 
-    public WebSocketController(WebSocketService websocketService, WebSocketNetwork websocketNetwork)
+    public WebSocketController(IServiceProvider serviceProvider)
     {
-        _websocketService = websocketService;
-        _websocketNetwork = websocketNetwork;
+        _serviceProvider = serviceProvider;
     }
 
-    [HttpGet]
-    public async Task ConnectAsync()
+    [HttpGet("{userId}")]
+    public async Task ConnectAsync(long userId)
     {
-        // Si la petición es de tipo websocket la aceptamos
         if (HttpContext.WebSockets.IsWebSocketRequest)
         {
-            // Aceptamos la solicitud
-            WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+            using var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+            using var scope = _serviceProvider.CreateScope();
+            var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
 
-            // Manejamos la solicitud.
-            await _websocketService.HandleAsync(webSocket);
+            var handler = new WebSocketHandler(userId, webSocket, dbContext);
+            await handler.HandleAsync();
         }
-        // En caso contrario la rechazamos
         else
         {
             HttpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
         }
-
-        // Cuando este método finalice, se cerrará automáticamente la conexión con el websocket
-    }
-
-    [HttpGet("advanced")]
-    public async Task AdvancedConnectAsync()
-    {
-        // Si la petición es de tipo websocket la aceptamos
-        if (HttpContext.WebSockets.IsWebSocketRequest)
-        {
-            // Aceptamos la solicitud
-            WebSocket webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-
-            // Manejamos la solicitud.
-            await _websocketNetwork.HandleAsync(webSocket);
-        }
-        // En caso contrario la rechazamos
-        else
-        {
-            HttpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
-        }
-
-        // Cuando este método finalice, se cerrará automáticamente la conexión con el websocket
     }
 }

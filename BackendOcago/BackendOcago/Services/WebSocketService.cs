@@ -1,74 +1,101 @@
 ﻿using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
+using System.Collections.Concurrent;
+using BackendOcago.Models.Database;
+using BackendOcago.Models.Database.Entities;
+using BackendOcago.Models.Database.Enum;
+using Microsoft.EntityFrameworkCore;
+using BackendOcago.Models.Dtos;
 
 namespace BackendOcago.Services;
 
 public class WebSocketService
 {
-    public async Task HandleAsync(WebSocket webSocket)
+    private readonly DataContext _dbContext;
+    private static readonly ConcurrentDictionary<long, WebSocket> _connections = new();
+
+    public WebSocketService(DataContext dbContext)
     {
-        // Mientras que el websocket del cliente esté conectado
+        _dbContext = dbContext;
+    }
+
+    public async Task HandleConnectionAsync(long userId, WebSocket webSocket)
+    {
+        _connections[userId] = webSocket;
+
         while (webSocket.State == WebSocketState.Open)
         {
-            // Leemos el mensaje
-            string message = await ReadAsync(webSocket);
-
+            string message = await ReadMessageAsync(webSocket);
             if (!string.IsNullOrWhiteSpace(message))
             {
-                // Procesamos el mensaje
-                string outMessage = $"[{string.Join(", ", message as IEnumerable<char>)}]";
-
-                // Enviamos respuesta al cliente
-                await SendAsync(webSocket, outMessage);
+                await ProcessMessageAsync(userId, message);
             }
         }
+
+        _connections.TryRemove(userId, out _);
     }
 
-    private async Task<string> ReadAsync(WebSocket webSocket, CancellationToken cancellation = default)
+    private async Task ProcessMessageAsync(long senderId, string message)
     {
-        // Creo un buffer para almacenar temporalmente los bytes del contenido del mensaje
-        byte[] buffer = new byte[4096];
-        // Creo un StringBuilder para poder ir creando poco a poco el mensaje en formato texto
-        StringBuilder stringBuilder = new StringBuilder();
-        // Creo un booleano para saber cuándo termino de leer el mensaje
-        bool endOfMessage = false;
+        var request = JsonSerializer.Deserialize<WebSocketRequest>(message);
+        if (request == null || request.SenderId == request.ReceiverId) return;
 
-        do
+        // Verificar si ya existe una solicitud de amistad
+        var existingRequest = await _dbContext.Friendships
+            .FirstOrDefaultAsync(f => f.SenderId == request.SenderId && f.ReceiverId == request.ReceiverId);
+
+        if (existingRequest != null) return;
+
+        // Crear nueva solicitud de amistad
+        var friendship = new Friendship
         {
-            // Recibo el mensaje pasándole el buffer como parámetro
-            WebSocketReceiveResult result = await webSocket.ReceiveAsync(buffer, cancellation);
+            SenderId = request.SenderId,
+            ReceiverId = request.ReceiverId,
+            SentAt = DateTime.UtcNow,
+            Status = FriendshipInvitationStatus.Pendiente
+        };
 
-            // Si el resultado que se ha recibido es de tipo texto lo decodifico y lo meto en el StringBuilder
-            if (result.MessageType == WebSocketMessageType.Text)
-            {
-                // Decodifico el contenido recibido
-                string message = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                // Lo añado al StringBuilder
-                stringBuilder.Append(message);
-            }
-            // Si el resultado que se ha recibido entonces cerramos la conexión
-            else if (result.CloseStatus.HasValue)
-            {
-                // Cerramos la conexión
-                await webSocket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, cancellation);
-            }
+        _dbContext.Friendships.Add(friendship);
+        await _dbContext.SaveChangesAsync();
 
-            // Guardamos en nuestro booleano si hemos recibido el final del mensaje
-            endOfMessage = result.EndOfMessage;
-        }
-        // Repetiremos iteración si el socket permanece abierto y no se ha recibido todavía el final del mensaje
-        while (webSocket.State == WebSocketState.Open && !endOfMessage);
+        // Enviar notificación de solicitud de amistad al receptor
+        var notification = JsonSerializer.Serialize(new
+        {
+            senderId = request.SenderId,
+            receiverId = request.ReceiverId,
+            sentAt = friendship.SentAt,
+            status = friendship.Status.ToString(),
+            message = "Tienes una solicitud de amistad pendiente. ¿Aceptar o rechazar?"
+        });
 
-        // Finalmente devolvemos el contenido del StringBuilder
-        return stringBuilder.ToString();
+        await SendMessageToClient(request.ReceiverId, notification);
     }
 
-    private Task SendAsync(WebSocket webSocket, string message, CancellationToken cancellation = default)
+
+
+    private async Task<string> ReadMessageAsync(WebSocket webSocket)
     {
-        // Codificamos a bytes el contenido del mensaje
-        byte[] bytes = Encoding.UTF8.GetBytes(message);
+        var buffer = new byte[4096];
+        var result = await webSocket.ReceiveAsync(buffer, CancellationToken.None);
 
-        // Enviamos los bytes al cliente marcando que el mensaje es un texto
-        return webSocket.SendAsync(bytes, WebSocketMessageType.Text, true, cancellation);
+        return result.MessageType == WebSocketMessageType.Text
+            ? Encoding.UTF8.GetString(buffer, 0, result.Count)
+            : string.Empty;
     }
+
+    public async Task SendMessageToClient(long userId, string message)
+    {
+        if (_connections.TryGetValue(userId, out var socket) && socket.State == WebSocketState.Open)
+        {
+            byte[] bytes = Encoding.UTF8.GetBytes(message);
+            await socket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
+        }
+        else
+        {
+            Console.WriteLine($"El usuario {userId} no tiene una conexión WebSocket activa.");
+        }
+    }
+
+
 }
