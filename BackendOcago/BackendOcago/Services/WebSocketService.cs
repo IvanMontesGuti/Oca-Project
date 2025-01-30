@@ -14,6 +14,7 @@ public class WebSocketService
 {
     private readonly DataContext _dbContext;
     private static readonly ConcurrentDictionary<long, WebSocket> _connections = new();
+    private static readonly ConcurrentDictionary<long, bool> _userStatus = new();
 
     public WebSocketService(DataContext dbContext)
     {
@@ -22,19 +23,66 @@ public class WebSocketService
 
     public async Task HandleConnectionAsync(long userId, WebSocket webSocket)
     {
-        _connections[userId] = webSocket;
+        Console.WriteLine($"Usuario {userId} conectado.");
 
-        while (webSocket.State == WebSocketState.Open)
+        _connections[userId] = webSocket;
+        _userStatus[userId] = true; // Marcar usuario como conectado
+
+        await BroadcastConnectedUsersCount(); // Notificar número de usuarios conectados
+
+        try
         {
-            string message = await ReadMessageAsync(webSocket);
-            if (!string.IsNullOrWhiteSpace(message))
+            while (webSocket.State == WebSocketState.Open)
             {
-                await ProcessMessageAsync(userId, message);
+                string message = await ReadMessageAsync(webSocket);
+                if (!string.IsNullOrWhiteSpace(message))
+                {
+                    await ProcessMessageAsync(userId, message);
+                }
             }
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error en WebSocket de {userId}: {ex.Message}");
+        }
+        finally
+        {
+            _connections.TryRemove(userId, out _);
+            _userStatus.TryRemove(userId, out _); // Marcar usuario como desconectado
+            Console.WriteLine($"Usuario {userId} desconectado.");
 
-        _connections.TryRemove(userId, out _);
+            await BroadcastConnectedUsersCount(); // Notificar desconexión
+        }
     }
+
+    private async Task BroadcastConnectedUsersCount()
+    {
+        int connectedUsers = _userStatus.Count;
+        var message = JsonSerializer.Serialize(new
+        {
+            type = "connectedUsers",
+            count = connectedUsers
+        });
+
+        await BroadcastMessage(message);
+    }
+
+    private async Task BroadcastMessage(string message)
+    {
+        List<Task> tasks = new();
+        foreach (var socket in _connections.Values)
+        {
+            if (socket.State == WebSocketState.Open)
+            {
+                tasks.Add(socket.SendAsync(Encoding.UTF8.GetBytes(message), WebSocketMessageType.Text, true, CancellationToken.None));
+            }
+        }
+        await Task.WhenAll(tasks);
+    }
+
+
+
+
 
     private async Task ProcessMessageAsync(long senderId, string message)
     {
