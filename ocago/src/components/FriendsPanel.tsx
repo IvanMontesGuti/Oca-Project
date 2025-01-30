@@ -12,13 +12,14 @@ import {
   FRIENDSHIP_ACCEPT_REQUEST_URL,
   FRIENDSHIP_DELETE_REQUEST_URL,
   API_BASE_URL,
+  FRIENDSHIP_SEND_REQUEST_URL,
 } from "@/lib/endpoints/config"
 
 interface Friend {
   id: string
   nickname: string
   avatarUrl: string
-  status?: string
+  status?: string | number
   sender?: {
     id: string
     nickname: string
@@ -29,11 +30,13 @@ interface Friend {
     nickname: string
     avatarUrl: string
   }
+  isFriend?: boolean
 }
 
 interface DecodedToken {
   id: number
   nickname: string
+  avatarUrl?: string
 }
 
 interface PaginationProps {
@@ -100,7 +103,7 @@ export default function FriendsPanel() {
     id: userInfo?.id,
     unique_name: userInfo?.nickname,
     status: 0,
-    avatarUrl: userInfo?.avatarUrl
+    avatarUrl: userInfo?.avatarUrl,
   }
 
   const fetchFriends = useCallback(
@@ -123,8 +126,8 @@ export default function FriendsPanel() {
             throw new Error(`Failed to fetch friends: ${response.statusText}`)
           }
           data = await response.json()
-          // Asumiendo que la respuesta es un array de amigos
-          setFriends(data || [])
+          // Mark these as friends
+          setFriends(data.map((friend: Friend) => ({ ...friend, isFriend: true })) || [])
         } else {
           url = API_SEARCH_URL(search)
           const response = await fetch(url)
@@ -132,12 +135,15 @@ export default function FriendsPanel() {
             throw new Error(`Failed to search users: ${response.statusText}`)
           }
           data = await response.json()
-          
-          setFriends(data || [])
+          // Check if each user is a friend
+          const friendsResponse = await fetch(FRIENDSHIP_GET_BY_ID_URL(userInfo.id))
+          const friendsData = await friendsResponse.json()
+          const friendIds = new Set(friendsData.map((friend: Friend) => friend.id))
+          setFriends(data.map((user: Friend) => ({ ...user, isFriend: friendIds.has(user.id) })) || [])
         }
 
         console.log("Friends/Search data:", data)
-        setTotalPages(1) 
+        setTotalPages(1)
       } catch (error) {
         console.error("Error fetching friends:", error)
         setError("No se encontraron usuarios con este nickname.")
@@ -169,6 +175,23 @@ export default function FriendsPanel() {
       console.error("Error fetching friend requests:", error)
     }
   }, [userInfo?.id])
+
+  const handleSendFriendRequest = async (receiverId: string) => {
+    if (!userInfo?.id) return
+
+    try {
+      const url = `${FRIENDSHIP_SEND_REQUEST_URL}?senderId=${userInfo.id}&receiverId=${receiverId}`
+      const response = await fetch(url, {
+        method: "POST",
+      })
+      if (!response.ok) {
+        throw new Error("Failed to send friend request")
+      }
+      fetchFriends(currentPage, searchQuery)
+    } catch (error) {
+      console.error("Error sending friend request:", error)
+    }
+  }
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -240,8 +263,7 @@ export default function FriendsPanel() {
   }
 
   console.log("friends", friends)
-  console.log(`${API_BASE_URL}/${currentUser.avatarUrl}`);
-  
+  console.log(`${API_BASE_URL}/${currentUser.avatarUrl}`)
 
   return (
     <div className="bg-[#231356] rounded-lg p-4 space-y-6">
@@ -280,9 +302,16 @@ export default function FriendsPanel() {
                     </Avatar>
                     <div>
                       <div className="font-medium leading-none text-white">{friendUser.nickname}</div>
-                      <div className="text-sm text-gray-400">{friendUser.status === "0" ? "Offline" : "Online"}</div>
+                      {friend.isFriend && (
+                        <div className="text-sm text-gray-400">{friendUser.status === "0" ? "Offline" : "Online"}</div>
+                      )}
                     </div>
                   </div>
+                  {!friend.isFriend && friendUser.id !== userInfo?.id && (
+                    <Button size="sm" variant="default" onClick={() => handleSendFriendRequest(friendUser.id)}>
+                      Enviar solicitud
+                    </Button>
+                  )}
                 </div>
               )
             })}
