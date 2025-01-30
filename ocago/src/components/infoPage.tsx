@@ -1,7 +1,7 @@
 import React, { } from 'react';
 import Image from 'next/image'
 import { ArrowRight } from 'lucide-react'
-
+import Link from 'next/link'
 
 export function InfoPage() {
    
@@ -20,10 +20,10 @@ export function InfoPage() {
             El juego clásico de la oca, con amigos.
           </p>
          
-          <button className="bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-lg flex items-center gap-2 hover:bg-white/30 transition-colors font-montserrat">
-            Empezar a jugar
-            <ArrowRight className="h-5 w-5"/>
-          </button>
+          <Link href="/menu" className="bg-white/20 backdrop-blur-sm text-white px-6 py-3 rounded-lg flex items-center gap-2 hover:bg-white/30 transition-colors font-montserrat">
+  Empezar a jugar
+  <ArrowRight className="h-5 w-5" />
+</Link>
         </div>
        
         <div className="md:w-1/2 mt-8 md:mt-0 relative">
