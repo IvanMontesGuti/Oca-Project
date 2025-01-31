@@ -3,17 +3,18 @@ import type { Metadata } from 'next'
 import { Fredoka } from 'next/font/google'
 import { Montserrat } from 'next/font/google'
 import { AuthProvider } from '@/context/AuthContext'
+import { WebSocketProvider } from '@/context/WebSocketContext'
 
 
 
-const fredoka = Fredoka({ 
+const fredoka = Fredoka({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
   variable: '--font-fredoka',
 })
 
 // Initialize the Montserrat font
-const montserrat = Montserrat({ 
+const montserrat = Montserrat({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
   variable: '--font-montserrat',
@@ -32,7 +33,11 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className={`${fredoka.variable} ${montserrat.variable}`}>
-      <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <WebSocketProvider>
+            {children}
+          </WebSocketProvider>
+        </AuthProvider>
       </body>
 
     </html>

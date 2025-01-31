@@ -11,6 +11,7 @@ public class WebSocketHandler
 {
     private static readonly ConcurrentDictionary<string, WebSocket> _connections = new();
     private readonly IServiceScopeFactory _serviceScopeFactory;
+    private static readonly object _lock = new();
 
     public WebSocketHandler(IServiceScopeFactory serviceScopeFactory)
     {
@@ -19,9 +20,22 @@ public class WebSocketHandler
 
     public async Task HandleConnection(WebSocket webSocket, string userId)
     {
-        _connections[userId] = webSocket;
         try
         {
+            // Agregar usuario de forma segura
+            lock (_lock)
+            {
+                _connections[userId] = webSocket;
+            }
+
+            int connectedCount = _connections.Count;
+
+            // Enviar mensaje solo al usuario recién conectado
+            await SendMessage(userId, new { Message = $"Hay {connectedCount} usuarios conectados." });
+
+            // Notificar a todos los demás usuarios (excluyendo al usuario recién conectado)
+            await BroadcastMessage(new { Message = $"Hay {connectedCount} usuarios conectados." }, excludeUserId: userId);
+
             var buffer = new byte[1024 * 4];
             while (webSocket.State == WebSocketState.Open)
             {
@@ -30,66 +44,43 @@ public class WebSocketHandler
                 {
                     break;
                 }
-                var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
-                var json = JsonSerializer.Deserialize<WebSocketMessage>(message);
-
-                if (json != null)
-                {
-                    using var scope = _serviceScopeFactory.CreateScope();
-                    var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
-
-                    switch (json.Type)
-                    {
-                        case "sendFriendRequest":
-                            var friendship = new Friendship
-                            {
-                                SenderId = long.Parse(json.SenderId),
-                                ReceiverId = long.Parse(json.ReceiverId),
-                                SentAt = DateTime.UtcNow,
-                                Status = FriendshipInvitationStatus.Pendiente
-                            };
-                            dbContext.Friendships.Add(friendship);
-                            await dbContext.SaveChangesAsync();
-
-                            await SendNotification(json.ReceiverId, new WebSocketMessage
-                            {
-                                Type = "friendRequest",
-                                SenderId = json.SenderId,
-                                ReceiverId = json.ReceiverId
-                            });
-                            break;
-
-                        case "respondFriendRequest":
-                            var existingFriendship = dbContext.Friendships.FirstOrDefault(f =>
-                                f.SenderId == long.Parse(json.SenderId) && f.ReceiverId == long.Parse(json.ReceiverId));
-                            if (existingFriendship != null)
-                            {
-                                existingFriendship.Status = json.Accepted ? FriendshipInvitationStatus.Aceptada : FriendshipInvitationStatus.Rechazada;
-                                await dbContext.SaveChangesAsync();
-
-                                await SendNotification(json.SenderId, new WebSocketMessage
-                                {
-                                    Type = json.Accepted ? "friendRequestAccepted" : "friendRequestRejected",
-                                    SenderId = json.ReceiverId,
-                                    ReceiverId = json.SenderId,
-                                    Accepted = json.Accepted
-                                });
-                            }
-                            break;
-                    }
-                }
             }
         }
         finally
         {
-            _connections.TryRemove(userId, out _);
-            await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closed by server", CancellationToken.None);
+            // Eliminar usuario de forma segura
+            lock (_lock)
+            {
+                _connections.TryRemove(userId, out _);
+            }
+
+            int connectedCount = _connections.Count;
+
+            // Notificar a todos los usuarios que alguien salió
+            await BroadcastMessage(new { Message = $"Hay {connectedCount} usuarios conectados." });
         }
     }
 
-    public async Task SendNotification(string receiverId, WebSocketMessage message)
+    private async Task BroadcastMessage(object message, string excludeUserId = null)
     {
-        if (_connections.TryGetValue(receiverId, out var receiverSocket))
+        var jsonMessage = JsonSerializer.Serialize(message);
+        var bytes = Encoding.UTF8.GetBytes(jsonMessage);
+
+        List<Task> sendTasks = new();
+        foreach (var (userId, connection) in _connections)
+        {
+            if (connection.State == WebSocketState.Open && userId != excludeUserId)
+            {
+                sendTasks.Add(connection.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, CancellationToken.None));
+            }
+        }
+
+        await Task.WhenAll(sendTasks);
+    }
+
+    private async Task SendMessage(string receiverId, object message)
+    {
+        if (_connections.TryGetValue(receiverId, out var receiverSocket) && receiverSocket.State == WebSocketState.Open)
         {
             var jsonMessage = JsonSerializer.Serialize(message);
             var bytes = Encoding.UTF8.GetBytes(jsonMessage);
