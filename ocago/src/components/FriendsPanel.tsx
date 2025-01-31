@@ -1,5 +1,5 @@
 "use client"
-
+//FRIENDSPANEL
 import { useState, useEffect, useCallback } from "react"
 import { jwtDecode } from "jwt-decode"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
