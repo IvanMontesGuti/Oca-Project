@@ -126,7 +126,7 @@ const fetchFriends = useCallback(
           throw new Error(`Failed to fetch friends: ${response.statusText}`)
         }
         data = await response.json()
-        // Mark these as friends
+        
         setFriends(data.map((friend: Friend) => ({ ...friend, isFriend: true })) || [])
       } else {
         url = API_SEARCH_URL(search)
@@ -135,10 +135,10 @@ const fetchFriends = useCallback(
           throw new Error(`Failed to search users: ${response.statusText}`)
         }
         data = await response.json()
-        // Check if each user is a friend
+        
         const friendsResponse = await fetch(FRIENDSHIP_GET_BY_ID_URL(userInfo.id))
         if (!friendsResponse.ok) {
-          // If there's an error fetching friends, assume the user has no friends
+          
           setFriends(data.map((user: Friend) => ({ ...user, isFriend: false })) || [])
         } else {
           const friendsData = await friendsResponse.json()
@@ -262,7 +262,7 @@ const fetchFriends = useCallback(
       }
       console.log(response, "response")
 
-      // Refresh friend requests
+      
       fetchFriendRequests()
     } catch (error) {
       console.error("Error rejecting friend request:", error)
@@ -273,8 +273,8 @@ const fetchFriends = useCallback(
   console.log(`${API_BASE_URL}/${currentUser.avatarUrl}`)
 
   return (
-    <div className="bg-[#231356] rounded-lg p-4 space-y-6">
-      <div className="space-y-4">
+    <div className="bg-[#231356] rounded-lg p-4 space-y-6 ">
+      <div className="space-y-4 ">
         <div className="flex justify-between items-center">
           <h2 className="font-semibold text-white">Amigos</h2>
         </div>
@@ -292,7 +292,7 @@ const fetchFriends = useCallback(
         ) : friends.length === 0 ? (
           <div className="text-white text-center">No friends found</div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-[150px] overflow-y-auto">
             {friends.map((friend) => {
               const friendUser = friend.sender?.id === userInfo?.id ? friend.receiver : friend.sender || friend
               return (
@@ -350,7 +350,7 @@ const fetchFriends = useCallback(
                     <div className="font-medium leading-none text-white">{request.sender.nickname}</div>
                   </div>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-1 ">
                   <Button size="sm" variant="default" onClick={() => handleAcceptRequest(request.id)}>
                     Aceptar
                   </Button>

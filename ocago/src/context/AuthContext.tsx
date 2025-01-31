@@ -4,7 +4,7 @@ import { LOGIN_URL, REGISTER_URL } from "@/lib/endpoints/config";
 import { FETCH_POST } from "@/lib/endpoints/useFetch";
 import React, { createContext, useContext, useState, useEffect } from "react";
 
-// Interfaz para el contexto de autenticación
+
 interface AuthContextType {
     token: string | null;
     login: (identifier: string, password: string, rememberMe: boolean) => Promise<void>;
@@ -13,7 +13,7 @@ interface AuthContextType {
     isAuthenticated: boolean;
 }
 
-// Crear el contexto de autenticación
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -35,11 +35,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         try {
             console.log("Sending login request:", { mail, password });
     
-            // Realiza la solicitud al backend
+            
             const data = await FETCH_POST(LOGIN_URL, { mail, password });
             console.log("Server Response:", data);
     
-            // Extrae el token desde la propiedad `accessToken`
+            
             if (!data?.accessToken) {
                 throw new Error("Server did not return a valid accessToken");
             }
@@ -47,7 +47,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setToken(data.accessToken);
             setIsAuthenticated(true);
     
-            // Almacenar el token en localStorage o sessionStorage según la preferencia del usuario
+            
             if (rememberMe) {
                 localStorage.setItem("authToken", data.accessToken);
                 sessionStorage.setItem("authToken", data.accessToken);
@@ -69,7 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 mail,
                 nickname,
                 password,
-                role: null, // Cambia esto según sea necesario
+                role: null, 
                 avatarUrl,
             });
     
@@ -81,7 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 body,
             });
     
-            // Verificar si la respuesta es exitosa
+            
             if (!response.ok) {
                 const errorData = await response.json();
                 throw new Error(errorData.message || "Failed to register");

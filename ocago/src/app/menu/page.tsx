@@ -55,7 +55,7 @@ export default function OcaGame() {
 
       if (!userInfo) {
         return (
-          <div className="flex items-center justify-center h-screen bg-gray-100">
+          <div className="flex items-center justify-center h-screen bg-[#2E1B6B]">
           <div className="text-center bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
             <p className="text-2xl font-semibold text-red-600 mb-6 font-fredoka">
               ¡Inicia sesión para poder entrar!
@@ -64,7 +64,8 @@ export default function OcaGame() {
               href="/"
               className="text-lg text-blue-600 hover:text-blue-500 transition-colors font-montserrat"
             >
-              Volver al inicio
+              <strong>Volver al inicio</strong>
+              
             </Link>
           </div>
         </div>
@@ -109,11 +110,11 @@ export default function OcaGame() {
                   width={96}
                   height={96}
                   className="rounded-full bg-white p-2"
-                />
+                />  
               </div>
               <div className="text-center lg:text-left">
                 <h1 className="text-2xl md:text-3xl font-bold mb-2 items-center">
-                  Juega al juego clásico de la oca con amigos <span className="text-[#4ADE80]">online</span>.
+                  Disfruta con el juego clásico de la oca con amigos <span className="text-[#4ADE80]">en línea</span>.
                 </h1>
                 <WebInfo />
                 
