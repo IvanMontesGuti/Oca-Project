@@ -1,23 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { jwtDecode } from "jwt-decode";
+import React, {} from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { UPDATE_USER_STATE } from "@/lib/endpoints/config";
 import { FETCH_PUT } from "@/lib/endpoints/useFetch";
 import { Link } from "lucide-react";
 
-interface DecodedToken {
-    email: string;
-    role: string;
-    unique_name: string;
-    family_name?: string; 
-    nbf: number;
-    exp: number;
-    iat: number;
-    id: number;
-}
 
 export default function Dashboard() {
     const { logout } = useAuth(); 
