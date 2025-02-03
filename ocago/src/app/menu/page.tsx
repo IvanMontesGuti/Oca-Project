@@ -7,25 +7,33 @@ import Image from "next/image"
 import { Toaster, toast } from 'sonner'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import FriendsPanel from "@/components/FriendsPanel";
-import {WebInfo} from "@/components/WebInfo";
+import { WebInfo } from "@/components/WebInfo";
 import { UPDATE_USER_STATE } from "@/lib/endpoints/config";
 import { FETCH_PUT } from "@/lib/endpoints/useFetch";
 import { Header2 } from "@/components/navUser";
+import { useAuth } from "@/context/AuthContext";
 import { Header } from "@/components/header";
+
+
 interface DecodedToken {
-    email: string;
-    role: string;
-    unique_name: string;
-    family_name?: string; 
-    nbf: number;
-    exp: number;
-    iat: number;
-    id: number;
+  email: string;
+  role: string;
+  unique_name: string;
+  family_name?: string;
+  nbf: number;
+  exp: number;
+  iat: number;
+  id: number;
 }
+
 export default function OcaGame() {
   
-  const [userInfo, setUserInfo] = useState<DecodedToken | null>(null);
-  const url = UPDATE_USER_STATE(1, userInfo?.id);
+  const {isAuthenticated} = useAuth();
+
+
+
+ /*  const url = UPDATE_USER_STATE(1, userInfo?.id);
+
 
   FETCH_PUT(url)
     .then(response => response.json())
@@ -35,119 +43,100 @@ export default function OcaGame() {
     .catch(error => {
       console.error("Error en la solicitud:", error);
     });
+ */
 
-  useEffect(() => {
-          if (typeof window !== "undefined") {
-              const token = localStorage.getItem("authToken");
-              
-              if (token) {
-                  try {
-                      const decodedToken = jwtDecode<DecodedToken>(token);
-                      setUserInfo(decodedToken);
-                      setTimeout(() => {
-                        toast.success('Sesión iniciada correctamente.')
-                      }, 100)
-                  } catch (error) {
-                      console.error("Error al decodificar el token:", error);
-                  }
-              }
-          }
-      }, []);
 
-      if (!userInfo) {
-        return (
-          <div className="flex items-center justify-center h-screen bg-[#2E1B6B]">
-          <div className="text-center bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
-            <p className="text-2xl font-semibold text-red-600 mb-6 font-fredoka">
-              ¡Inicia sesión para poder entrar!
-            </p>
-            <Link
-              href="/"
-              className="text-lg text-blue-600 hover:text-blue-500 transition-colors font-montserrat"
-            >
-              <strong>Volver al inicio</strong>
-              
-            </Link>
-          </div>
-        </div>
-        );
-    }
+  // if (!isAuthenticated) {
+  //   return (
+  //     <div className="flex items-center justify-center h-screen bg-gray-100">
+  //       <div className="text-center bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+  //         <p className="text-2xl font-semibold text-red-600 mb-6 font-fredoka">
+  //           ¡Inicia sesión para poder entrar!
+  //         </p>
+  //         <Link
+  //           href="/"
+  //           className="text-lg text-blue-600 hover:text-blue-500 transition-colors font-montserrat"
+  //         >
+  //           Volver al inicio
+  //         </Link>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
-  const { family_name, unique_name} = userInfo;
+
 
   return (
     <>
-    
-    <div className="min-h-screen bg-[#2E1B6B] text-white">
-    
-    <Header />
-      <Toaster />
-      <div className="container mx-auto px-4 py-8 ">
-        
-      
-        <div className="flex flex-col lg:flex-row gap-8">
-          
-          <div className="lg:w-1/2">
-            <div className="relative w-full">
-              <Image
-                src="/images/tablero.svg"
-                alt="OcaGo game board"
-                width={600}
-                height={400}
-                className="animate-float w-full h-auto rounded-lg"
-                priority
-              />
-            </div>
-          </div>
+      <div className="min-h-screen bg-[#2E1B6B] text-white">
 
-          
-          <div className="lg:w-1/3 flex flex-col justify-center gap-8">
-           
-            <div className="flex flex-col items-center lg:items-start gap-4">
-              <div className="w-24 h-24 items-center">
+         {isAuthenticated ? <Header2 /> : <Header />}
+        <Toaster />
+        <div className="container mx-auto px-4 py-8 ">
+
+
+          <div className="flex flex-col lg:flex-row gap-8">
+
+            <div className="lg:w-1/2">
+              <div className="relative w-full">
                 <Image
-                  src="/images/logo.svg"
-                  alt="OcaGo logo"
-                  width={96}
-                  height={96}
-                  className="rounded-full bg-white p-2"
-                />  
-              </div>
-              <div className="text-center lg:text-left">
-                <h1 className="text-2xl md:text-3xl font-bold mb-2 items-center">
-                  Disfruta con el juego clásico de la oca con amigos <span className="text-[#4ADE80]">en línea</span>.
-                </h1>
-                <WebInfo />
-                
+                  src="/images/tablero.svg"
+                  alt="OcaGo game board"
+                  width={600}
+                  height={400}
+                  className="animate-float w-full h-auto rounded-lg"
+                  priority
+                />
               </div>
             </div>
 
-           
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-            <Link
-              href="/gamePrueba"
-              className="bg-[#E633FF] hover:bg-[#D020E9] text-white px-8 rounded-lg font-fredoka"
-            >
-              Play Online
-            </Link>
-            <Link
-              href="/gamePrueba"
-              className="bg-[#33FFE6] hover:bg-[#20E9D0] text-black px-8 rounded-lg font-fredoka"
-              
-            >
-              Play Bot
-            </Link>
-              
+
+            <div className="lg:w-1/3 flex flex-col justify-center gap-8">
+
+              <div className="flex flex-col items-center lg:items-start gap-4">
+                <div className="w-24 h-24 items-center">
+                  <Image
+                    src="/images/logo.svg"
+                    alt="OcaGo logo"
+                    width={96}
+                    height={96}
+                    className="rounded-full bg-white p-2"
+                  />
+                </div>
+                <div className="text-center lg:text-left">
+                  <h1 className="text-2xl md:text-3xl font-bold mb-2 items-center">
+                    Juega al juego clásico de la oca con amigos <span className="text-[#4ADE80]">online</span>.
+                  </h1>
+                  <WebInfo />
+
+                </div>
+              </div>
+
+
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                <Link
+                  href="/gamePrueba"
+                  className="bg-[#E633FF] hover:bg-[#D020E9] text-white px-8 rounded-lg font-fredoka"
+                >
+                  Play Online
+                </Link>
+                <Link
+                  href="/gamePrueba"
+                  className="bg-[#33FFE6] hover:bg-[#20E9D0] text-black px-8 rounded-lg font-fredoka"
+
+                >
+                  Play Bot
+                </Link>
+
+              </div>
             </div>
+
+            <FriendsPanel />
+
           </div>
-
-          <FriendsPanel />
-          
         </div>
       </div>
-    </div>
     </>
   )
 }
-
 

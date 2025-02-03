@@ -1,41 +1,41 @@
-import { useState, useEffect, useCallback } from "react"
-//USEWEBSOCKET.TSX
-export function useWebSocket(url: string) {
-  const [socket, setSocket] = useState<WebSocket | null>(null)
-  const [isConnected, setIsConnected] = useState(false)
-  const [messages, setMessages] = useState<string[]>([])
+// import { useState, useEffect, useCallback } from "react"
 
-  useEffect(() => {
-    const ws = new WebSocket(url)
+// export function useWebSocket(url: string) {
+//   const [socket, setSocket] = useState<WebSocket | null>(null)
+//   const [isConnected, setIsConnected] = useState(false)
+//   const [messages, setMessages] = useState<string[]>([])
 
-    ws.onopen = () => {
-      setIsConnected(true)
-    }
+//   useEffect(() => {
+//     const ws = new WebSocket(url)
 
-    ws.onmessage = (event: MessageEvent) => {
-      setMessages((prevMessages) => [...prevMessages, event.data])
-    }
+//     ws.onopen = () => {
+//       setIsConnected(true)
+//     }
 
-    ws.onclose = () => {
-      setIsConnected(false)
-    }
+//     ws.onmessage = (event: MessageEvent) => {
+//       setMessages((prevMessages) => [...prevMessages, event.data])
+//     }
 
-    setSocket(ws)
+//     ws.onclose = () => {
+//       setIsConnected(false)
+//     }
 
-    return () => {
-      ws.close()
-    }
-  }, [url])
+//     setSocket(ws)
 
-  const sendMessage = useCallback(
-    (message: string) => {
-      if (socket && isConnected) {
-        socket.send(message)
-      }
-    },
-    [socket, isConnected],
-  )
+//     return () => {
+//       ws.close()
+//     }
+//   }, [url])
 
-  return { isConnected, messages, sendMessage }
-}
+//   const sendMessage = useCallback(
+//     (message: string) => {
+//       if (socket && isConnected) {
+//         socket.send(message)
+//       }
+//     },
+//     [socket, isConnected],
+//   )
+
+//   return { isConnected, messages, sendMessage }
+// }
 

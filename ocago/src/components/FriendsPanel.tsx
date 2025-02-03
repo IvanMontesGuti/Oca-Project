@@ -1,5 +1,4 @@
 "use client"
-//FRIENDSPANEL
 import { useState, useEffect, useCallback } from "react"
 import { jwtDecode } from "jwt-decode"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -55,39 +54,6 @@ interface FriendRequest {
   status: number
 }
 
-const Pagination = ({ currentPage, totalPages, onPageChange }: PaginationProps) => {
-  const pages = Array.from({ length: totalPages }, (_, i) => i + 1)
-
-  return (
-    <div className="flex items-center justify-center mt-6 gap-2">
-      <button
-        onClick={() => onPageChange(currentPage - 1)}
-        disabled={currentPage === 0}
-        className="px-3 py-2 rounded-lg text-sm font-medium bg-gray-200 hover:bg-gray-300 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        ← Anterior
-      </button>
-
-      {pages.map((page) => (
-        <button
-          key={page}
-          onClick={() => onPageChange(page - 1)}
-          className={`px-3 py-2 rounded-lg text-sm font-medium ${page - 1 === currentPage ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
-        >
-          {page}
-        </button>
-      ))}
-
-      <button
-        onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage === totalPages - 1}
-        className="px-3 py-2 rounded-lg text-sm font-medium bg-gray-200 hover:bg-gray-300 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        Siguiente →
-      </button>
-    </div>
-  )
-}
 
 export default function FriendsPanel() {
   const [userInfo, setUserInfo] = useState<DecodedToken | null>(null)
@@ -366,4 +332,3 @@ const fetchFriends = useCallback(
     </div>
   )
 }
-
