@@ -30,39 +30,23 @@ export default function OcaGame() {
   
   const {isAuthenticated} = useAuth();
 
-
-
- /*  const url = UPDATE_USER_STATE(1, userInfo?.id);
-
-
-  FETCH_PUT(url)
-    .then(response => response.json())
-    .then(data => {
-      console.log("Respuesta:", data);
-    })
-    .catch(error => {
-      console.error("Error en la solicitud:", error);
-    });
- */
-
-
-  // if (!isAuthenticated) {
-  //   return (
-  //     <div className="flex items-center justify-center h-screen bg-gray-100">
-  //       <div className="text-center bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
-  //         <p className="text-2xl font-semibold text-red-600 mb-6 font-fredoka">
-  //           ¡Inicia sesión para poder entrar!
-  //         </p>
-  //         <Link
-  //           href="/"
-  //           className="text-lg text-blue-600 hover:text-blue-500 transition-colors font-montserrat"
-  //         >
-  //           Volver al inicio
-  //         </Link>
-  //       </div>
-  //     </div>
-  //   );
-  // }
+   if (!isAuthenticated) {
+     return (
+       <div className="flex items-center justify-center h-screen bg-gray-100">
+         <div className="text-center bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+           <p className="text-2xl font-semibold text-red-600 mb-6 font-fredoka">
+             ¡Inicia sesión para poder entrar!
+           </p>
+           <Link
+             href="/"
+             className="text-lg text-blue-600 hover:text-blue-500 transition-colors font-montserrat"
+           >
+             Volver al inicio
+           </Link>
+         </div>
+       </div>
+     );
+   }
 
 
 
