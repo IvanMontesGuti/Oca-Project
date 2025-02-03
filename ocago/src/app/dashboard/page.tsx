@@ -6,6 +6,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { UPDATE_USER_STATE } from "@/lib/endpoints/config";
 import { FETCH_PUT } from "@/lib/endpoints/useFetch";
+import { Link } from "lucide-react";
 
 interface DecodedToken {
     email: string;
@@ -20,41 +21,35 @@ interface DecodedToken {
 
 export default function Dashboard() {
     const { logout } = useAuth(); 
-    const [userInfo, setUserInfo] = useState<DecodedToken | null>(null);
     const router = useRouter()
+    const {userInfo} = useAuth();
     const url = UPDATE_USER_STATE(0, userInfo?.id);
+    const {isAuthenticated} = useAuth();
+    
     
     const handleNavigateHome = () => {
         router.push("/");
     }
-    useEffect(() => {
-        if (typeof window !== "undefined") {
-            const token = localStorage.getItem("authToken");
+    
 
-            if (token) {
-                try {
-                    const decodedToken = jwtDecode<DecodedToken>(token);
-                    setUserInfo(decodedToken);
-                } catch (error) {
-                    console.error("Error al decodificar el token:", error);
-                }
-            }
-        }
-    }, []);
-
-    if (!userInfo) {
-        return (
-            <div className="flex items-center justify-center h-screen bg-gray-100">
-                <p className="text-xl text-red-600">¡Inicia Sesion para poder entrar!</p>
-                <button
-                    onClick={handleNavigateHome}
-                    className="flex items-center mt-4 w-full bg-red-500 text-white font-semibold py-2 px-4 rounded hover:bg-red-700"
-                >
-                    Volver Inicio
-                </button>
-            </div>
-        );
+    if (!isAuthenticated) {
+      return (
+        <div className="flex items-center justify-center h-screen bg-gray-100">
+          <div className="text-center bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+            <p className="text-2xl font-semibold text-red-600 mb-6 font-fredoka">
+              ¡Inicia sesión para poder entrar!
+            </p>
+            <Link
+              href="/"
+              className="text-lg text-blue-600 hover:text-blue-500 transition-colors font-montserrat"
+            >
+              Volver al inicio
+            </Link>
+          </div>
+        </div>
+      );
     }
+ 
 
     const { email, role, unique_name, family_name } = userInfo;
     console.log(userInfo.id);

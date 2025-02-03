@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { toast } from 'sonner';
 import { jwtDecode } from 'jwt-decode';
+import { useAuth } from '@/context/AuthContext';
 
 interface DecodedToken {
     email: string;
@@ -19,43 +20,9 @@ interface DecodedToken {
 }
 
 export function Header2() {
-const [userInfo, setUserInfo] = useState<DecodedToken | null>(null);
 
-useEffect(() => {
-    if (typeof window !== "undefined") {
-        const token = localStorage.getItem("authToken");
-        
-        if (token) {
-            try {
-                const decodedToken = jwtDecode<DecodedToken>(token);
-                setUserInfo(decodedToken);
-                setTimeout(() => {
-                  toast.success('Sesión iniciada correctamente.')
-                }, 100)
-            } catch (error) {
-                console.error("Error al decodificar el token:", error);
-            }
-        }
-    }
-}, []);
+const {userInfo} = useAuth();
 
-if (!userInfo) {
-  return (
-    <div className="flex items-center justify-center h-screen bg-gray-100">
-    <div className="text-center bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
-      <p className="text-2xl font-semibold text-red-600 mb-6 font-fredoka">
-        ¡Inicia sesión para poder entrar!
-      </p>
-      <Link
-        href="/"
-        className="text-lg text-blue-600 hover:text-blue-500 transition-colors font-montserrat"
-      >
-        Volver al inicio
-      </Link>
-    </div>
-  </div>
-  );
-}
 
 const { family_name, unique_name} = userInfo;
   return (
