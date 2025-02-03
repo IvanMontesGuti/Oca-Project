@@ -134,6 +134,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (typeof window !== "undefined") {
         localStorage.setItem("accessToken", data.accessToken);
+        setIsAuthenticated(true);
       }
     } catch (error) {
       console.error("❌ Error en registro:", error);

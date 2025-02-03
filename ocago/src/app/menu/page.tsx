@@ -70,7 +70,7 @@ export default function OcaGame() {
     <>
       <div className="min-h-screen bg-[#2E1B6B] text-white">
 
-         {isAuthenticated ? <Header /> : <Header2 />}
+         {isAuthenticated ? <Header2 /> : <Header />}
         <Toaster />
         <div className="container mx-auto px-4 py-8 ">
 
