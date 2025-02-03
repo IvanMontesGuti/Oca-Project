@@ -19,7 +19,7 @@ export function RegisterForm({
   const { register } = useAuth();
   const [avatar, setAvatar] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [passwordError, setPasswordError] = useState<string | null>(null); // Para el mensaje de error
+  const [passwordError, setPasswordError] = useState<string | null>(null); 
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -46,10 +46,10 @@ export function RegisterForm({
     try {
       const avatarPath = avatar ? `images/${nickname}.png` : `images/default.png`;
 
-      // Registro del usuario
+      
       await register(nickname, mail, password, avatarPath);
 
-      // Subir avatar si existe
+      
       if (avatar) {
         const formData = new FormData();
         formData.append("name", `${nickname}.png`);

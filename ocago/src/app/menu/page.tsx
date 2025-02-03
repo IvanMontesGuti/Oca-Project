@@ -1,20 +1,20 @@
 "use client";
-
-import React, { useEffect, useState } from "react";
-import { jwtDecode } from "jwt-decode";
+//MENU
+import React, {} from "react";
+//import { jwtDecode } from "jwt-decode";
 import Link from 'next/link'
 import Image from "next/image"
-import { Toaster, toast } from 'sonner'
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Toaster } from 'sonner'
+//import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import FriendsPanel from "@/components/FriendsPanel";
 import { WebInfo } from "@/components/WebInfo";
-import { UPDATE_USER_STATE } from "@/lib/endpoints/config";
-import { FETCH_PUT } from "@/lib/endpoints/useFetch";
+//import { UPDATE_USER_STATE } from "@/lib/endpoints/config";
+//import { FETCH_PUT } from "@/lib/endpoints/useFetch";
 import { Header2 } from "@/components/navUser";
 import { useAuth } from "@/context/AuthContext";
 import { Header } from "@/components/header";
 
-
+/*
 interface DecodedToken {
   email: string;
   role: string;
@@ -24,7 +24,7 @@ interface DecodedToken {
   exp: number;
   iat: number;
   id: number;
-}
+}*/
 
 export default function OcaGame() {
   
