@@ -11,6 +11,7 @@ import {WebInfo} from "@/components/WebInfo";
 import { UPDATE_USER_STATE } from "@/lib/endpoints/config";
 import { FETCH_PUT } from "@/lib/endpoints/useFetch";
 import { Header2 } from "@/components/navUser";
+import { Header } from "@/components/header";
 interface DecodedToken {
     email: string;
     role: string;
@@ -79,7 +80,7 @@ export default function OcaGame() {
     
     <div className="min-h-screen bg-[#2E1B6B] text-white">
     
-    <Header2 />
+    <Header />
       <Toaster />
       <div className="container mx-auto px-4 py-8 ">
         
