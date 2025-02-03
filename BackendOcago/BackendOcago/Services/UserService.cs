@@ -127,15 +127,17 @@ public class UserService
     }
     public async Task<UserDto> UpdateStatus(UserStatus Status, long userId)
     {
-        User userEntity = await _unitOfWork.UserRepository.GetByIdAsync(userId) ?? throw new Exception("El usuario no existe");
-        userEntity.Status = Status;
+        var userEntity = await _unitOfWork.UserRepository.GetByIdAsync(userId);
+        if (userEntity == null) throw new Exception("El usuario no existe");
 
+        userEntity.Status = Status;
         _unitOfWork.UserRepository.Update(userEntity);
 
-        await _unitOfWork.UserRepository.SaveAsync();
+        var affectedRows = await _unitOfWork.SaveAsync();
 
         return _mapper.ToDto(userEntity);
     }
+
 
     /* ----- DELETE ----- */
 
@@ -163,10 +165,5 @@ public class UserService
     public Task<User> GetByNickNameAsync(string mail)
     {
         return _unitOfWork.UserRepository.GetByNicknameAsync(mail);
-    }
-
-    internal async Task<int> UpdateStatus(UserStatus userStatusRequest)
-    {
-        throw new NotImplementedException();
     }
 }
