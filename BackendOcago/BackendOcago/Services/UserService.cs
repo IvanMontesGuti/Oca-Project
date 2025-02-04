@@ -125,15 +125,19 @@ public class UserService
     {
         return await _unitOfWork.UserRepository.CountStatusAsync(status);
     }
-    public async Task<UserDto> UpdateStatus(UserStatus Status, long userId)
+    public async Task<UserDto> UpdateStatus(UserStatus newStatus, long userId)
     {
         var userEntity = await _unitOfWork.UserRepository.GetByIdAsync(userId);
         if (userEntity == null) throw new Exception("El usuario no existe");
 
-        userEntity.Status = Status;
+        userEntity.Status = newStatus;
         _unitOfWork.UserRepository.Update(userEntity);
+        Console.WriteLine($"Usuario {userId} actualizado a estado {newStatus}");
+
 
         var affectedRows = await _unitOfWork.SaveAsync();
+        Console.WriteLine($"Filas afectadas en la DB: {affectedRows}");
+
 
         return _mapper.ToDto(userEntity);
     }
