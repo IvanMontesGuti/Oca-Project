@@ -1,5 +1,6 @@
 ﻿using BackendOcago.Models.Database.Enum;
 using BackendOcago.Models.Dtos;
+using BackendOcago.Services;
 using System.Collections.Concurrent;
 using System.Net.WebSockets;
 using System.Text;
@@ -17,6 +18,7 @@ public class WebSocketHandler
     {
         _serviceScopeFactory = serviceScopeFactory;
         _lobby = lobby;
+
     }
 
     public async Task HandleConnection(WebSocket webSocket, string userId)
@@ -29,8 +31,12 @@ public class WebSocketHandler
                 _connections[userId] = webSocket;
             }
 
+            
+
+
             // Al conectarse, el usuario se marca como Conectado.
             await _lobby.SetUserStatusAsync(userId, UserStatus.Conectado);
+ 
 
             int connectedCount = _connections.Count;
             await SendMessage(userId, new { Message = $"Hay {connectedCount} usuarios conectados." });
@@ -73,20 +79,31 @@ public class WebSocketHandler
 
     private async Task ProcessMessage(WebSocketMessage message)
     {
+        // Normalizar userIds
+        if (message.ReceiverId != null)
+            message.ReceiverId = message.ReceiverId.Trim(); // 🔹 Asegurar formato
+        message.SenderId = message.SenderId?.Trim();
+
         switch (message.Type)
         {
             case "invite":
-                // Validar que el usuario invitado esté Conectado antes de enviar la invitación
-                if (_lobby.GetUserStatus(message.ReceiverId) == UserStatus.Conectado)
+                Console.WriteLine($"[INVITE] Invitación de '{message.SenderId}' a '{message.ReceiverId}'");
+
+                var receiverStatus = _lobby.GetUserStatus(message.ReceiverId);
+                Console.WriteLine($"[INVITE] Estado de {message.ReceiverId}: {receiverStatus}");
+
+                if (receiverStatus == UserStatus.Conectado)
                 {
                     await SendMessage(message.ReceiverId, message);
+                    Console.WriteLine($"[INVITE] Invitación enviada a {message.ReceiverId}");
                 }
                 else
                 {
-                    // Notificar al remitente que el usuario no está disponible
-                    await SendMessage(message.SenderId, new { Message = $"El usuario {message.ReceiverId} no está disponible para jugar." });
+                    await SendMessage(message.SenderId, new { Message = $"El usuario {message.ReceiverId} ({receiverStatus}) no está disponible para jugar." });
+                    Console.WriteLine($"[INVITE] {message.ReceiverId} no está disponible ({receiverStatus})");
                 }
                 break;
+
             case "accept":
                 await _lobby.SetUserStatusAsync(message.SenderId, UserStatus.Jugando);
                 await _lobby.SetUserStatusAsync(message.ReceiverId, UserStatus.Jugando);

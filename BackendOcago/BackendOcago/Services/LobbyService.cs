@@ -7,32 +7,54 @@ using BackendOcago.Services;
 
 public class LobbyService
 {
-    private readonly ConcurrentDictionary<string, UserStatus> _userStatuses = new();
+    private readonly ConcurrentDictionary<string, UserStatus> _userStatuses;
     private readonly Queue<string> _randomQueue = new();
-    private readonly UserService _userService; 
+    private readonly UserService _userService;
 
     public LobbyService(UserService userService)
     {
         _userService = userService;
+        _userStatuses = new ConcurrentDictionary<string, UserStatus>(); // 🔹 Se inicializa aquí
     }
+
 
     /// <summary>
     /// Agrega o actualiza el estado de un usuario en memoria y en la base de datos.
     /// </summary>
     public async Task SetUserStatusAsync(string userId, UserStatus status)
     {
-        _userStatuses.AddOrUpdate(userId, status, (key, oldValue) => status);
-        // Convertir el userId a long, asumiendo que el string se puede parsear a long.
-        if (long.TryParse(userId, out long id))
+        try
         {
-            await _userService.UpdateStatus(status, id);
-        }
-        else
-        {
+            // Normalizar userId (ejemplo: eliminar espacios)
+            userId = userId.Trim();
 
-            throw new ArgumentException("El userId no es un número válido.", nameof(userId));
+            _userStatuses.AddOrUpdate(userId, status, (key, oldValue) => status);
+            Console.WriteLine($"[SET STATUS] Usuario: '{userId}', Estado: {status}");
+
+            // Log para ver el estado actual de los usuarios en memoria
+            Console.WriteLine($"[SET STATUS] {status} para usuario {userId}");
+            Console.WriteLine($"[SET STATUS] Todos los usuarios almacenados: {string.Join(", ", _userStatuses.Select(kv => kv.Key + "=" + kv.Value))}");
+
+            if (long.TryParse(userId, out long id))
+            {
+                // Actualiza el estado en la base de datos
+                await _userService.UpdateStatus(status, id);
+                Console.WriteLine($"[DB STATUS] Estado de {userId} actualizado en la DB a {status}");
+            }
+            else
+            {
+                throw new ArgumentException("El userId no es un número válido.", nameof(userId));
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ERROR] No se pudo actualizar el estado de {userId}: {ex.Message}");
+            throw;
         }
     }
+
+
+
 
     /// <summary>
     /// Obtiene el estado actual de un usuario.
@@ -40,8 +62,15 @@ public class LobbyService
     /// </summary>
     public UserStatus GetUserStatus(string userId)
     {
+        userId = userId.Trim(); // 🔹 Normalizar al buscar
+        Console.WriteLine($"[GET STATUS] Buscando estado de '{userId}'");
+        Console.WriteLine($"[GET STATUS] Claves existentes: {string.Join(", ", _userStatuses.Keys.Select(k => $"'{k}'"))}"); // 🔹 Mostrar claves con comillas
         return _userStatuses.TryGetValue(userId, out var status) ? status : UserStatus.Desconectado;
     }
+
+
+
+
 
     /// <summary>
     /// Obtiene la lista de usuarios que se encuentren en un estado específico.
@@ -56,15 +85,19 @@ public class LobbyService
     /// </summary>
     public async Task RemoveUser(string userId)
     {
+        Console.WriteLine($"[REMOVE USER] Eliminando usuario {userId} de _userStatuses");
         _userStatuses.TryRemove(userId, out _);
+
+        Console.WriteLine($"[REMOVE USER] Usuarios después de eliminación: {string.Join(", ", _userStatuses.Select(kv => kv.Key + "=" + kv.Value))}");
+
         RemoveFromRandomQueue(userId);
 
-        // Asegurar que el usuario se marca como desconectado en la base de datos
         if (long.TryParse(userId, out long id))
         {
             await _userService.UpdateStatus(UserStatus.Desconectado, id);
         }
     }
+
 
 
     /// <summary>
