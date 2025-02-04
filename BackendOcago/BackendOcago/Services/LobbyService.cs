@@ -16,9 +16,6 @@ public class LobbyService
         _userService = userService;
     }
 
-    /// <summary>
-    /// Agrega o actualiza el estado de un usuario en memoria y en la base de datos.
-    /// </summary>
     public async Task SetUserStatusAsync(string userId, UserStatus status)
     {
         _userStatuses.AddOrUpdate(userId, status, (key, oldValue) => status);
@@ -34,10 +31,7 @@ public class LobbyService
         }
     }
 
-    /// <summary>
-    /// Obtiene el estado actual de un usuario.
-    /// Si el usuario no está registrado, se asume que está Desconectado.
-    /// </summary>
+
     public UserStatus GetUserStatus(string userId)
     {
         return _userStatuses.TryGetValue(userId, out var status) ? status : UserStatus.Desconectado;

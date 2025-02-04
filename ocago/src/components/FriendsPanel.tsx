@@ -1,300 +1,186 @@
-"use client"
-import { useState, useEffect, useCallback } from "react"
-import { jwtDecode } from "jwt-decode"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import {
-  API_SEARCH_URL,
-  FRIENDSHIP_GET_BY_ID_URL,
-  FRIENDSHIP_RECEIVED_REQUEST_URL,
-  FRIENDSHIP_ACCEPT_REQUEST_URL,
-  FRIENDSHIP_DELETE_REQUEST_URL,
-  API_BASE_URL,
-  FRIENDSHIP_SEND_REQUEST_URL,
-} from "@/lib/endpoints/config"
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { API_SEARCH_URL, API_BASE_URL, FRIENDSHIP_RECEIVED_REQUEST_URL, FRIENDSHIP_ACCEPT_REQUEST_URL, FRIENDSHIP_REJECT_REQUEST_URL } from "@/lib/endpoints/config";
+import { useAuth } from "@/context/AuthContext";
+import { useWebSocket } from "@/context/WebSocketContext";
 
 interface Friend {
-  id: string
-  nickname: string
-  avatarUrl: string
-  status?: string | number
-  sender?: {
-    id: string
-    nickname: string
-    avatarUrl: string
-  }
-  receiver?: {
-    id: string
-    nickname: string
-    avatarUrl: string
-  }
-  isFriend?: boolean
-}
-
-interface DecodedToken {
-  id: number
-  nickname: string
-  avatarUrl?: string
-}
-
-interface PaginationProps {
-  currentPage: number
-  totalPages: number
-  onPageChange: (page: number) => void
+  id: string;
+  nickname: string;
+  avatarUrl: string;
+  isFriend?: boolean;
 }
 
 interface FriendRequest {
-  id: string
-  sender: {
-    id: string
-    nickname: string
-    avatarUrl: string
-  }
-  status: number
+  id: string;
+  senderId: string;
+  senderNickname: string;
+  senderAvatarUrl: string;
 }
 
-
 export default function FriendsPanel() {
-  const [userInfo, setUserInfo] = useState<DecodedToken | null>(null)
-  const [friends, setFriends] = useState<Friend[]>([])
-  const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([])
-  const [currentPage, setCurrentPage] = useState(0)
-  const [totalPages, setTotalPages] = useState(1)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { userInfo } = useAuth();
+  const { sendFriendRequest } = useWebSocket();
+  const [friends, setFriends] = useState<Friend[]>([]);
+  const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const currentUser = {
-    id: userInfo?.id,
-    unique_name: userInfo?.nickname,
-    status: 0,
-    avatarUrl: userInfo?.avatarUrl,
-  }
+  // Buscar amigos por nickname
+  const fetchFriends = useCallback(async () => {
+    if (!userInfo?.id || searchQuery.trim() === "") return;
 
-const fetchFriends = useCallback(
-  async ( search = "") => {
-    if (!userInfo?.id) {
-      console.log("userInfo.id is not available, skipping fetchFriends")
-      return
-    }
-
-    setIsLoading(true)
-    setError(null)
+    setIsLoading(true);
+    setError(null);
 
     try {
-      let url
-      let data
-      if (search.trim() === "") {
-        url = FRIENDSHIP_GET_BY_ID_URL(userInfo.id)
-        const response = await fetch(url)
-        if (!response.ok) {
-          throw new Error(`Failed to fetch friends: ${response.statusText}`)
-        }
-        data = await response.json()
-        
-        setFriends(data.map((friend: Friend) => ({ ...friend, isFriend: true })) || [])
-      } else {
-        url = API_SEARCH_URL(search)
-        const response = await fetch(url)
-        if (!response.ok) {
-          throw new Error(`Failed to search users: ${response.statusText}`)
-        }
-        data = await response.json()
-        
-        const friendsResponse = await fetch(FRIENDSHIP_GET_BY_ID_URL(userInfo.id))
-        if (!friendsResponse.ok) {
-          
-          setFriends(data.map((user: Friend) => ({ ...user, isFriend: false })) || [])
-        } else {
-          const friendsData = await friendsResponse.json()
-          const friendIds = new Set(friendsData.map((friend: Friend) => friend.id))
-          setFriends(data.map((user: Friend) => ({ ...user, isFriend: friendIds.has(user.id) })) || [])
-        }
-      }
+      const response = await fetch(API_SEARCH_URL(searchQuery));
+      if (!response.ok) throw new Error("Error al buscar usuarios");
 
-      console.log("Friends/Search data:", data)
-      setTotalPages(1)
+      const data = await response.json();
+      setFriends(data);
     } catch (error) {
-      console.error("Error fetching friends:", error)
-      setError("No se encontraron usuarios con este nickname.")
-      setFriends([])
+      console.error("Error fetching friends:", error);
+      setError("No se encontraron usuarios con este nickname.");
+      setFriends([]);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  },
-  [userInfo?.id],
-)
+  }, [userInfo?.id, searchQuery]);
 
-
-
+  // Obtener solicitudes de amistad
   const fetchFriendRequests = useCallback(async () => {
-    if (!userInfo?.id) {
-      console.log("userInfo.id is not available, skipping fetchFriendRequests")
-      return
-    }
+    if (!userInfo?.id) return;
 
-    console.log("Fetching friend requests for user ID:", userInfo.id)
-    try {
-      const response = await fetch(FRIENDSHIP_RECEIVED_REQUEST_URL(userInfo.id))
-      console.log("Friend requests response:", response)
-      if (!response.ok) {
-        throw new Error("Failed to fetch friend requests")
-      }
-      const data = await response.json()
-      console.log("Friend requests data:", data)
-      setFriendRequests(data.filter((request: FriendRequest) => request.status === 0))
-    } catch (error) {
-      console.error("Error fetching friend requests:", error)
-    }
-  }, [userInfo?.id])
-
-  const handleSendFriendRequest = async (receiverId: string) => {
-    if (!userInfo?.id) return
+    setIsLoading(true);
+    setError(null);
 
     try {
-      const url = `${FRIENDSHIP_SEND_REQUEST_URL}?senderId=${userInfo.id}&receiverId=${receiverId}`
-      const response = await fetch(url, {
-        method: "POST",
-      })
-      if (!response.ok) {
-        throw new Error("Failed to send friend request")
-      }
-      fetchFriends(searchQuery)
+      const response = await fetch(FRIENDSHIP_RECEIVED_REQUEST_URL(userInfo.id));
+      if (!response.ok) throw new Error("Error al obtener solicitudes de amistad");
+
+      const data = await response.json();
+      setFriendRequests(data.map((request: any) => ({
+        id: request.id,
+        senderId: request.senderId,
+        senderNickname: request.sender.nickname,
+        senderAvatarUrl: request.sender.avatarUrl,
+      })));
     } catch (error) {
-      console.error("Error sending friend request:", error)
+      console.error("Error fetching friend requests:", error);
+      setError("No se pudieron obtener las solicitudes.");
+      setFriendRequests([]);
+    } finally {
+      setIsLoading(false);
     }
-  }
+  }, [userInfo?.id]);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const token = localStorage.getItem("authToken")
-      if (token) {
-        try {
-          const decodedToken = jwtDecode<DecodedToken>(token)
-          setUserInfo(decodedToken)
-        } catch (error) {
-          console.error("Error al decodificar el token:", error)
-        }
-      }
-    }
-  }, [])
+    const delayDebounce = setTimeout(() => {
+      fetchFriends();
+    }, 300);
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchQuery, fetchFriends]);
 
   useEffect(() => {
-    if (userInfo?.id) {
-      fetchFriends(searchQuery)
-      fetchFriendRequests()
-    }
-  }, [userInfo, currentPage, searchQuery, fetchFriends, fetchFriendRequests])
+    fetchFriendRequests();
+  }, [userInfo?.id, fetchFriendRequests]);
 
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value)
-    setCurrentPage(0)
-  }
-
-  const handlePageClick = (selected: number) => {
-    setCurrentPage(selected)
-  }
-
-  const handleAcceptRequest = async (friendshipId: string) => {
-    if (!userInfo?.id) return
-
+  // Aceptar solicitud de amistad
+  const handleAcceptRequest = async (friendshipId: string, receiverId: string) => {
+    if (!userInfo?.id) return;
+  
     try {
-      const url = `${FRIENDSHIP_ACCEPT_REQUEST_URL(friendshipId)}?userId=${userInfo.id}`
+      // La URL ahora pasa tanto el userId como el receiverId
+      const url = `${FRIENDSHIP_ACCEPT_REQUEST_URL(friendshipId)}?friendshipId=${userInfo.id}&userId=${receiverId}`;
       const response = await fetch(url, {
         method: "POST",
-      })
+      });
+  
       if (!response.ok) {
-        throw new Error("Failed to accept friend request")
+        throw new Error("Failed to accept friend request");
       }
-
-      fetchFriendRequests()
-      fetchFriends(searchQuery)
+      fetchFriendRequests();
     } catch (error) {
-      console.error("Error accepting friend request:", error)
+      console.error("Error accepting friend request:", error);
     }
-  }
-
+  };
+  
+  // Rechazar solicitud de amistad
   const handleRejectRequest = async (friendshipId: string) => {
-    if (!userInfo?.id) return
+    if (!userInfo?.id) return;
+
+    setIsLoading(true);
+    setError(null);
 
     try {
-      const url = `${FRIENDSHIP_DELETE_REQUEST_URL(friendshipId)}?userId=${userInfo.id}`
+      const url = `${FRIENDSHIP_REJECT_REQUEST_URL(friendshipId)}?userId=${userInfo.id}`;
       const response = await fetch(url, {
         method: "POST",
-      })
-      if (!response.ok) {
-        throw new Error("Failed to reject friend request")
-      }
-      console.log(response, "response")
+      });
 
-      
-      fetchFriendRequests()
+      if (!response.ok) throw new Error("Failed to reject friend request");
+
+      console.log(response, "response");
+
+      fetchFriendRequests();  // Refrescar solicitudes de amistad
     } catch (error) {
-      console.error("Error rejecting friend request:", error)
+      console.error("Error rejecting friend request:", error);
+      setError("No se pudo rechazar la solicitud.");
+    } finally {
+      setIsLoading(false);
     }
-  }
-
-  console.log("friends", friends)
-  console.log(`${API_BASE_URL}/${currentUser.avatarUrl}`)
+  };
 
   return (
-    <div className="bg-[#231356] rounded-lg p-4 space-y-6 ">
-      <div className="space-y-4 ">
-        <div className="flex justify-between items-center">
-          <h2 className="font-semibold text-white">Amigos</h2>
-        </div>
+    <div className="bg-[#231356] rounded-lg p-4 space-y-6">
+      <div className="space-y-4">
+        <h2 className="font-semibold text-white">Amigos</h2>
         <Input
           type="text"
           placeholder="Buscar por nickname..."
           value={searchQuery}
-          onChange={handleSearch}
+          onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full bg-gray-700 text-white placeholder-gray-400"
         />
         {isLoading ? (
-          <div className="text-white text-center">Loading...</div>
+          <div className="text-white text-center">Buscando...</div>
         ) : error ? (
           <div className="text-red-500 text-center">{error}</div>
-        ) : friends.length === 0 ? (
-          <div className="text-white text-center">No friends found</div>
         ) : (
           <div className="space-y-4 max-h-[150px] overflow-y-auto">
-            {friends.map((friend) => {
-              const friendUser = friend.sender?.id === userInfo?.id ? friend.receiver : friend.sender || friend
-              return (
-                <div key={friendUser.id} className="flex items-center justify-between group">
-                  <div className="flex items-center gap-3">
-                    <Avatar>
-                      <AvatarImage
-                        src={`${API_BASE_URL}/${friendUser.avatarUrl}` || "/placeholder.svg"}
-                        alt={friendUser.nickname}
-                      />
-                      <AvatarFallback>
-                        {friendUser.nickname ? friendUser.nickname.slice(0, 2).toUpperCase() : "NA"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="font-medium leading-none text-white">{friendUser.nickname}</div>
-                      {friend.isFriend && (
-                        <div className="text-sm text-gray-400">{friendUser.status === "0" ? "Offline" : "Online"}</div>
-                      )}
-                    </div>
-                  </div>
-                  {!friend.isFriend && friendUser.id !== userInfo?.id && (
-                    <Button size="sm" variant="default" onClick={() => handleSendFriendRequest(friendUser.id)}>
-                      Enviar solicitud
-                    </Button>
-                  )}
+            {friends.map((friend) => (
+              <div key={friend.id} className="flex items-center justify-between group">
+                <div className="flex items-center gap-3">
+                  <Avatar>
+                    <AvatarImage src={`${API_BASE_URL}/${friend.avatarUrl}`} alt={friend.nickname} />
+                    <AvatarFallback>{friend.nickname.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <span className="text-white">{friend.nickname}</span>
                 </div>
-              )
-            })}
+                {!friend.isFriend && (
+                  <Button onClick={() => sendFriendRequest(friend.id)} className="bg-blue-500 hover:bg-blue-600 text-white">
+                    Añadir
+                  </Button>
+                )}
+              </div>
+            ))}
           </div>
         )}
-        
       </div>
       <div className="space-y-4 mt-6">
         <h2 className="font-semibold text-white">Solicitudes de amistad</h2>
-        {friendRequests.length === 0 ? (
+        {isLoading ? (
+          <div className="text-white text-center">Cargando solicitudes...</div>
+        ) : error ? (
+          <div className="text-red-500 text-center">{error}</div>
+        ) : friendRequests.length === 0 ? (
           <div className="text-white text-center">No hay solicitudes de amistad pendientes</div>
         ) : (
           <div className="space-y-4">
@@ -302,23 +188,16 @@ const fetchFriends = useCallback(
               <div key={request.id} className="flex items-center justify-between group">
                 <div className="flex items-center gap-3">
                   <Avatar>
-                    <AvatarImage
-                      src={`${API_BASE_URL}/${request.sender.avatarUrl}` || "/placeholder.svg"}
-                      alt={request.sender.nickname}
-                    />
-                    <AvatarFallback>
-                      {request.sender.nickname ? request.sender.nickname.slice(0, 2).toUpperCase() : "NA"}
-                    </AvatarFallback>
+                    <AvatarImage src={`${API_BASE_URL}/${request.senderAvatarUrl}`} alt={request.senderNickname} />
+                    <AvatarFallback>{request.senderNickname ? request.senderNickname.slice(0, 2).toUpperCase() : "NA"}</AvatarFallback>
                   </Avatar>
-                  <div>
-                    <div className="font-medium leading-none text-white">{request.sender.nickname}</div>
-                  </div>
+                  <span className="text-white">{request.senderNickname}</span>
                 </div>
-                <div className="flex gap-1 ">
-                  <Button size="sm" variant="default" onClick={() => handleAcceptRequest(request.id)}>
+                <div className="flex gap-2">
+                  <Button size="sm" className="bg-green-500 hover:bg-green-600 text-white" onClick={() => handleAcceptRequest(request.id, request.senderId)}>
                     Aceptar
                   </Button>
-                  <Button size="sm" variant="default" onClick={() => handleRejectRequest(request.id)}>
+                  <Button size="sm" className="bg-red-500 hover:bg-red-600 text-white" onClick={() => handleRejectRequest(request.id)}>
                     Rechazar
                   </Button>
                 </div>
@@ -328,5 +207,5 @@ const fetchFriends = useCallback(
         )}
       </div>
     </div>
-  )
+  );
 }

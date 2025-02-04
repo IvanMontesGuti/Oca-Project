@@ -38,9 +38,7 @@ namespace BackendOcago.Controllers
             {
                 return Ok(requests.ToList());
             }
-            
         }
-
 
         [HttpPost("accept/{friendshipId}")]
         public async Task<IActionResult> AcceptRequest(long friendshipId, long userId)
@@ -73,27 +71,15 @@ namespace BackendOcago.Controllers
             return Ok("Amigo eliminado con éxito.");
         }
 
-
-
-        // Endpoint para obtener todas las solicitudes de amistad
-        [HttpGet("all/")]
-        public async Task<IActionResult> GetAllRequests()
-        {
-            var requests = await _friendshipService.GetAllFriendshipRequestsAsync();
-            if (requests == null || !requests.Any())
-                return NotFound("No se encontraron solicitudes de amistad.");
-
-            return Ok(requests);
-        }
-
+        // Endpoint para obtener todas las solicitudes y amistades del usuario (pendientes y aceptadas)
         [HttpGet("all/{userId}")]
         public async Task<IActionResult> GetAllFriends(long userId)
         {
-            var friends = await _friendshipService.GetAllFriendshipsAsync(userId);
-            if (friends == null || !friends.Any())
-                return NotFound("No se encontraron amistades.");
+            var friendships = await _friendshipService.GetAllFriendshipsAsync(userId);
+            if (friendships == null || !friendships.Any())
+                return NotFound("No se encontraron solicitudes de amistad o amistades.");
 
-            return Ok(friends);
+            return Ok(friendships);
         }
     }
 }
