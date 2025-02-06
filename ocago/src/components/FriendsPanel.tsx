@@ -239,7 +239,7 @@ export default function FriendsPanel() {
 
   return (
     <div className="bg-[#231356] rounded-lg p-4 space-y-6">
-      <div className="space-y-4">
+      <div className="space-y-4 max-h-[250px] overflow-y-auto">
         <Input
           type="text"
           placeholder="Buscar por nickname..."

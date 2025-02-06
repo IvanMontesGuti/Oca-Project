@@ -67,7 +67,7 @@ export default function GameRoom() {
             ...prev,
             isGameStarted: true,
           }));
-          router.push("/game");
+          router.push("/gamePrueba");
           break;
       }
     };
