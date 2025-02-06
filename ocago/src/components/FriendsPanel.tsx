@@ -144,8 +144,11 @@ export default function FriendsPanel() {
     }
     // Remove the request from the list of pending requests
     setPendingRequests((requests) => requests.filter((request) => request.id !== requestId))
-    // Refresh friends list after accepting
-    fetchFriends()
+    // Add the accepted friend to the friends list
+    const acceptedRequest = pendingRequests.find((request) => request.id === requestId)
+    if (acceptedRequest) {
+      setFriends((prevFriends) => [...prevFriends, { ...acceptedRequest, status: 1 }])
+    }
   }
 
   const handleRejectRequest = (requestId: string, senderId: string) => {
@@ -188,7 +191,17 @@ export default function FriendsPanel() {
             break
           case "friendRequestAccepted":
             // Handle accepted friend request
-            fetchFriends()
+            if (data.SenderId && data.SenderNickname) {
+              setFriends((prevFriends) => [
+                ...prevFriends,
+                {
+                  id: data.SenderId,
+                  nickname: data.SenderNickname,
+                  avatarUrl: data.SenderAvatarUrl || "",
+                  status: 1,
+                },
+              ])
+            }
             break
           case "friendRequestRejected":
             // Handle rejected friend request
@@ -197,6 +210,20 @@ export default function FriendsPanel() {
           case "invite":
             // Handle game invitation
             // You might want to show a modal or notification to the user
+            break
+          case "yourFriendRequestAccepted":
+            // Handle when your friend request is accepted by someone else
+            if (data.ReceiverId && data.ReceiverNickname) {
+              setFriends((prevFriends) => [
+                ...prevFriends,
+                {
+                  id: data.ReceiverId,
+                  nickname: data.ReceiverNickname,
+                  avatarUrl: data.ReceiverAvatarUrl || "",
+                  status: 1,
+                },
+              ])
+            }
             break
           // Add more cases as needed
         }
