@@ -8,9 +8,20 @@ import { DialogHeader } from "./ui/dialog";
 import { useAuth } from "@/context/AuthContext"; // Assuming userInfo comes from the AuthContext
 
 interface Friend {
-  id: string;
-  nickname: string;
-  profileImageUrl?: string;
+  id: string
+  nickname: string
+  avatarUrl: string
+  status: number
+  sender?: {
+    id: string
+    nickname: string
+    avatarUrl: string
+  }
+  receiver?: {
+    id: string
+    nickname: string
+    avatarUrl: string
+  }
 }
 
 interface InviteFriendsModalProps {
@@ -33,6 +44,8 @@ export const InviteFriendsModal = ({ isOpen, onClose }: InviteFriendsModalProps)
         if (!response.ok) throw new Error("Error fetching friends");
 
         const data: Friend[] = await response.json();
+        console.log("👫 Friends:", data);
+        
         setFriends(data);
       } catch (err) {
         setError("Failed to load friends");
@@ -57,9 +70,10 @@ export const InviteFriendsModal = ({ isOpen, onClose }: InviteFriendsModalProps)
         {!loading && !error && friends.length > 0 && (
           <div className="grid grid-cols-2 gap-4">
             {friends.map((friend) => (
-              <div key={friend.id} className="flex items-center space-x-4 p-2 bg-gray-100 rounded-lg">
+              
+              <div key={`${friend.id}-${friend.nickname}`} className="flex items-center space-x-4 p-2 bg-gray-100 rounded-lg">
                 <Avatar>
-                  <AvatarImage src={friend.profileImageUrl || "/default-avatar.png"} alt={friend.nickname} />
+                  <AvatarImage src={friend.sender?.avatarUrl || "/default-avatar.png"} alt={friend.nickname} />
                   <AvatarFallback>{friend.nickname?.slice(0, 2).toUpperCase() || "NA"}</AvatarFallback>
                 </Avatar>
                 <span>{friend.nickname}</span>
