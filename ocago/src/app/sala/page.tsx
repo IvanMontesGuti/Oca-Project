@@ -128,7 +128,7 @@ export default function GameRoom() {
   const canStartGame = roomState.players.length === 2;
 
   return (
-    <div className="min-h-screen bg-[#0066FF]">
+    <div className="bg-svg bg-cover bg-no-repeat h-full min-h-screen w-full flex flex-col">
       <Header2 />
       <main className="container mx-auto px-4 py-8">
         <div className="flex justify-end mb-8">
