@@ -5,7 +5,9 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
 using System.Threading;
-using BackendOcago.Services;  // Se requiere para acceder a FriendshipService
+using System.Threading.Tasks;
+using BackendOcago.Services;
+using BackendOcago.Models.Database.Entities;
 
 public class WebSocketHandler
 {
@@ -13,6 +15,8 @@ public class WebSocketHandler
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly LobbyService _lobby;
     private static readonly object _lock = new();
+    // Diccionario para almacenar solicitudes de amistad pendientes: clave = usuario receptor, valor = lista de IDs de usuarios que enviaron solicitud
+    private static readonly Dictionary<string, List<string>> _friendRequests = new Dictionary<string, List<string>>();
 
     public WebSocketHandler(IServiceScopeFactory serviceScopeFactory, LobbyService lobby)
     {
@@ -58,7 +62,7 @@ public class WebSocketHandler
                 {
                     // Se asigna el remitente basado en la conexión actual
                     wsMessage.SenderId = userId;
-                    await ProcessMessage(wsMessage);
+                    await ProcessMessage(wsMessage, webSocket);
                 }
             }
         }
@@ -77,7 +81,7 @@ public class WebSocketHandler
         }
     }
 
-    private async Task ProcessMessage(WebSocketMessage message)
+    private async Task ProcessMessage(WebSocketMessage message, WebSocket webSocket)
     {
         try
         {
@@ -93,10 +97,18 @@ public class WebSocketHandler
                         if (long.TryParse(message.SenderId, out long senderId) &&
                             long.TryParse(message.ReceiverId, out long receiverId))
                         {
+                            Console.WriteLine($"📌 RespondFriendRequest - SenderId: {senderId}, ReceiverId: {receiverId}, Accepted: {message.Accepted}");
+
+                            bool updated = await friendshipService.RespondFriendRequestAsync(senderId, receiverId, message.Accepted);
+                            if (!updated)
+                            {
+                                await SendMessage(message.SenderId, new { Message = "❌ No se pudo actualizar la solicitud de amistad." });
+                                return;
+                            }
+
                             bool created = await friendshipService.SendFriendRequestAsync(senderId, receiverId);
                             if (!created)
                             {
-                                // Si ya existe una solicitud o amistad, notifica al emisor
                                 await SendMessage(message.SenderId, new { Message = "Ya existe una solicitud de amistad o amistad." });
                                 return;
                             }
@@ -107,7 +119,13 @@ public class WebSocketHandler
                             return;
                         }
                     }
-                    // Se envía la solicitud al receptor, sin importar su estado (la notificación llega cuando se conecte)
+                    // Actualizar el diccionario de solicitudes pendientes para el receptor
+                    if (!_friendRequests.ContainsKey(message.ReceiverId))
+                    {
+                        _friendRequests[message.ReceiverId] = new List<string>();
+                    }
+                    _friendRequests[message.ReceiverId].Add(message.SenderId);
+                    // Se envía la solicitud al receptor, si está conectado
                     if (_connections.TryGetValue(message.ReceiverId, out var receiverSocket) &&
                         receiverSocket.State == WebSocketState.Open)
                     {
@@ -140,24 +158,21 @@ public class WebSocketHandler
                             return;
                         }
                     }
-
-                    // Reenviar el mensaje al receptor después de actualizar la base de datos
                     await SendMessage(message.ReceiverId, message);
                     break;
 
-
-                case "invite":
-                    // Para invitaciones de partida (si se usan)
-                    if (_lobby.GetUserStatus(message.ReceiverId) == UserStatus.Conectado)
+                case "getPendingFriendRequests":
                     {
-                        await SendMessage(message.ReceiverId, message);
-                    }
-                    else
-                    {
-                        await SendMessage(message.SenderId, new { Message = $"El usuario {message.ReceiverId} no está disponible para jugar." });
+                        List<string> requests;
+                        if (!_friendRequests.TryGetValue(message.SenderId, out requests))
+                        {
+                            requests = new List<string>();
+                        }
+                        var response = new { Type = "pendingFriendRequests", Requests = requests };
+                        await SendMessage(message.SenderId, response);
                     }
                     break;
-                
+
                 case "accept":
                     await _lobby.SetUserStatusAsync(message.SenderId, UserStatus.Jugando);
                     await _lobby.SetUserStatusAsync(message.ReceiverId, UserStatus.Jugando);
@@ -168,9 +183,6 @@ public class WebSocketHandler
                     await SendMessage(message.ReceiverId, message);
                     break;
 
-                case "viewPendingRequests":
-                    await SendPendingRequests(message.SenderId);
-                    break;
                 case "cancel":
                     _lobby.RemoveFromRandomQueue(message.SenderId);
                     await SendMessage(message.ReceiverId, message);
@@ -185,18 +197,25 @@ public class WebSocketHandler
 
                 case "random":
                     var result = await _lobby.AddToRandomQueueAsync(message.SenderId);
-                    if (result.HasValue)
+                    if (result.HasValue && result.Value.paired)
                     {
-                        if (result.Value.paired)
+                        var opponentId = result.Value.opponent;
+                        await SendMessage(message.SenderId, new { Message = "Emparejado", OpponentId = opponentId });
+                        await SendMessage(opponentId, new { Message = "Emparejado", OpponentId = message.SenderId });
+
+                        // Crear una lobby automáticamente
+                        var lobbyIdsec = await _lobby.CreateLobbyAsync(message.SenderId);
+                        if (lobbyIdsec != null)
                         {
-                            var opponentId = result.Value.opponent;
-                            await SendMessage(message.SenderId, new { Message = "Emparejado", OpponentId = opponentId });
-                            await SendMessage(opponentId, new { Message = "Emparejado", OpponentId = message.SenderId });
+                            await _lobby.AddUserToLobbyAsync(message.SenderId, lobbyIdsec);
+                            await _lobby.AddUserToLobbyAsync(opponentId, lobbyIdsec);
+                            await SendMessage(message.SenderId, new { Type = "lobbyCreated", LobbyId = lobbyIdsec });
+                            await SendMessage(opponentId, new { Type = "lobbyCreated", LobbyId = lobbyIdsec });
                         }
-                        else
-                        {
-                            await SendMessage(message.SenderId, new { Message = "Buscando oponente..." });
-                        }
+                    }
+                    else
+                    {
+                        await SendMessage(message.SenderId, new { Message = "Buscando oponente..." });
                     }
                     break;
 
@@ -210,6 +229,46 @@ public class WebSocketHandler
                     await SendMessage(message.SenderId, new { Message = "Iniciando partida contra bot." });
                     break;
 
+                case "createLobby":
+                    var lobbyId = await _lobby.CreateLobbyAsync(message.SenderId);
+                    if (lobbyId != null)
+                    {
+                        await SendMessage(message.SenderId, new { Type = "lobbyCreated", LobbyId = lobbyId });
+                    }
+                    else
+                    {
+                        await SendMessage(message.SenderId, new { Type = "error", Message = "Ya estás en un lobby." });
+                    }
+                    break;
+
+                case "joinLobby":
+                    await _lobby.AddUserToLobbyAsync(message.SenderId, message.LobbyId);
+                    if (_lobby.IsUserInLobby(message.SenderId))
+                    {
+                        await SendMessage(message.SenderId, new { Type = "lobbyJoined", LobbyId = message.LobbyId });
+                    }
+                    else
+                    {
+                        await SendMessage(message.SenderId, new { Type = "error", Message = "No se pudo unir al lobby." });
+                    }
+                    break;
+
+                case "invite":
+                    if (_lobby.GetUserLobbyId(message.SenderId) == null)
+                    {
+                        await SendMessage(message.SenderId, new { Type = "error", Message = "No estás en un lobby." });
+                        break;
+                    }
+                    if (_connections.ContainsKey(message.ReceiverId))
+                    {
+                        await SendMessage(message.ReceiverId, new { Type = "invitation", From = message.SenderId, LobbyId = _lobby.GetUserLobbyId(message.SenderId) });
+                    }
+                    else
+                    {
+                        await SendMessage(message.SenderId, new { Type = "error", Message = "El usuario no está disponible." });
+                    }
+                    break;
+
                 default:
                     Console.WriteLine($"⚠️ Tipo de mensaje no reconocido: {message.Type}");
                     break;
@@ -221,11 +280,39 @@ public class WebSocketHandler
         }
     }
 
+    private async Task CreateLobby(WebSocketMessage message)
+    {
+        var userId = message.SenderId;
+        Console.WriteLine($"Creating lobby for user {userId}...");
+
+        if (_lobby.IsUserInLobby(userId))
+        {
+            await SendMessage(userId, new { Message = "Ya estás en una lobby." });
+            return;
+        }
+
+        var lobbyId = await _lobby.CreateLobbyAsync(userId);
+        if (lobbyId != null)
+        {
+            Console.WriteLine($"Lobby created successfully with ID: {lobbyId}");
+            await SendMessage(userId, new { Message = "Lobby creada correctamente.", LobbyId = lobbyId });
+            await _lobby.AddUserToLobbyAsync(userId, lobbyId);
+            if (_connections.TryGetValue(userId, out var webSocket) && webSocket.State == WebSocketState.Open)
+            {
+                await BroadcastMessage(new { Message = $"El jugador {userId} ha creado una lobby." });
+            }
+        }
+        else
+        {
+            Console.WriteLine("Error creating lobby.");
+            await SendMessage(userId, new { Message = "Hubo un error al crear la lobby." });
+        }
+    }
+
     private async Task BroadcastMessage(object message, string excludeUserId = null)
     {
         var jsonMessage = JsonSerializer.Serialize(message);
         var bytes = Encoding.UTF8.GetBytes(jsonMessage);
-
         List<Task> sendTasks = new();
         foreach (var (userId, connection) in _connections)
         {
@@ -234,48 +321,16 @@ public class WebSocketHandler
                 sendTasks.Add(connection.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, CancellationToken.None));
             }
         }
-
         await Task.WhenAll(sendTasks);
     }
 
-    private async Task SendPendingRequests(string userId)
+    private async Task SendMessage(string userId, object message)
     {
-        if (!long.TryParse(userId, out long parsedUserId))
-        {
-            await SendMessage(userId, new { Message = "ID de usuario inválido." });
-            return;
-        }
-
-        using (var scope = _serviceScopeFactory.CreateScope())
-        {
-            var friendshipService = scope.ServiceProvider.GetRequiredService<FriendshipService>();
-
-            var pendingRequests = await friendshipService.GetReceivedRequestsAsync(parsedUserId);
-
-            if (pendingRequests.Any())
-            {
-                var pendingRequestsDto = pendingRequests.Select(req => new
-                {
-                    SenderId = req.SenderId,
-                    SentAt = req.SentAt.ToString("yyyy-MM-dd HH:mm:ss") // O el formato que prefieras
-                });
-
-                await SendMessage(userId, new { Message = "Solicitudes pendientes:", Requests = pendingRequestsDto });
-            }
-            else
-            {
-                await SendMessage(userId, new { Message = "No tienes solicitudes pendientes." });
-            }
-        }
-    }
-
-    private async Task SendMessage(string receiverId, object message)
-    {
-        if (_connections.TryGetValue(receiverId, out var receiverSocket) && receiverSocket.State == WebSocketState.Open)
+        if (_connections.TryGetValue(userId, out var webSocket) && webSocket.State == WebSocketState.Open)
         {
             var jsonMessage = JsonSerializer.Serialize(message);
             var bytes = Encoding.UTF8.GetBytes(jsonMessage);
-            await receiverSocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, CancellationToken.None);
+            await webSocket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, CancellationToken.None);
         }
     }
 }
