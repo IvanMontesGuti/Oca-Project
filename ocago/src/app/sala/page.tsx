@@ -26,7 +26,6 @@ export default function GameRoom() {
 
   const [isLoadingUser, setIsLoadingUser] = useState(true);
 
-  // 🔍 Esperar a que `userInfo` se cargue
   useEffect(() => {
     if (userInfo) {
       console.log("✅ User Info cargado:", userInfo);
@@ -36,7 +35,6 @@ export default function GameRoom() {
     }
   }, [userInfo]);
 
-  // 🔄 Manejo del WebSocket
   useEffect(() => {
     if (!socket || isLoadingUser) return;
 
@@ -69,7 +67,7 @@ export default function GameRoom() {
             ...prev,
             isGameStarted: true,
           }));
-          router.push("/game"); // Redirige al juego
+          router.push("/game");
           break;
       }
     };
@@ -81,7 +79,6 @@ export default function GameRoom() {
     };
   }, [socket, router, isLoadingUser]);
 
-  // ⏳ Muestra un mensaje de carga mientras `userInfo` se obtiene
   if (isLoadingUser) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0066FF] text-white text-2xl">
@@ -90,7 +87,6 @@ export default function GameRoom() {
     );
   }
 
-  // 🚀 Función para iniciar el juego
   const handleStartGame = () => {
     if (socket && socket.readyState === WebSocket.OPEN && userInfo) {
       const message = JSON.stringify({
@@ -101,7 +97,6 @@ export default function GameRoom() {
     }
   };
 
-  // 🎭 Renderizar jugadores
   const renderPlayer = (player?: Player, isWaiting = false) => (
     <div className="flex flex-col items-center gap-4">
       <div className="relative">
