@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { FRIENDSHIP_GET_BY_ID_URL } from "@/lib/endpoints/config";
+import { API_BASE_URL, FRIENDSHIP_GET_BY_ID_URL } from "@/lib/endpoints/config";
 import { Dialog, DialogContent, DialogTitle } from "@radix-ui/react-dialog";
 import { DialogHeader } from "./ui/dialog";
 import { useAuth } from "@/context/AuthContext";
@@ -89,7 +89,7 @@ export const InviteFriendsModal = ({ isOpen, onClose }: InviteFriendsModalProps)
               return (
                 <div key={`${friendUser?.id}-${friendUser?.nickname}`} className="flex items-center space-x-4 p-2 bg-gray-100 rounded-lg">
                   <Avatar>
-                    <AvatarImage src={friendUser?.avatarUrl || "/default-avatar.png"} alt={friendUser?.nickname} />
+                    src={friendUser.avatarUrl ? `${API_BASE_URL}/${friendUser.avatarUrl}` : undefined}
                     <AvatarFallback>{friendUser?.nickname?.slice(0, 2).toUpperCase() || "NA"}</AvatarFallback>
                   </Avatar>
                   <span>{friendUser?.nickname}</span>
