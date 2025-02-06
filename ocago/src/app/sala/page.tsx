@@ -25,7 +25,6 @@ export default function GameRoom() {
   });
 
   const [isLoadingUser, setIsLoadingUser] = useState(true);
-  console.log("🔒 User Info:", userInfo);
   
   useEffect(() => {
     if (userInfo) {
