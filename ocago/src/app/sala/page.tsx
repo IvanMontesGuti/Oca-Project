@@ -1,53 +1,48 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
-import { Loader2 } from "lucide-react"
-import { Header2 } from "@/components/navUser"
-import { InviteFriendsModal } from "@/components/invite-friends-modal"
-import { useAuth } from "@/context/AuthContext"
-import { useWebSocket } from "@/context/WebSocketContext"
-import { API_BASE_URL } from "@/lib/endpoints/config"
-import type { Player, RoomState } from "@/types/room"
-
-interface DecodedToken {
-    email: string;
-    role: string;
-    unique_name: string;
-    family_name?: string; 
-    nbf: number;
-    exp: number;
-    iat: number;
-    id: number;
-}
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
+import { Header2 } from "@/components/navUser";
+import { InviteFriendsModal } from "@/components/invite-friends-modal";
+import { useAuth } from "@/context/AuthContext";
+import { useWebSocket } from "@/context/WebSocketContext";
+import { API_BASE_URL } from "@/lib/endpoints/config";
+import type { Player, RoomState } from "@/types/room";
 
 export default function GameRoom() {
-  const router = useRouter()
-  
-  const { socket } = useWebSocket()
-  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
+  const router = useRouter();
+  const { socket } = useWebSocket();
+  const { userInfo, isAuthenticated } = useAuth();
+
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [roomState, setRoomState] = useState<RoomState>({
     players: [],
     isGameStarted: false,
-  })
-  const {userInfo} = useAuth();
-  console.log(userInfo);
-  
-  
-  
-  const { family_name = "", unique_name = "" } = userInfo;
-  
-  
+  });
 
+  const [isLoadingUser, setIsLoadingUser] = useState(true);
+
+  // 🔍 Esperar a que `userInfo` se cargue
   useEffect(() => {
-    if (!socket) return
+    if (userInfo) {
+      console.log("✅ User Info cargado:", userInfo);
+      setIsLoadingUser(false);
+    } else {
+      console.log("❌ User Info no disponible, esperando...");
+    }
+  }, [userInfo]);
+
+  // 🔄 Manejo del WebSocket
+  useEffect(() => {
+    if (!socket || isLoadingUser) return;
 
     const handleWebSocketMessage = (event: MessageEvent) => {
-      const data = JSON.parse(event.data)
-      console.log("Received WebSocket message:", data)
+      const data = JSON.parse(event.data);
+      console.log("📩 Mensaje WebSocket recibido:", data);
 
       switch (data.Type) {
         case "playerJoined":
@@ -61,41 +56,52 @@ export default function GameRoom() {
                 avatarUrl: data.PlayerAvatarUrl,
               },
             ],
-          }))
-          break
+          }));
+          break;
         case "playerLeft":
           setRoomState((prev) => ({
             ...prev,
             players: prev.players.filter((player) => player.id !== data.PlayerId),
-          }))
-          break
+          }));
+          break;
         case "gameStarted":
           setRoomState((prev) => ({
             ...prev,
             isGameStarted: true,
-          }))
-          router.push("/game") // Redirect to game page
-          break
+          }));
+          router.push("/game"); // Redirige al juego
+          break;
       }
-    }
+    };
 
-    socket.addEventListener("message", handleWebSocketMessage)
+    socket.addEventListener("message", handleWebSocketMessage);
 
     return () => {
-      socket.removeEventListener("message", handleWebSocketMessage)
-    }
-  }, [socket, router])
+      socket.removeEventListener("message", handleWebSocketMessage);
+    };
+  }, [socket, router, isLoadingUser]);
 
+  // ⏳ Muestra un mensaje de carga mientras `userInfo` se obtiene
+  if (isLoadingUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0066FF] text-white text-2xl">
+        Cargando datos del usuario...
+      </div>
+    );
+  }
+
+  // 🚀 Función para iniciar el juego
   const handleStartGame = () => {
     if (socket && socket.readyState === WebSocket.OPEN && userInfo) {
       const message = JSON.stringify({
         Type: "startGame",
         SenderId: userInfo.id.toString(),
-      })
-      socket.send(message)
+      });
+      socket.send(message);
     }
-  }
+  };
 
+  // 🎭 Renderizar jugadores
   const renderPlayer = (player?: Player, isWaiting = false) => (
     <div className="flex flex-col items-center gap-4">
       <div className="relative">
@@ -117,9 +123,9 @@ export default function GameRoom() {
       </div>
       <span className="text-xl font-bold text-white">{isWaiting ? "Buscando oponente..." : player?.nickname}</span>
     </div>
-  )
+  );
 
-  const canStartGame = roomState.players.length === 2
+  const canStartGame = roomState.players.length === 2;
 
   return (
     <div className="min-h-screen bg-[#0066FF]">
@@ -157,6 +163,5 @@ export default function GameRoom() {
         <InviteFriendsModal isOpen={isInviteModalOpen} onClose={() => setIsInviteModalOpen(false)} />
       </main>
     </div>
-  )
+  );
 }
-
