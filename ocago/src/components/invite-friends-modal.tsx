@@ -6,6 +6,8 @@ import { FRIENDSHIP_GET_BY_ID_URL } from "@/lib/endpoints/config";
 import { Dialog, DialogContent, DialogTitle } from "@radix-ui/react-dialog";
 import { DialogHeader } from "./ui/dialog";
 import { useAuth } from "@/context/AuthContext";
+import { Button } from "./ui/button";
+import { useWebSocket } from "@/context/WebSocketContext";
 
 interface Friend {
   id: string;
@@ -30,6 +32,7 @@ interface InviteFriendsModalProps {
 }
 
 export const InviteFriendsModal = ({ isOpen, onClose }: InviteFriendsModalProps) => {
+  const { socket } = useWebSocket()
   const [friends, setFriends] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,6 +60,18 @@ export const InviteFriendsModal = ({ isOpen, onClose }: InviteFriendsModalProps)
     fetchFriends();
   }, [userInfo]);
 
+  const handleSendGameInvitation = (friendId: string) => {
+    if (socket && socket.readyState === WebSocket.OPEN && userInfo) {
+      const message = JSON.stringify({
+        Type: "invite",
+        SenderId: userInfo.id.toString(),
+        ReceiverId: friendId.toString(),
+      })
+      socket.send(message)
+      console.log("Sending game invitation:", message)
+    }
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
@@ -78,6 +93,9 @@ export const InviteFriendsModal = ({ isOpen, onClose }: InviteFriendsModalProps)
                     <AvatarFallback>{friendUser?.nickname?.slice(0, 2).toUpperCase() || "NA"}</AvatarFallback>
                   </Avatar>
                   <span>{friendUser?.nickname}</span>
+                  <Button size="sm" variant="default" onClick={() => handleSendGameInvitation(friendUser.id)}>
+                        Invitar a partida
+                      </Button>
                 </div>
               );
             })}
