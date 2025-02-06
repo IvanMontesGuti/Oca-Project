@@ -3,123 +3,166 @@ using BackendOcago.Models.Database;
 using BackendOcago.Models.Dtos;
 using BackendOcago.Models.Mappers;
 using BackendOcago.Models.Database.Enum;
+using Microsoft.EntityFrameworkCore;
 
-namespace BackendOcago.Services;
-
-public class FriendshipService
+namespace BackendOcago.Services
 {
-    private readonly UnitOfWork _unitOfWork;
-    private readonly FriendshipMapper _mapper;
-
-    public FriendshipService(UnitOfWork unitOfWork, FriendshipMapper mapper)
+    public class FriendshipService
     {
-        _unitOfWork = unitOfWork;
-        _mapper = mapper;
-    }
+        private readonly UnitOfWork _unitOfWork;
+        private readonly FriendshipMapper _mapper;
+        private readonly SmartSearchService _smartSearchService;
 
-    /* ----- INSERT ----- */
-
-    public async Task<bool> SendFriendRequestAsync(long senderId, long receiverId)
-    {
-        Console.WriteLine($"Intentando crear una amistad entre {senderId} y {receiverId}.");
-
-        if (_unitOfWork.FriendshipRepository == null)
+        public FriendshipService(UnitOfWork unitOfWork, FriendshipMapper mapper, SmartSearchService smartSearchService)
         {
-            Console.WriteLine("Error: FriendshipRepository es null.");
-            return false;
+            _unitOfWork = unitOfWork;
+            _mapper = mapper;
+            _smartSearchService = smartSearchService;
         }
 
-        var existingFriendship = await _unitOfWork.FriendshipRepository.GetFriendshipAsync(senderId, receiverId);
-
-        if (existingFriendship != null)
+        /* ----- INSERT ----- */
+        public async Task<bool> SendFriendRequestAsync(long senderId, long receiverId)
         {
-            Console.WriteLine("Ya existe una solicitud o amistad.");
-            return false;
+            if (await _unitOfWork.FriendshipRepository.GetFriendshipAsync(senderId, receiverId) != null)
+            {
+                Console.WriteLine("Ya existe una solicitud o amistad.");
+                return false;
+            }
+
+            var newFriendship = new Friendship
+            {
+                SenderId = senderId,
+                ReceiverId = receiverId,
+                SentAt = DateTime.UtcNow,
+                Status = FriendshipInvitationStatus.Pendiente
+            };
+
+            await _unitOfWork.FriendshipRepository.InsertAsync(newFriendship);
+            return await SaveChangesAsync("Solicitud de amistad enviada.");
         }
 
-        var newFriendship = new Friendship
+        /* ----- GET ----- */
+        public async Task<IEnumerable<Friendship>> GetAllRequestsAsync() =>
+            await _unitOfWork.FriendshipRepository.GetAllRequestsAsync();
+
+        public async Task<IEnumerable<FriendshipDto>> GetSentRequestsAsync(long userId)
         {
-            SenderId = senderId,
-            ReceiverId = receiverId,
-            SentAt = DateTime.UtcNow,
-            Status = FriendshipInvitationStatus.Pendiente
-        };
+            var sentRequests = await _unitOfWork.FriendshipRepository.GetSentRequestsAsync(userId);
+            return _mapper.ToDto(sentRequests);
+        }
 
-        await _unitOfWork.FriendshipRepository.InsertAsync(newFriendship);
-        var saved = await _unitOfWork.SaveAsync();
-        Console.WriteLine(saved ? "Amistad creada con éxito." : "Error al guardar la amistad.");
-        return saved;
-    }
+        public async Task<IEnumerable<Friendship>> GetReceivedRequestsAsync(long userId) =>
+            await _unitOfWork.FriendshipRepository.GetReceivedRequestsAsync(userId);
 
+        public async Task<IEnumerable<Friendship>> GetAllFriendshipRequestsAsync() =>
+            await GetAllRequestsAsync();
 
+        public async Task<IEnumerable<FriendshipDto>> GetAllFriendshipsAsync(long userId)
+        {
+            var accepted = await _unitOfWork.FriendshipRepository.GetAcceptedFriendshipsAsync(userId);
+            var pendingReceived = await _unitOfWork.FriendshipRepository.GetReceivedRequestsAsync(userId);
+            var all = accepted.Concat(pendingReceived);
+            return _mapper.ToDto(all);
+        }
 
-    /* ----- GET ----- */
+        /* ----- UPDATE ----- */
+        public async Task<bool> AcceptFriendRequestAsync(long friendshipId, long userId)
+        {
+            var friendship = await _unitOfWork.FriendshipRepository.GetByIdAsync(friendshipId);
 
-    public async Task<IEnumerable<FriendshipDto>> GetSentRequestsAsync(long userId)
-    {
-        var sentRequests = await _unitOfWork.FriendshipRepository.GetSentRequestsAsync(userId);
-        return _mapper.ToDto(sentRequests);
-    }
+            if (friendship == null || friendship.ReceiverId != userId || friendship.Status != FriendshipInvitationStatus.Pendiente)
+                return false;
 
-    public async Task<IEnumerable<FriendshipDto>> GetReceivedRequestsAsync(long userId)
-    {
-        var receivedRequests = await _unitOfWork.FriendshipRepository.GetReceivedRequestsAsync(userId);
-        return _mapper.ToDto(receivedRequests);
-    }
+            friendship.Status = FriendshipInvitationStatus.Aceptada;
 
-    //public async Task<IEnumerable<UserDto>> GetFriendsAsync(long userId)
-    //{
-    //    var friendships = await _unitOfWork.FriendshipRepository.GetAcceptedFriendshipsAsync(userId);
-    //    var friends = friendships.Select(f => f.SenderId == userId ? f.Receiver : f.Sender);
-    //    return friends.Select(friend => _mapper.ToDto(friend)).ToList();
-    //}
-    public async Task<IEnumerable<FriendshipDto>> GetAllFriendshipRequestsAsync(long userId)
-    {
-        var sentRequests = await GetSentRequestsAsync(userId); // Obtener solicitudes enviadas
-        var receivedRequests = await GetReceivedRequestsAsync(userId); // Obtener solicitudes recibidas
+            if (!await AddFriendsToEachOtherAsync(friendship.SenderId, friendship.ReceiverId))
+                return false;
 
-        // Combinar ambas listas
-        var allRequests = sentRequests.Concat(receivedRequests);
+            _unitOfWork.FriendshipRepository.Update(friendship);
+            return await SaveChangesAsync("Solicitud de amistad aceptada.");
+        }
 
-        return allRequests;
-    }
+        public async Task<bool> RejectFriendRequestAsync(long friendshipId, long userId)
+        {
+            var friendship = await _unitOfWork.FriendshipRepository.GetByIdAsync(friendshipId);
 
-    /* ----- UPDATE ----- */
+            if (friendship == null || friendship.ReceiverId != userId || friendship.Status != FriendshipInvitationStatus.Pendiente)
+                return false;
 
-    public async Task<bool> AcceptFriendRequestAsync(long friendshipId, long userId)
-    {
-        var friendship = await _unitOfWork.FriendshipRepository.GetByIdAsync(friendshipId);
+            friendship.Status = FriendshipInvitationStatus.Rechazada;
+            _unitOfWork.FriendshipRepository.Update(friendship);
+            return await SaveChangesAsync("Solicitud de amistad rechazada.");
+        }
 
-        if (friendship == null || friendship.ReceiverId != userId || friendship.Status != FriendshipInvitationStatus.Pendiente)
-            return false;
+        public async Task<bool> RespondFriendRequestAsync(long senderId, long receiverId, bool accepted)
+        {
+            var friendship = await _unitOfWork.FriendshipRepository.GetFriendshipAsync(senderId, receiverId)
+                              ?? await _unitOfWork.FriendshipRepository.GetFriendshipAsync(receiverId, senderId);
 
-        friendship.Status = FriendshipInvitationStatus.Aceptada;
+            if (friendship == null)
+            {
+                Console.WriteLine("❌ No se encontró la solicitud de amistad en la BD.");
+                return false;
+            }
 
-        _unitOfWork.FriendshipRepository.Update(friendship);
-        return await _unitOfWork.SaveAsync();
-    }
+            friendship.Status = accepted ? FriendshipInvitationStatus.Aceptada : FriendshipInvitationStatus.Rechazada;
+            _unitOfWork.FriendshipRepository.Update(friendship);
+            return await SaveChangesAsync($"✅ Solicitud de amistad {(accepted ? "aceptada" : "rechazada")} en BD.");
+        }
 
-    public async Task<bool> RejectFriendRequestAsync(long friendshipId, long userId)
-    {
-        var friendship = await _unitOfWork.FriendshipRepository.GetByIdAsync(friendshipId);
+        /* ----- DELETE ----- */
+        public async Task<bool> RemoveFriendAsync(long userId, long friendId)
+        {
+            var friendship = await _unitOfWork.FriendshipRepository.GetFriendshipAsync(userId, friendId);
 
-        if (friendship == null || friendship.ReceiverId != userId || friendship.Status != FriendshipInvitationStatus.Pendiente)
-            return false;
+            if (friendship == null || friendship.Status != FriendshipInvitationStatus.Aceptada)
+                return false;
 
-        _unitOfWork.FriendshipRepository.Delete(friendship);
-        return await _unitOfWork.SaveAsync();
-    }
+            if (!await RemoveFriendsFromEachOtherAsync(userId, friendId))
+                return false;
 
-    /* ----- DELETE ----- */
+            _unitOfWork.FriendshipRepository.Delete(friendship);
+            return await SaveChangesAsync("Amistad eliminada.");
+        }
 
-    public async Task<bool> DeleteFriendshipAsync(long friendshipId, long userId)
-    {
-        var friendship = await _unitOfWork.FriendshipRepository.GetByIdAsync(friendshipId);
+        /* ----- PRIVATE HELPERS ----- */
+        private async Task<bool> SaveChangesAsync(string successMessage)
+        {
+            var saved = await _unitOfWork.SaveAsync();
+            Console.WriteLine(saved ? successMessage : "Error al guardar los cambios.");
+            return saved;
+        }
 
-        if (friendship == null || (friendship.SenderId != userId && friendship.ReceiverId != userId))
-            return false;
+        private async Task<bool> AddFriendsToEachOtherAsync(long userId, long friendId)
+        {
+            var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
+            var friend = await _unitOfWork.UserRepository.GetByIdAsync(friendId);
 
-        _unitOfWork.FriendshipRepository.Delete(friendship);
-        return await _unitOfWork.SaveAsync();
+            if (user == null || friend == null)
+                return false;
+
+            user.Friends.Add(friend);
+            friend.Friends.Add(user);
+
+            _unitOfWork.UserRepository.Update(user);
+            _unitOfWork.UserRepository.Update(friend);
+            return true;
+        }
+
+        private async Task<bool> RemoveFriendsFromEachOtherAsync(long userId, long friendId)
+        {
+            var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
+            var friend = await _unitOfWork.UserRepository.GetByIdAsync(friendId);
+
+            if (user == null || friend == null)
+                return false;
+
+            user.Friends.Remove(friend);
+            friend.Friends.Remove(user);
+
+            _unitOfWork.UserRepository.Update(user);
+            _unitOfWork.UserRepository.Update(friend);
+            return true;
+        }
     }
 }

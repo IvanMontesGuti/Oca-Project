@@ -15,14 +15,14 @@ export function Header() {
                   alt="logo"
                   width={50}
                   height={50}
-                  
+
                 />
           <span className="text-white text-2xl font-fredoka flex items-center gap-2">
             OcaGo! <ArrowRight className="h-5 w-5" />
           </span>
         </div>
         <div className="flex gap-4">
-        
+
           <Link
             href="#faq"
             className="text-white hover:text-gray-200 transition-colors font-montserrat"
@@ -38,19 +38,19 @@ export function Header() {
           <Link
             href="/login"
             className="text-white hover:text-gray-200 transition-colors font-montserrat"
-            
+
           >
             Inicia Sesión
           </Link>
           <Link
             href="/register"
             className="text-white hover:text-gray-200 transition-colors font-montserrat"
-           
+
           >
             Regístrate
           </Link>
-          
-          
+
+
         </div>
       </nav>
       </>

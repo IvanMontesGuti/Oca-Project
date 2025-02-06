@@ -10,6 +10,9 @@ public class FriendshipDto
     public UserDto Receiver { get; set; }
     public DateTime SentAt { get; set; }
     public FriendshipInvitationStatus Status { get; set; }
+
+   
+
 }
 
 

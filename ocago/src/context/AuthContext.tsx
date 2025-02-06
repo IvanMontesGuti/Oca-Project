@@ -1,128 +1,170 @@
 "use client";
 
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { jwtDecode } from "jwt-decode";
 import { LOGIN_URL, REGISTER_URL } from "@/lib/endpoints/config";
-import { FETCH_POST } from "@/lib/endpoints/useFetch";
-import React, { createContext, useContext, useState, useEffect } from "react";
 
-// Interfaz para el contexto de autenticación
-interface AuthContextType {
-    token: string | null;
-    login: (identifier: string, password: string, rememberMe: boolean) => Promise<void>;
-    register: (nickname: string, email: string, password: string, avatarUrl:string) => Promise<void>;
-    logout: () => void;
-    isAuthenticated: boolean;
+
+interface JwtPayload {
+  id: string;
 }
 
-// Crear el contexto de autenticación
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+interface DecodedToken {
+  avatarUrl: string;
+  email: string;
+  role: string;
+  unique_name: string;
+  family_name?: string;
+  nbf: number;
+  exp: number;
+  iat: number;
+  id: number;
+}
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [token, setToken] = useState<string | null>(null);
-    const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+interface AuthContextType {
+  token: string | null;
+  userId: string | null;
+  userInfo: DecodedToken | null;
+  login: (mail: string, password: string, rememberMe: boolean) => Promise<void>;
+  register: (nickname: string, email: string, password: string, avatarUrl: string) => Promise<void>;
+  logout: () => void;
+  isAuthenticated: boolean;
+}
 
-    useEffect(() => {
-        const savedToken = localStorage.getItem("authToken") || sessionStorage.getItem("authToken");
-        if (savedToken) {
-            setToken(savedToken);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [token, setToken] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+  const [userInfo, setUserInfo] = useState<DecodedToken | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+
+  const extractUserId = (accessToken: string): string | null => {
+    try {
+      const decoded = jwtDecode<JwtPayload>(accessToken);
+      return decoded.id ? String(decoded.id) : null;
+    } catch (error) {
+      console.error("⚠️ Error al decodificar JWT:", error);
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    const savedToken = localStorage.getItem("accessToken") || sessionStorage.getItem("accessToken");
+
+    if (savedToken) {
+      try {
+        const decodedToken = jwtDecode<DecodedToken>(savedToken);
+        setUserInfo(decodedToken);
+        const extractedUserId = extractUserId(savedToken);
+        if (extractedUserId) {
+          setToken(savedToken);
+          setUserId(extractedUserId);
+          setIsAuthenticated(true);
+        } else {
+          logout();
         }
-    }, []);
+      } catch (error) {
+        console.error("Error decoding token:", error);
+        logout();
+      }
+    }
+  }, []);
 
-    useEffect(() => {
-        setIsAuthenticated(!!token);
-    }, [token]);
-
-    const login = async (mail: string, password: string, rememberMe: boolean) => {
-        try {
-            console.log("Sending login request:", { mail, password });
-    
-            // Realiza la solicitud al backend
-            const data = await FETCH_POST(LOGIN_URL, { mail, password });
-            console.log("Server Response:", data);
-    
-            // Extrae el token desde la propiedad `accessToken`
-            if (!data?.accessToken) {
-                throw new Error("Server did not return a valid accessToken");
-            }
-    
-            setToken(data.accessToken);
-            setIsAuthenticated(true);
-    
-            // Almacenar el token en localStorage o sessionStorage según la preferencia del usuario
-            if (rememberMe) {
-                localStorage.setItem("authToken", data.accessToken);
-                sessionStorage.setItem("authToken", data.accessToken);
-            }else{
-                localStorage.setItem("authToken", data.accessToken);
-            }
-        } catch (error: any) {
-            console.error("Login failed:", error.message || error);
-            throw new Error(error.message || "Login failed. Please check your credentials.");
+  const login = async (mail: string, password: string, rememberMe: boolean) => {
+    try {
+      const response = await fetch(LOGIN_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mail, password }),
+      });
+  
+      const data = await response.json();
+  
+      if (!data?.accessToken) throw new Error("⚠️ Token de acceso inválido");
+  
+      const extractedUserId = extractUserId(data.accessToken);
+      if (!extractedUserId) throw new Error("⚠️ No se pudo extraer userId");
+  
+      const decodedToken = jwtDecode<DecodedToken>(data.accessToken);
+      setUserInfo(decodedToken);
+  
+      setToken(data.accessToken);
+      setUserId(extractedUserId);
+      setIsAuthenticated(true);
+  
+      if (typeof window !== "undefined") {
+        if (rememberMe) {
+          localStorage.setItem("accessToken", data.accessToken);
+        } else {
+          sessionStorage.setItem("accessToken", data.accessToken);
         }
-    };
+      }
+    } catch (error) {
+      console.error("❌ Error en login:", error);
+      throw error;
+    }
+  };
 
-    const register = async (nickname: string, mail: string, password: string, avatarUrl: string) => {
-        try {
-    
-            console.log("Sending registration data:", { mail, nickname, password, role: null, avatarUrl });
-    
-            const body = JSON.stringify({
-                mail,
-                nickname,
-                password,
-                role: null, // Cambia esto según sea necesario
-                avatarUrl,
-            });
-    
-            const response = await fetch(REGISTER_URL, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body,
-            });
-    
-            // Verificar si la respuesta es exitosa
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || "Failed to register");
-            }
-    
-            const data = await response.json();
-            console.log("Registration Response:", data);
-    
-            if (!data?.accessToken) {
-                throw new Error("Server did not return a valid accessToken");
-            }
-    
-            setToken(data.accessToken);
-            localStorage.setItem("authToken", data.accessToken);
-            sessionStorage.setItem("authToken", data.accessToken)
-        } catch (error: any) {
-            console.error("Registration failed:", error.message || error);
-            throw new Error("Registration failed. Please try again.");
-        }
-    };
-    
-    
-    
+  const register = async (nickname: string, mail: string, password: string, avatarUrl: string) => {
+    try {
+      const response = await fetch(REGISTER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nickname, mail, password, avatarUrl }),
+      });
 
-    const logout = () => {
-        setToken(null);
-        localStorage.removeItem("authToken");
-        sessionStorage.removeItem("authToken");
-    };
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "⚠️ Error en el registro");
+      }
 
-    return (
-        <AuthContext.Provider value={{ token, login, register, logout, isAuthenticated }}>
-            {children}
-        </AuthContext.Provider>
-    );
+      const data = await response.json();
+      if (!data?.accessToken) throw new Error("⚠️ Token de acceso inválido");
+
+      const extractedUserId = extractUserId(data.accessToken);
+      if (!extractedUserId) throw new Error("⚠️ No se pudo extraer el userId");
+
+      const decodedToken = jwtDecode<DecodedToken>(data.accessToken);
+      setUserInfo(decodedToken);
+
+      setToken(data.accessToken);
+      setUserId(extractedUserId);
+      setIsAuthenticated(true);
+
+      if (typeof window !== "undefined") {
+        localStorage.setItem("accessToken", data.accessToken);
+        setIsAuthenticated(true);
+      }
+    } catch (error) {
+      console.error("❌ Error en registro:", error);
+      throw error;
+    }
+  };
+
+  const logout = () => {
+    setToken(null);
+    setUserId(null);
+    setUserInfo(null);
+    setIsAuthenticated(false);
+
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("accessToken");
+      sessionStorage.removeItem("accessToken");
+    }
+  };
+
+  return (
+    <AuthContext.Provider value={{ token, userId, userInfo, login, register, logout, isAuthenticated }}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {
-    const context = useContext(AuthContext);
-    if (context === undefined) {
-        throw new Error("useAuth must be used within an AuthProvider");
-    }
-    return context;
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth debe usarse dentro de un AuthProvider");
+  }
+  return context;
 };

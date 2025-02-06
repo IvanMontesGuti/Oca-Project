@@ -2,6 +2,7 @@
 using BackendOcago.Models.Database;
 using BackendOcago.Models.Dtos;
 using BackendOcago.Models.Mappers;
+using BackendOcago.Models.Database.Enum;
 namespace BackendOcago.Services;
 
 public class UserService
@@ -35,6 +36,8 @@ public class UserService
         User user = await _unitOfWork.UserRepository.GetUserDataByIdAsync(id);
         return _mapper.ToDto(user);
     }
+
+
 
     public async Task<IEnumerable<UserDto>> GetAllAsync()
     {
@@ -118,6 +121,27 @@ public class UserService
         return _mapper.ToDto(userEntity);
     }
     */
+    public async Task<int> GetStatusCount (UserStatus status)
+    {
+        return await _unitOfWork.UserRepository.CountStatusAsync(status);
+    }
+    public async Task<UserDto> UpdateStatus(UserStatus newStatus, long userId)
+    {
+        var userEntity = await _unitOfWork.UserRepository.GetByIdAsync(userId);
+        if (userEntity == null) throw new Exception("El usuario no existe");
+
+        userEntity.Status = newStatus;
+        _unitOfWork.UserRepository.Update(userEntity);
+        Console.WriteLine($"Usuario {userId} actualizado a estado {newStatus}");
+
+
+        var affectedRows = await _unitOfWork.SaveAsync();
+        Console.WriteLine($"Filas afectadas en la DB: {affectedRows}");
+
+
+        return _mapper.ToDto(userEntity);
+    }
+
 
     /* ----- DELETE ----- */
 

@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using BackendOcago.Services;
 using BackendOcago.Models.Dtos;
+using BackendOcago.Models.Database.Enum;
 
 namespace BackendOcago.Controllers;
 
@@ -23,6 +24,22 @@ public class UserController : ControllerBase
         var users = await _userService.GetAllAsync();
         return Ok(users);
     }
+    [HttpGet("User/{id}")]
+    public async Task<IActionResult> GetUser(long id)
+    {
+        var user = await _userService.GetByIdAsync(id);
+        return Ok(user);
+    }
 
-    
+    [HttpPut("Status")]
+    public async Task<UserDto> ChangeStatus(UserStatus userStatusRequest, long userId)
+    {
+        return await _userService.UpdateStatus(userStatusRequest, userId);
+    }
+
+    [HttpGet("CountStatus")]
+    public async Task<int> GetStatusCount (UserStatus estado)
+    {
+        return await _userService.GetStatusCount(estado);
+    }
 }

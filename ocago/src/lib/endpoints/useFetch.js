@@ -1,5 +1,5 @@
 const getAuthToken = () => {
-  return localStorage.getItem('authToken') || '';
+  return localStorage.getItem('accessToken') || '';
 };
 
 async function FETCH_REQUEST(url, method, obj = null) {

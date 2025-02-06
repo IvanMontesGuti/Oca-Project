@@ -33,10 +33,12 @@ namespace BackendOcago.Models.Database.Repositories
         public async Task<IEnumerable<Friendship>> GetReceivedRequestsAsync(long userId)
         {
             return await _dbContext.Friendships
-                .Where(f => f.ReceiverId == userId && f.Status == FriendshipInvitationStatus.Pendiente)
-                .Include(f => f.Sender)
+                .Where(f => f.ReceiverId == userId)
+                .Include(f => f.Sender) // Include only if you need Sender data
                 .ToListAsync();
         }
+
+        
 
         public async Task<IEnumerable<Friendship>> GetAcceptedFriendshipsAsync(long userId)
         {
@@ -46,5 +48,12 @@ namespace BackendOcago.Models.Database.Repositories
                 .Include(f => f.Receiver)
                 .ToListAsync();
         }
+
+        public async Task<IEnumerable<Friendship>> GetAllRequestsAsync()
+        {
+            return await _dbContext.Friendships
+                .ToListAsync();
+        }
+
     }
 }
