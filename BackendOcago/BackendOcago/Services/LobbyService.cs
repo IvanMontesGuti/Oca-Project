@@ -1,19 +1,37 @@
 ﻿using BackendOcago.Models.Database.Enum;
 using System.Collections.Concurrent;
-using System.Linq;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using BackendOcago.Services;
 
 public class LobbyService
 {
     private readonly ConcurrentDictionary<string, UserStatus> _userStatuses = new();
-    private readonly Queue<string> _randomQueue = new();
+    private readonly ConcurrentDictionary<string, string> _userLobbies = new();
+    private Dictionary<string, List<string>> _lobbies = new Dictionary<string, List<string>>();
+    private Queue<string> _randomQueue = new();
     private readonly UserService _userService; 
 
     public LobbyService(UserService userService)
     {
         _userService = userService;
+    }
+    public async Task<(bool paired, string opponent, string lobbyId)?> TryPairUsersAsync()
+    {
+        var searchingUsers = _userStatuses.Where(u => u.Value == UserStatus.BuscandoPartida).Select(u => u.Key).ToList();
+
+        if (searchingUsers.Count >= 2)
+        {
+            string player1 = searchingUsers[0];
+            string player2 = searchingUsers[1];
+
+            _userStatuses[player1] = UserStatus.Jugando;
+            _userStatuses[player2] = UserStatus.Jugando;
+
+            string lobbyId = Guid.NewGuid().ToString();
+            _lobbies[lobbyId] = new List<string> { player1, player2 };
+
+            return (true, player2, lobbyId);
+        }
+        return (false, null, null);
     }
 
     public async Task SetUserStatusAsync(string userId, UserStatus status)
@@ -37,17 +55,11 @@ public class LobbyService
         return _userStatuses.TryGetValue(userId, out var status) ? status : UserStatus.Desconectado;
     }
 
-    /// <summary>
-    /// Obtiene la lista de usuarios que se encuentren en un estado específico.
-    /// </summary>
     public IEnumerable<string> GetUsersByStatus(UserStatus status)
     {
         return _userStatuses.Where(kvp => kvp.Value == status).Select(kvp => kvp.Key);
     }
 
-    /// <summary>
-    /// Remueve al usuario del lobby (por ejemplo, cuando se desconecta) y de la cola aleatoria.
-    /// </summary>
     public async Task RemoveUser(string userId)
     {
         _userStatuses.TryRemove(userId, out _);
@@ -61,11 +73,7 @@ public class LobbyService
     }
 
 
-    /// <summary>
-    /// Agrega un usuario a la cola de emparejamiento aleatorio.
-    /// Si hay al menos dos usuarios en cola, se emparejan y se actualiza su estado a Jugando.
-    /// </summary>
-    public async Task<(bool paired, string opponent)?> AddToRandomQueueAsync(string userId)
+    public async Task<(bool paired, string opponent, string lobbyId)?> AddToRandomQueueAsync(string userId)
     {
         lock (_randomQueue)
         {
@@ -76,36 +84,23 @@ public class LobbyService
 
             if (_randomQueue.Count >= 2)
             {
-                // Sacamos dos jugadores de la cola
                 string player1 = _randomQueue.Dequeue();
                 string player2 = _randomQueue.Dequeue();
 
-                // Actualizamos su estado a Jugando en memoria
                 _userStatuses[player1] = UserStatus.Jugando;
                 _userStatuses[player2] = UserStatus.Jugando;
 
-                // Retornamos el oponente del usuario que llamó (si aplica)
-                if (player1 == userId)
-                {
-                    return (true, player2);
-                }
-                else if (player2 == userId)
-                {
-                    return (true, player1);
-                }
-                else
-                {
-                    // El usuario que llamó ya estaba en cola, pero no es parte de la pareja actual.
-                    return null;
-                }
+                string lobbyId = Guid.NewGuid().ToString();
+                _lobbies[lobbyId] = new List<string> { player1, player2 };
+
+                return (true, player2, lobbyId);
             }
         }
-        return (false, null);
+        return (false, null, null);
     }
 
-    /// <summary>
-    /// Remueve un usuario de la cola de emparejamiento aleatorio.
-    /// </summary>
+
+
     public void RemoveFromRandomQueue(string userId)
     {
         lock (_randomQueue)
@@ -123,9 +118,7 @@ public class LobbyService
         }
     }
 
-    /// <summary>
-    /// Marca al usuario como Jugando contra un bot y actualiza su estado en la base de datos.
-    /// </summary>
+
     public async Task StartBotGameAsync(string userId)
     {
         _userStatuses[userId] = UserStatus.Jugando;
@@ -135,12 +128,43 @@ public class LobbyService
         }
     }
 
-    /// <summary>
-    /// (Opcional) Lógica para reasignar anfitrión si el actual se desconecta.
-    /// </summary>
     public string ReassignHost(string hostId, IEnumerable<string> currentPlayers)
     {
         var newHost = currentPlayers.FirstOrDefault(id => id != hostId);
         return newHost;
     }
+
+    // Método para verificar si un usuario está en un lobby
+    public bool IsUserInLobby(string userId)
+    {
+        return _userLobbies.ContainsKey(userId);
+    }
+
+    public async Task<string> CreateLobbyAsync(string userId)
+    {
+        string lobbyId = Guid.NewGuid().ToString();
+        _lobbies[lobbyId] = new List<string> { userId };
+        return lobbyId;
+    }
+
+
+    public async Task AddUserToLobbyAsync(string userId, string lobbyId)
+    {
+        if (_lobbies.ContainsKey(lobbyId))
+        {
+            _lobbies[lobbyId].Add(userId);
+        }
+    }
+    public void SetUserSearching(string userId)
+    {
+        _userStatuses[userId] = UserStatus.BuscandoPartida;
+    }
+    public string? GetUserLobbyId(string userId)
+    {
+        return _userLobbies.TryGetValue(userId, out var lobbyId) ? lobbyId : null;
+    }
+
+
+
+
 }

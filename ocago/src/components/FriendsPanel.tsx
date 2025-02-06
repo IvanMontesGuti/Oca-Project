@@ -37,7 +37,7 @@ export default function FriendsPanel() {
 
     setIsLoading(true);
     setError(null);
-
+    
     try {
       const response = await fetch(API_SEARCH_URL(searchQuery));
       if (!response.ok) throw new Error("Error al buscar usuarios");
