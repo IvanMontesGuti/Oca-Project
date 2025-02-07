@@ -89,7 +89,7 @@ export const InviteFriendsModal = ({ isOpen, onClose }: InviteFriendsModalProps)
               return (
                 <div key={`${friendUser?.id}-${friendUser?.nickname}`} className="flex items-center space-x-4 p-2 bg-gray-100 rounded-lg">
                   <Avatar>
-                    <AvatarImage src={friendUser.avatarUrl ? `${API_BASE_URL}/${friendUser.avatarUrl}` : undefined} />
+                    src={friendUser.avatarUrl ? `${API_BASE_URL}/${friendUser.avatarUrl}` : undefined}
                     <AvatarFallback>{friendUser?.nickname?.slice(0, 2).toUpperCase() || "NA"}</AvatarFallback>
                   </Avatar>
                   <span>{friendUser?.nickname}</span>
