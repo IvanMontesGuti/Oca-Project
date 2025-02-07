@@ -101,10 +101,9 @@ namespace BackendOcago.Services
 
             if (friendship == null)
             {
-                Console.WriteLine($"❌ No se encontró la solicitud de amistad en la BD. SenderId: {senderId}, ReceiverId: {receiverId}");
+                Console.WriteLine("❌ No se encontró la solicitud de amistad en la BD.");
                 return false;
             }
-
 
             friendship.Status = accepted ? FriendshipInvitationStatus.Aceptada : FriendshipInvitationStatus.Rechazada;
             _unitOfWork.FriendshipRepository.Update(friendship);
