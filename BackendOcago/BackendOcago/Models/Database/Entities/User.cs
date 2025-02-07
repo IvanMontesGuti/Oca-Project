@@ -24,4 +24,8 @@ public class User
     [InverseProperty("Receiver")]
     public List<Friendship> ReceivedFriendships { get; set; } = new();  // Relaciones recibidas
 
+    [InverseProperty("Usuarios")]
+    public Lobby? Lobby { get; set; }
+
+
 }
