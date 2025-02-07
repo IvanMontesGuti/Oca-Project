@@ -25,7 +25,7 @@ export default function GameRoom() {
   });
 
   const [isLoadingUser, setIsLoadingUser] = useState(true);
-
+  
   useEffect(() => {
     if (userInfo) {
       console.log("✅ User Info cargado:", userInfo);
@@ -67,7 +67,7 @@ export default function GameRoom() {
             ...prev,
             isGameStarted: true,
           }));
-          router.push("/game");
+          router.push("/gamePrueba");
           break;
       }
     };
@@ -108,7 +108,7 @@ export default function GameRoom() {
           ) : (
             <>
               <AvatarImage
-                src={player?.avatarUrl ? `${API_BASE_URL}/${player.avatarUrl}` : undefined}
+                src={userInfo?.unique_name ? `${API_BASE_URL}/${userInfo?.family_name}` : undefined}
                 alt={player?.nickname || "Avatar"}
               />
               <AvatarFallback>{player?.nickname ? player.nickname.slice(0, 2).toUpperCase() : "NA"}</AvatarFallback>
@@ -116,9 +116,13 @@ export default function GameRoom() {
           )}
         </Avatar>
       </div>
-      <span className="text-xl font-bold text-white">{isWaiting ? "Buscando oponente..." : player?.nickname}</span>
+      
+      <span className="text-xl font-bold text-white">
+        {isWaiting ? "Buscando oponente..." : (player?.nickname || userInfo?.unique_name)}
+      </span>
     </div>
   );
+  
 
   const canStartGame = roomState.players.length === 2;
 

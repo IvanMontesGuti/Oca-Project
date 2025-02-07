@@ -239,7 +239,7 @@ export default function FriendsPanel() {
 
   return (
     <div className="bg-[#231356] rounded-lg p-4 space-y-6">
-      <div className="space-y-4">
+      <div className="space-y-4 max-h-[250px] overflow-y-auto">
         <Input
           type="text"
           placeholder="Buscar por nickname..."
@@ -253,7 +253,7 @@ export default function FriendsPanel() {
           <div className="text-red-500 text-center">{error}</div>
         ) : searchQuery.trim() === "" ? (
           <div className="space-y-4">
-            <h2 className="font-semibold text-white">Amigos</h2>
+            <h2 className="font-semibold text-white ">Amigos</h2>
             {friends.length === 0 ? (
               <div className="text-white text-center">No tienes amigos aún</div>
             ) : (
@@ -290,7 +290,7 @@ export default function FriendsPanel() {
             )}
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-[250px] overflow-y-auto">
             <h2 className="font-semibold text-white">Resultados de búsqueda</h2>
             {searchResults.length === 0 ? (
               <div className="text-white text-center">No se encontraron usuarios</div>

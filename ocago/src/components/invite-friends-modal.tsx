@@ -2,15 +2,28 @@
 
 import { useEffect, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { FRIENDSHIP_GET_BY_ID_URL } from "@/lib/endpoints/config"; // Updated import for the URL function
+import { API_BASE_URL, FRIENDSHIP_GET_BY_ID_URL } from "@/lib/endpoints/config";
 import { Dialog, DialogContent, DialogTitle } from "@radix-ui/react-dialog";
 import { DialogHeader } from "./ui/dialog";
-import { useAuth } from "@/context/AuthContext"; // Assuming userInfo comes from the AuthContext
+import { useAuth } from "@/context/AuthContext";
+import { Button } from "./ui/button";
+import { useWebSocket } from "@/context/WebSocketContext";
 
 interface Friend {
   id: string;
   nickname: string;
-  profileImageUrl?: string;
+  avatarUrl: string;
+  status: number;
+  sender?: {
+    id: string;
+    nickname: string;
+    avatarUrl: string;
+  };
+  receiver?: {
+    id: string;
+    nickname: string;
+    avatarUrl: string;
+  };
 }
 
 interface InviteFriendsModalProps {
@@ -19,20 +32,23 @@ interface InviteFriendsModalProps {
 }
 
 export const InviteFriendsModal = ({ isOpen, onClose }: InviteFriendsModalProps) => {
+  const { socket } = useWebSocket()
   const [friends, setFriends] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { userInfo } = useAuth(); // Assuming userInfo is available from context
+  const { userInfo } = useAuth();
 
   useEffect(() => {
     const fetchFriends = async () => {
-      if (!userInfo?.id) return; // Ensure userInfo is available
+      if (!userInfo?.id) return;
 
       try {
-        const response = await fetch(FRIENDSHIP_GET_BY_ID_URL(userInfo.id)); // Using the dynamic URL
+        const response = await fetch(FRIENDSHIP_GET_BY_ID_URL(userInfo.id));
         if (!response.ok) throw new Error("Error fetching friends");
 
         const data: Friend[] = await response.json();
+        
+
         setFriends(data);
       } catch (err) {
         setError("Failed to load friends");
@@ -42,7 +58,19 @@ export const InviteFriendsModal = ({ isOpen, onClose }: InviteFriendsModalProps)
     };
 
     fetchFriends();
-  }, [userInfo]); // Trigger the fetch when userInfo changes
+  }, [userInfo]);
+
+  const handleSendGameInvitation = (friendId: string) => {
+    if (socket && socket.readyState === WebSocket.OPEN && userInfo) {
+      const message = JSON.stringify({
+        Type: "invite",
+        SenderId: userInfo.id.toString(),
+        ReceiverId: friendId.toString(),
+      })
+      socket.send(message)
+      console.log("Sending game invitation:", message)
+    }
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -56,15 +84,21 @@ export const InviteFriendsModal = ({ isOpen, onClose }: InviteFriendsModalProps)
         {!loading && !error && friends.length === 0 && <p>No friends found.</p>}
         {!loading && !error && friends.length > 0 && (
           <div className="grid grid-cols-2 gap-4">
-            {friends.map((friend) => (
-              <div key={friend.id} className="flex items-center space-x-4 p-2 bg-gray-100 rounded-lg">
-                <Avatar>
-                  <AvatarImage src={friend.profileImageUrl || "/default-avatar.png"} alt={friend.nickname} />
-                  <AvatarFallback>{friend.nickname?.slice(0, 2).toUpperCase() || "NA"}</AvatarFallback>
-                </Avatar>
-                <span>{friend.nickname}</span>
-              </div>
-            ))}
+            {friends.map((friend) => {
+              const friendUser = friend.sender?.id === userInfo?.id ? friend.receiver : friend.sender || friend;
+              return (
+                <div key={`${friendUser?.id}-${friendUser?.nickname}`} className="flex items-center space-x-4 p-2 bg-gray-100 rounded-lg">
+                  <Avatar>
+                    <AvatarImage src={friendUser.avatarUrl ? `${API_BASE_URL}/${friendUser.avatarUrl}` : undefined} />
+                    <AvatarFallback>{friendUser?.nickname?.slice(0, 2).toUpperCase() || "NA"}</AvatarFallback>
+                  </Avatar>
+                  <span>{friendUser?.nickname}</span>
+                  <Button size="sm" variant="default" onClick={() => handleSendGameInvitation(friendUser.id)}>
+                        Invitar a partida
+                      </Button>
+                </div>
+              );
+            })}
           </div>
         )}
       </DialogContent>
