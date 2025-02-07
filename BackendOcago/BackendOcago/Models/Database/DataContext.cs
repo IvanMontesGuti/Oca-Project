@@ -11,8 +11,7 @@ namespace BackendOcago.Models.Database
         public DbSet<User> Users { get; set; }
         public DbSet<Image> Images { get; set; }
         public DbSet<Friendship> Friendships { get; set; }
-        public DbSet<Lobby> Lobbies { get; set; }
-
+    
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             string baseDir = AppDomain.CurrentDomain.BaseDirectory; 

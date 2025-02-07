@@ -4,7 +4,6 @@
     {
         Desconectado,
         Conectado,
-        BuscandoPartida,
         Jugando
     }
 }
