@@ -4,7 +4,12 @@ import { useState, useEffect, useCallback } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { API_SEARCH_URL, FRIENDSHIP_GET_BY_ID_URL, API_BASE_URL } from "@/lib/endpoints/config"
+import {
+  API_SEARCH_URL,
+  FRIENDSHIP_GET_BY_ID_URL,
+  API_BASE_URL,
+  FRIENDSHIP_RECEIVED_REQUEST_URL,
+} from "@/lib/endpoints/config"
 import { useAuth } from "@/context/AuthContext"
 import { useWebSocket } from "@/context/WebSocketContext"
 
@@ -13,16 +18,14 @@ interface Friend {
   nickname: string
   avatarUrl: string
   status: number
-  sender?: {
-    id: string
-    nickname: string
-    avatarUrl: string
-  }
-  receiver?: {
-    id: string
-    nickname: string
-    avatarUrl: string
-  }
+}
+
+interface FriendRequest {
+  id: string
+  senderId: string
+  nickname: string
+  avatarUrl: string
+  sentAt: string
 }
 
 interface SearchResult {
@@ -34,9 +37,9 @@ interface SearchResult {
 
 export default function FriendsPanel() {
   const { userInfo } = useAuth()
-  const { sendFriendRequest: sendFriendRequestProp, respondFriendRequest, friendRequests, socket } = useWebSocket()
+  const { socket } = useWebSocket()
   const [friends, setFriends] = useState<Friend[]>([])
-  const [pendingRequests, setPendingRequests] = useState<Friend[]>([])
+  const [pendingRequests, setPendingRequests] = useState<FriendRequest[]>([])
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -58,39 +61,61 @@ export default function FriendsPanel() {
         throw new Error(`Failed to fetch friends: ${response.statusText}`)
       }
       const data = await response.json()
+      console.log("Raw friends data:", data)
 
-      // Filter accepted friends (status 1) and pending requests (status 0)
+      // Filter accepted friends (status 1)
       const acceptedFriends = data.filter((friend: Friend) => friend.status === 1)
-      const pendingRequestsData = data.filter((friend: Friend) => friend.status === 0)
+
+      console.log("Filtered friends:", acceptedFriends)
 
       setFriends(acceptedFriends)
-      setPendingRequests(pendingRequestsData)
 
-      console.log("Friends data:", acceptedFriends)
-      console.log("Pending requests:", pendingRequestsData)
+      console.log("Fetched friends:", acceptedFriends)
     } catch (error) {
       console.error("Error fetching friends:", error)
       setError("No se pudieron cargar los amigos.")
       setFriends([])
-      setPendingRequests([])
     } finally {
       setIsLoading(false)
     }
   }, [userInfo?.id])
 
-  useEffect(() => {
-    fetchFriends()
-  }, [fetchFriends])
+  const fetchPendingRequests = useCallback(async () => {
+    if (!userInfo?.id) {
+      console.log("userInfo.id is not available, skipping fetchPendingRequests")
+      return
+    }
+
+    try {
+      const url = FRIENDSHIP_RECEIVED_REQUEST_URL(userInfo.id)
+      const response = await fetch(url)
+      if (!response.ok) {
+        throw new Error(`Failed to fetch pending requests: ${response.statusText}`)
+      }
+      const data = await response.json()
+      console.log("Raw pending requests data:", data)
+
+      const pendingRequestsData = data.map((request: any) => ({
+        id: request.id,
+        senderId: request.sender.id,
+        nickname: request.sender.nickname,
+        avatarUrl: request.sender.avatarUrl,
+        sentAt: request.sentAt,
+      }))
+
+      console.log("Processed pending requests:", pendingRequestsData)
+
+      setPendingRequests(pendingRequestsData)
+    } catch (error) {
+      console.error("Error fetching pending requests:", error)
+      setError("No se pudieron cargar las solicitudes pendientes.")
+    }
+  }, [userInfo?.id])
 
   useEffect(() => {
-    if (socket && socket.readyState === WebSocket.OPEN && userInfo) {
-      const message = JSON.stringify({
-        Type: "viewPendingRequests",
-        SenderId: userInfo.id.toString(),
-      })
-      socket.send(message)
-    }
-  }, [socket, userInfo])
+    fetchFriends()
+    fetchPendingRequests()
+  }, [fetchFriends, fetchPendingRequests])
 
   const handleSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value
@@ -142,31 +167,27 @@ export default function FriendsPanel() {
       socket.send(message)
       console.log("Accepting friend request:", message)
     }
-    // Remove the request from the list of pending requests
-    setPendingRequests((requests) => requests.filter((request) => request.id !== requestId))
-    // Add the accepted friend to the friends list
-    const acceptedRequest = pendingRequests.find((request) => request.id === requestId)
-    if (acceptedRequest) {
-      setFriends((prevFriends) => [...prevFriends, { ...acceptedRequest, status: 1 }])
-    }
+    // Remove the request from the pending requests list
+    setPendingRequests((requests) => requests.filter((req) => req.id !== requestId))
+    // The friend will be added to the friends list when we receive the "friendRequestAccepted" message
   }
 
   const handleRejectRequest = (requestId: string, senderId: string) => {
     if (socket && socket.readyState === WebSocket.OPEN && userInfo) {
       const message = JSON.stringify({
         Type: "respondFriendRequest",
-        SenderId: senderId.toString(),
+        SenderId: senderId,
         ReceiverId: userInfo.id.toString(),
         Accepted: false,
       })
       socket.send(message)
       console.log("Rejecting friend request:", message)
     }
-    // Remove the request from the list
-    setPendingRequests((requests) => requests.filter((request) => request.id !== requestId))
+    // Remove the request from the pending requests list
+    setPendingRequests((requests) => requests.filter((req) => req.id !== requestId))
   }
 
-  const handleSendGameInvitation = (friendId: string) => {
+  const handleGameInvitation = (friendId: string) => {
     if (socket && socket.readyState === WebSocket.OPEN && userInfo) {
       const message = JSON.stringify({
         Type: "invite",
@@ -187,45 +208,41 @@ export default function FriendsPanel() {
         switch (data.Type) {
           case "friendRequestReceived":
             // Handle incoming friend request
-            setPendingRequests((prev) => [...prev, data])
+            const newRequest: FriendRequest = {
+              id: data.RequestId,
+              senderId: data.SenderId,
+              senderNickname: data.SenderNickname,
+              senderAvatarUrl: data.SenderAvatarUrl,
+              sentAt: new Date().toISOString(), // You might want to use the server's timestamp if provided
+            }
+            setPendingRequests((prev) => [...prev, newRequest])
             break
           case "friendRequestAccepted":
+          case "yourFriendRequestAccepted":
             // Handle accepted friend request
-            if (data.SenderId && data.SenderNickname) {
-              setFriends((prevFriends) => [
-                ...prevFriends,
-                {
-                  id: data.SenderId,
-                  nickname: data.SenderNickname,
-                  avatarUrl: data.SenderAvatarUrl || "",
-                  status: 1,
-                },
-              ])
+            const newFriend: Friend = {
+              id: data.SenderId || data.ReceiverId,
+              nickname: data.SenderNickname || data.ReceiverNickname,
+              avatarUrl: data.SenderAvatarUrl || data.ReceiverAvatarUrl || "",
+              status: 1,
             }
+            setFriends((prevFriends) => {
+              if (!prevFriends.some((friend) => friend.id === newFriend.id)) {
+                return [...prevFriends, newFriend]
+              }
+              return prevFriends
+            })
+            // Remove from pending requests if it was there
+            setPendingRequests((prev) => prev.filter((req) => req.senderId !== newFriend.id))
             break
           case "friendRequestRejected":
-            // Handle rejected friend request
-            // You might want to show a notification to the user
+            // Remove from pending requests
+            setPendingRequests((prev) => prev.filter((req) => req.senderId !== data.SenderId))
             break
           case "invite":
             // Handle game invitation
             // You might want to show a modal or notification to the user
             break
-          case "yourFriendRequestAccepted":
-            // Handle when your friend request is accepted by someone else
-            if (data.ReceiverId && data.ReceiverNickname) {
-              setFriends((prevFriends) => [
-                ...prevFriends,
-                {
-                  id: data.ReceiverId,
-                  nickname: data.ReceiverNickname,
-                  avatarUrl: data.ReceiverAvatarUrl || "",
-                  status: 1,
-                },
-              ])
-            }
-            break
-          // Add more cases as needed
         }
       }
 
@@ -235,11 +252,11 @@ export default function FriendsPanel() {
         socket.removeEventListener("message", handleWebSocketMessage)
       }
     }
-  }, [socket, fetchFriends])
+  }, [socket])
 
   return (
     <div className="bg-[#231356] rounded-lg p-4 space-y-6">
-      <div className="space-y-4 max-h-[250px] overflow-y-auto">
+      <div className="space-y-4">
         <Input
           type="text"
           placeholder="Buscar por nickname..."
@@ -253,44 +270,33 @@ export default function FriendsPanel() {
           <div className="text-red-500 text-center">{error}</div>
         ) : searchQuery.trim() === "" ? (
           <div className="space-y-4">
-            <h2 className="font-semibold text-white ">Amigos</h2>
+            <h2 className="font-semibold text-white">Amigos</h2>
             {friends.length === 0 ? (
               <div className="text-white text-center">No tienes amigos aún</div>
             ) : (
               <div className="space-y-4">
-                {friends.map((friend, index) => {
-                  const friendUser = friend.sender?.id === userInfo?.id ? friend.receiver : friend.sender || friend
-                  return (
-                    <div
-                      key={`friend-${friendUser.id}-${friendUser.nickname}-${index}`}
-                      className="flex items-center justify-between group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <Avatar>
-                          <AvatarImage
-                            src={friendUser.avatarUrl ? `${API_BASE_URL}/${friendUser.avatarUrl}` : undefined}
-                            alt={friendUser.nickname}
-                          />
-                          <AvatarFallback>
-                            {friendUser.nickname ? friendUser.nickname.slice(0, 2).toUpperCase() : "NA"}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="font-medium leading-none text-white">{friendUser.nickname}</div>
-                          <div className="text-sm text-gray-400">{friendUser.status === 0 ? "Offline" : "Online"}</div>
-                        </div>
-                      </div>
-                      <Button size="sm" variant="default" onClick={() => handleSendGameInvitation(friendUser.id)}>
-                        Invitar a partida
-                      </Button>
+                {friends.map((friend) => (
+                  <div key={friend.id} className="flex items-center justify-between group">
+                    <div className="flex items-center gap-3">
+                      <Avatar>
+                        <AvatarImage
+                          src={friend.avatarUrl ? `${API_BASE_URL}/${friend.avatarUrl}` : undefined}
+                          alt={friend.nickname}
+                        />
+                        <AvatarFallback>{friend.nickname.slice(0, 2).toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <div className="font-medium leading-none text-white">{friend.nickname}</div>
                     </div>
-                  )
-                })}
+                    <Button size="sm" variant="default" onClick={() => handleGameInvitation(friend.id)}>
+                      Invitar a partida
+                    </Button>
+                  </div>
+                ))}
               </div>
             )}
           </div>
         ) : (
-          <div className="space-y-4 max-h-[250px] overflow-y-auto">
+          <div className="space-y-4">
             <h2 className="font-semibold text-white">Resultados de búsqueda</h2>
             {searchResults.length === 0 ? (
               <div className="text-white text-center">No se encontraron usuarios</div>
@@ -309,7 +315,7 @@ export default function FriendsPanel() {
                   </div>
                   {user.status === 1 ? (
                     <Button
-                      onClick={() => handleSendGameInvitation(user.id)}
+                      onClick={() => handleGameInvitation(user.id)}
                       className="bg-green-500 hover:bg-green-600 text-white"
                     >
                       Invitar a partida
@@ -338,39 +344,38 @@ export default function FriendsPanel() {
           <div className="text-white text-center">No hay solicitudes de amistad pendientes</div>
         ) : (
           <div className="space-y-4">
-            {pendingRequests.map((request) => {
-              const senderUser = request.sender
-              return (
-                <div key={`request-${request.id}`} className="flex items-center justify-between group">
-                  <div className="flex items-center gap-3">
-                    <Avatar>
-                      <AvatarImage
-                        src={senderUser.avatarUrl ? `${API_BASE_URL}/${senderUser.avatarUrl}` : undefined}
-                        alt={senderUser.nickname}
-                      />
-                      <AvatarFallback>
-                        {senderUser.nickname ? senderUser.nickname.slice(0, 2).toUpperCase() : "NA"}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <div className="font-medium leading-none text-white">{senderUser.nickname}</div>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="default" onClick={() => handleAcceptRequest(request.id, senderUser.id)}>
-                      Aceptar
-                    </Button>
-                    <Button size="sm" variant="default" onClick={() => handleRejectRequest(request.id, senderUser.id)}>
-                      Rechazar
-                    </Button>
+            {pendingRequests.map((request) => (
+              <div key={`request-${request.id}`} className="flex items-center justify-between group">
+                <div className="flex items-center gap-3">
+                  <Avatar>
+                    <AvatarImage
+                      src={request.avatarUrl ? `${API_BASE_URL}/${request.avatarUrl}` : undefined}
+                      alt={request.nickname}
+                    />
+                    <AvatarFallback>
+                      {request.nickname ? request.nickname.slice(0, 2).toUpperCase() : "NA"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <div className="font-medium leading-none text-white">{request.nickname}</div>
+                    <div className="text-sm text-gray-400">{new Date(request.sentAt).toLocaleString()}</div>
                   </div>
                 </div>
-              )
-            })}
+                <div className="flex gap-2">
+                  <Button size="sm" variant="default" onClick={() => handleAcceptRequest(request.id, request.senderId)}>
+                    Aceptar
+                  </Button>
+                  <Button size="sm" variant="default" onClick={() => handleRejectRequest(request.id, request.senderId)}>
+                    Rechazar
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
     </div>
   )
 }
+
 
