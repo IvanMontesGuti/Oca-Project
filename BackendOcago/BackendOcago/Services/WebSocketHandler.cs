@@ -97,15 +97,9 @@ public class WebSocketHandler
                         if (long.TryParse(message.SenderId, out long senderId) &&
                             long.TryParse(message.ReceiverId, out long receiverId))
                         {
-                            Console.WriteLine($"📌 RespondFriendRequest - SenderId: {senderId}, ReceiverId: {receiverId}, Accepted: {message.Accepted}");
+                            Console.WriteLine($"📌 SendFriendRequest - SenderId: {senderId}, ReceiverId: {receiverId}");
 
-                            bool updated = await friendshipService.RespondFriendRequestAsync(senderId, receiverId, message.Accepted);
-                            if (!updated)
-                            {
-                                await SendMessage(message.SenderId, new { Message = "❌ No se pudo actualizar la solicitud de amistad." });
-                                return;
-                            }
-
+                            // Llamar directamente a SendFriendRequestAsync sin actualizar previamente la solicitud.
                             bool created = await friendshipService.SendFriendRequestAsync(senderId, receiverId);
                             if (!created)
                             {
@@ -138,14 +132,16 @@ public class WebSocketHandler
                     }
                     break;
 
+
                 case "respondFriendRequest":
                     using (var scope = _serviceScopeFactory.CreateScope())
                     {
                         var friendshipService = scope.ServiceProvider.GetRequiredService<FriendshipService>();
-                        if (long.TryParse(message.SenderId, out long senderId) &&
-                            long.TryParse(message.ReceiverId, out long receiverId))
+                        // Aquí, 'responderId' es el usuario conectado (quien responde) y 'originalSenderId' es el que envió la solicitud originalmente.
+                        if (long.TryParse(message.SenderId, out long responderId) &&
+                            long.TryParse(message.ReceiverId, out long originalSenderId))
                         {
-                            bool updated = await friendshipService.RespondFriendRequestAsync(senderId, receiverId, message.Accepted);
+                            bool updated = await friendshipService.RespondFriendRequestAsync(originalSenderId, responderId, message.Accepted);
                             if (!updated)
                             {
                                 await SendMessage(message.SenderId, new { Message = "❌ No se pudo actualizar la solicitud de amistad." });
@@ -158,8 +154,10 @@ public class WebSocketHandler
                             return;
                         }
                     }
+                    // Se envía la respuesta al usuario que originalmente envió la solicitud
                     await SendMessage(message.ReceiverId, message);
                     break;
+
 
                 case "getPendingFriendRequests":
                     {
@@ -174,14 +172,62 @@ public class WebSocketHandler
                     break;
 
                 case "accept":
+                    // Cambiar el estado de ambos usuarios a "Jugando"
                     await _lobby.SetUserStatusAsync(message.SenderId, UserStatus.Jugando);
                     await _lobby.SetUserStatusAsync(message.ReceiverId, UserStatus.Jugando);
-                    await SendMessage(message.ReceiverId, message);
+
+                    // Enviar la respuesta de aceptación al receptor
+                    var acceptResponse = new
+                    {
+                        Type = "lobbyInvitationResponse",
+                        SenderId = message.SenderId,
+                        ReceiverId = message.ReceiverId,
+                        LobbyId = message.LobbyId,
+                        Status = "accepted",
+                        Message = "La invitación para unirte al lobby ha sido aceptada."
+                    };
+                    await SendMessage(message.ReceiverId, acceptResponse);
+
+                    // Enviar la notificación de aceptación al emisor
+                    var senderAcceptResponse = new
+                    {
+                        Type = "lobbyInvitationResponse",
+                        SenderId = message.SenderId,
+                        ReceiverId = message.ReceiverId,
+                        LobbyId = message.LobbyId,
+                        Status = "accepted",
+                        Message = "La invitación ha sido aceptada."
+                    };
+                    await SendMessage(message.SenderId, senderAcceptResponse);
                     break;
 
                 case "reject":
-                    await SendMessage(message.ReceiverId, message);
+                    // Enviar la respuesta de rechazo al receptor
+                    var rejectResponse = new
+                    {
+                        Type = "lobbyInvitationResponse",
+                        SenderId = message.SenderId,
+                        ReceiverId = message.ReceiverId,
+                        LobbyId = message.LobbyId,
+                        Status = "rejected",
+                        Message = "La invitación para unirte al lobby ha sido rechazada."
+                    };
+                    await SendMessage(message.ReceiverId, rejectResponse);
+
+                    // Enviar la notificación de rechazo al emisor
+                    var senderRejectResponse = new
+                    {
+                        Type = "lobbyInvitationResponse",
+                        SenderId = message.SenderId,
+                        ReceiverId = message.ReceiverId,
+                        LobbyId = message.LobbyId,
+                        Status = "rejected",
+                        Message = "La invitación ha sido rechazada."
+                    };
+                    await SendMessage(message.SenderId, senderRejectResponse);
                     break;
+
+
 
                 case "cancel":
                     _lobby.RemoveFromRandomQueue(message.SenderId);
@@ -242,13 +288,15 @@ public class WebSocketHandler
                     break;
 
                 case "joinLobby":
-                    await _lobby.AddUserToLobbyAsync(message.SenderId, message.LobbyId);
-                    if (_lobby.IsUserInLobby(message.SenderId))
+                    Console.WriteLine($"Intentando unir usuario {message.SenderId} al lobby {message.LobbyId}");
+                    bool joined = await _lobby.AddUserToLobbyAsync(message.SenderId, message.LobbyId);
+                    if (joined)
                     {
                         await SendMessage(message.SenderId, new { Type = "lobbyJoined", LobbyId = message.LobbyId });
                     }
                     else
                     {
+                        Console.WriteLine($"Error: No se pudo unir el usuario {message.SenderId} al lobby {message.LobbyId}");
                         await SendMessage(message.SenderId, new { Type = "error", Message = "No se pudo unir al lobby." });
                     }
                     break;

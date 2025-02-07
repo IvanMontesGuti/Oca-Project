@@ -10,6 +10,7 @@ using BackendOcago.Models.Database;
 using BackendOcago.Models.Database.Repositories;
 using BackendOcago.Services;
 using BackendOcago.Models.Mappers;
+using Microsoft.AspNetCore.Http;
 
 namespace BackendOcago;
 
@@ -56,6 +57,9 @@ public class Program
         builder.Services.AddTransient<UserMapper>();
         builder.Services.AddTransient<ImageMapper>();
         builder.Services.AddScoped<FriendshipMapper>();
+
+        builder.Services.AddTransient<Middleware>();
+
 
         // Swagger/OpenAPI configuración
         builder.Services.AddEndpointsApiExplorer();
@@ -112,8 +116,10 @@ public class Program
 
         // Configuración para WebSockets
         app.UseWebSockets();
+        app.UseMiddleware<Middleware>();
 
         app.UseHttpsRedirection();
+        app.UseRouting();
         app.UseStaticFiles();
 
         // Habilitar autenticación y autorización
@@ -124,7 +130,8 @@ public class Program
         app.UseStaticFiles(new StaticFileOptions
         {
             FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"))
-        });
+        }
+        );
 
         // Mapear controladores
         app.MapControllers();
@@ -134,6 +141,7 @@ public class Program
 
         // Ejecutar la aplicación
         await app.RunAsync();
+
     }
 
     // Método para realizar la creación (seed) de la base de datos

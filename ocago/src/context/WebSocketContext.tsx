@@ -19,6 +19,8 @@ interface WebSocketContextType {
   sendFriendRequest: (receiverId: string) => void;
   respondFriendRequest: (senderId: string, accepted: boolean) => void;
   createLobby: () => void;
+  inviteToLobby: (lobbyId: string, receiverId: string) => void;
+  respondLobbyInvitation: (lobbyId: string, accepted: boolean) => void;
   lobbies: Lobby[];
   friendRequests: FriendRequest[];
   connectedUsers: number;
@@ -103,11 +105,15 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
           setLobbies((prev) => [...prev, { id: message.lobbyId, hostId: message.hostId }]);
           toast.success("Lobby creada con éxito", { duration: 3000, icon: "🎮" });
           break;
-          
-          case "lobbyInvitation":
-            handleLobbyInvitation(message);
-            break;
-          
+
+        case "lobbyInvitation":
+          handleLobbyInvitation(message);
+          break;
+
+        case "lobbyInvitationResponse":
+          handleLobbyInvitationResponse(message);
+          break;
+
         default:
           console.log("📩 Mensaje recibido:", message);
           break;
@@ -164,6 +170,45 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
     socket.send(message);
     toast.info("Creando lobby...", { duration: 3000, icon: "🎮" });
   };
+
+  const inviteToLobby = (lobbyId: string, receiverId: string) => {
+    if (!socket || socket.readyState !== WebSocket.OPEN) return;
+
+    const message = JSON.stringify({
+      Type: "lobbyInvitation",
+      LobbyId: lobbyId,
+      SenderId: String(userId),
+      ReceiverId: String(receiverId),
+    });
+
+    console.log("📩 Enviando invitación a la lobby:", message);
+    socket.send(message);
+    toast.info("Invitación enviada", { duration: 3000, icon: "🎮" });
+  };
+
+  const respondLobbyInvitation = (lobbyId: string, accepted: boolean) => {
+    if (!socket || socket.readyState !== WebSocket.OPEN) return;
+
+    const message = JSON.stringify({
+      Type: "lobbyInvitationResponse",
+      SenderId: String(userId),
+      ReceiverId: String(userId), // El receptor es el usuario que está respondiendo
+      LobbyId: lobbyId,
+      Status: accepted ? "accepted" : "rejected",
+      Message: accepted
+        ? "La invitación para unirte al lobby ha sido aceptada."
+        : "La invitación para unirte al lobby ha sido rechazada.",
+    });
+
+    console.log("📨 Respondiendo invitación a la lobby:", message);
+    socket.send(message);
+
+    toast[accepted ? "success" : "info"](
+      accepted ? "Invitación aceptada" : "Invitación rechazada",
+      { duration: 3000, icon: accepted ? "✅" : "❌" }
+    );
+  };
+
   const handleLobbyInvitation = (message: any) => {
     toast(
       (t) => (
@@ -173,15 +218,18 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
             <button
               className="bg-green-500 text-white px-4 py-2 rounded"
               onClick={() => {
-                socket?.send(JSON.stringify({ Type: "joinLobby", LobbyId: message.lobbyId, UserId: userId }));
+                respondLobbyInvitation(message.lobbyId, true);
                 toast.dismiss(t);
               }}
             >
-              Unirse
+              Aceptar
             </button>
             <button
               className="bg-red-500 text-white px-4 py-2 rounded"
-              onClick={() => toast.dismiss(t)}
+              onClick={() => {
+                respondLobbyInvitation(message.lobbyId, false);
+                toast.dismiss(t);
+              }}
             >
               Rechazar
             </button>
@@ -191,13 +239,34 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
       { duration: 30000 }
     );
   };
-  
+
+  const handleLobbyInvitationResponse = (message: any) => {
+    // Se le envía el toast a ambos usuarios (emisor y receptor de la invitación)
+    toast.info(`${message.Message}`, { duration: 5000, icon: "🎮" });
+
+    // Notificar al emisor de la invitación
+    toast[message.Status === "accepted" ? "success" : "info"](
+      `Tu invitación ha sido ${message.Status === "accepted" ? "aceptada" : "rechazada"}`,
+      { duration: 3000, icon: message.Status === "accepted" ? "✅" : "❌" }
+    );
+  };
+
   return (
-    <WebSocketContext.Provider value={{ socket, sendFriendRequest, respondFriendRequest, createLobby, lobbies, friendRequests, connectedUsers }}>
+    <WebSocketContext.Provider value={{
+      socket,
+      sendFriendRequest,
+      respondFriendRequest,
+      createLobby,
+      inviteToLobby,
+      respondLobbyInvitation,
+      lobbies,
+      friendRequests,
+      connectedUsers
+    }}>
       {children}
     </WebSocketContext.Provider>
-  )
-}
+  );
+};
 
 export const useWebSocket = () => {
   const context = useContext(WebSocketContext);
