@@ -144,17 +144,43 @@ public class LobbyService
     {
         string lobbyId = Guid.NewGuid().ToString();
         _lobbies[lobbyId] = new List<string> { userId };
+        _userLobbies[userId] = lobbyId;
+
+        Console.WriteLine($"Lobby creado: {lobbyId} por usuario {userId}");
+        Console.WriteLine($"Lobbies actuales después de crear: {string.Join(", ", _lobbies.Keys)}");  // <-- Log extra
+
         return lobbyId;
     }
 
 
-    public async Task AddUserToLobbyAsync(string userId, string lobbyId)
+
+    public async Task<bool> AddUserToLobbyAsync(string userId, string lobbyId)
     {
-        if (_lobbies.ContainsKey(lobbyId))
+        Console.WriteLine($"Intentando unir usuario {userId} al lobby {lobbyId}");
+        Console.WriteLine($"Lobbies actuales: {string.Join(", ", _lobbies.Keys)}"); 
+
+        if (!_lobbies.ContainsKey(lobbyId))
         {
-            _lobbies[lobbyId].Add(userId);
+            Console.WriteLine($"Error: Lobby {lobbyId} no encontrado en _lobbies.");
+            return false;
         }
+
+        var lobby = _lobbies[lobbyId];
+
+        if (lobby.Contains(userId))
+        {
+            Console.WriteLine($"Usuario {userId} ya estaba en el lobby {lobbyId}");
+            return true; 
+        }
+
+        lobby.Add(userId);
+        _userLobbies[userId] = lobbyId;
+        Console.WriteLine($"Usuario {userId} añadido al lobby {lobbyId}");
+        return true;
     }
+
+
+
     public void SetUserSearching(string userId)
     {
         _userStatuses[userId] = UserStatus.BuscandoPartida;
@@ -163,8 +189,5 @@ public class LobbyService
     {
         return _userLobbies.TryGetValue(userId, out var lobbyId) ? lobbyId : null;
     }
-
-
-
 
 }
