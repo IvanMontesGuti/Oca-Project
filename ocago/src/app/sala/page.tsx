@@ -1,46 +1,34 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import { Header2 } from "@/components/navUser";
-import { InviteFriendsModal } from "@/components/invite-friends-modal";
-import { useAuth } from "@/context/AuthContext";
-import { useWebSocket } from "@/context/WebSocketContext";
-import { API_BASE_URL } from "@/lib/endpoints/config";
-import type { Player, RoomState } from "@/types/room";
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { Loader2 } from "lucide-react"
+import { Header2 } from "@/components/navUser"
+import { InviteFriendsModal } from "@/components/invite-friends-modal"
+import { useAuth } from "@/context/AuthContext"
+import { useWebSocket } from "@/context/WebSocketContext"
+import { API_BASE_URL } from "@/lib/endpoints/config"
+import type { Player, RoomState } from "@/types/room"
 
 export default function GameRoom() {
-  const router = useRouter();
-  const { socket } = useWebSocket();
-  const { userInfo, isAuthenticated } = useAuth();
+  const router = useRouter()
+  const { socket } = useWebSocket()
+  const { userInfo } = useAuth()
 
-  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
   const [roomState, setRoomState] = useState<RoomState>({
     players: [],
     isGameStarted: false,
-  });
-
-  const [isLoadingUser, setIsLoadingUser] = useState(true);
-  
-  useEffect(() => {
-    if (userInfo) {
-      console.log("✅ User Info cargado:", userInfo);
-      setIsLoadingUser(false);
-    } else {
-      console.log("❌ User Info no disponible, esperando...");
-    }
-  }, [userInfo]);
+  })
 
   useEffect(() => {
-    if (!socket || isLoadingUser) return;
+    if (!socket || !userInfo) return
 
     const handleWebSocketMessage = (event: MessageEvent) => {
-      const data = JSON.parse(event.data);
-      console.log("📩 Mensaje WebSocket recibido:", data);
+      const data = JSON.parse(event.data)
+      console.log("📩 Mensaje WebSocket recibido:", data)
 
       switch (data.Type) {
         case "playerJoined":
@@ -54,48 +42,51 @@ export default function GameRoom() {
                 avatarUrl: data.PlayerAvatarUrl,
               },
             ],
-          }));
-          break;
+          }))
+          break
         case "playerLeft":
           setRoomState((prev) => ({
             ...prev,
             players: prev.players.filter((player) => player.id !== data.PlayerId),
-          }));
-          break;
+          }))
+          break
         case "gameStarted":
           setRoomState((prev) => ({
             ...prev,
             isGameStarted: true,
-          }));
-          router.push("/gamePrueba");
-          break;
+          }))
+          router.push("/gamePrueba")
+          break
       }
-    };
+    }
 
-    socket.addEventListener("message", handleWebSocketMessage);
+    socket.addEventListener("message", handleWebSocketMessage)
 
     return () => {
-      socket.removeEventListener("message", handleWebSocketMessage);
-    };
-  }, [socket, router, isLoadingUser]);
-
-  if (isLoadingUser) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0066FF] text-white text-2xl">
-        Cargando datos del usuario...
-      </div>
-    );
-  }
+      socket.removeEventListener("message", handleWebSocketMessage)
+    }
+  }, [socket, router, userInfo])
 
   const handleStartGame = () => {
     if (socket && socket.readyState === WebSocket.OPEN && userInfo) {
       const message = JSON.stringify({
         Type: "startGame",
         SenderId: userInfo.id.toString(),
-      });
-      socket.send(message);
+      })
+      socket.send(message)
     }
-  };
+  }
+
+  const handleInviteFriend = (friendId: string) => {
+    if (socket && socket.readyState === WebSocket.OPEN && userInfo) {
+      const message = JSON.stringify({
+        Type: "inviteFriend",
+        SenderId: userInfo.id.toString(),
+        FriendId: friendId,
+      })
+      socket.send(message)
+    }
+  }
 
   const renderPlayer = (player?: Player, isWaiting = false) => (
     <div className="flex flex-col items-center gap-4">
@@ -108,7 +99,7 @@ export default function GameRoom() {
           ) : (
             <>
               <AvatarImage
-                src={userInfo?.unique_name ? `${API_BASE_URL}/${userInfo?.family_name}` : undefined}
+                src={player?.avatarUrl ? `${API_BASE_URL}/${player.avatarUrl}` : undefined}
                 alt={player?.nickname || "Avatar"}
               />
               <AvatarFallback>{player?.nickname ? player.nickname.slice(0, 2).toUpperCase() : "NA"}</AvatarFallback>
@@ -116,15 +107,13 @@ export default function GameRoom() {
           )}
         </Avatar>
       </div>
-      
       <span className="text-xl font-bold text-white">
-        {isWaiting ? "Buscando oponente..." : (player?.nickname || userInfo?.unique_name)}
+        {isWaiting ? "Buscando oponente..." : player?.nickname || "Jugador"}
       </span>
     </div>
-  );
-  
+  )
 
-  const canStartGame = roomState.players.length === 2;
+  const canStartGame = roomState.players.length === 2
 
   return (
     <div className="bg-svg bg-cover bg-no-repeat h-full min-h-screen w-full flex flex-col">
@@ -151,16 +140,23 @@ export default function GameRoom() {
             >
               Comenzar partida
             </Button>
-            <Link href="/menu">
-              <Button variant="outline" className="bg-black text-white hover:bg-gray-900">
-                Abandonar sala
-              </Button>
-            </Link>
+            <Button
+              variant="outline"
+              className="bg-black text-white hover:bg-gray-900"
+              onClick={() => router.push("/menu")}
+            >
+              Abandonar sala
+            </Button>
           </div>
         </div>
 
-        <InviteFriendsModal isOpen={isInviteModalOpen} onClose={() => setIsInviteModalOpen(false)} />
+        <InviteFriendsModal
+          isOpen={isInviteModalOpen}
+          onClose={() => setIsInviteModalOpen(false)}
+          onInvite={handleInviteFriend}
+        />
       </main>
     </div>
-  );
+  )
 }
+
