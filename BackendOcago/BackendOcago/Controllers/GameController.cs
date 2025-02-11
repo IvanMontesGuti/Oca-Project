@@ -1,50 +1,58 @@
-﻿using BackendOcago.Services;
+﻿using BackendOcago.Models.Dtos;
+using BackendOcago.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BackendOcago.Controllers
 {
-    [Route("api/[controller]")]
+    
     [ApiController]
+    [Route("api/[controller]")]
     public class GameController : ControllerBase
     {
-        private readonly GameService _gameService;
+        private readonly IGameService _gameService;
 
-        // Inject GameService into the controller
-        public GameController(GameService gameService)
+        public GameController(IGameService gameService)
         {
             _gameService = gameService;
         }
 
-        // Endpoint to start the game and play
-        [HttpPost("start")]
-        public IActionResult StartGame()
+        [HttpPost]
+        public async Task<ActionResult<GameDTO>> CreateGame()
         {
-            try
-            {
-                var result = _gameService.JugarTurnos();
-                return Ok(result); // Return the result of the game as a JSON object
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+            var playerId = User.Identity.Name;
+            var game = await _gameService.CreateGameAsync(playerId);
+            return Ok(game);
         }
 
-        // Endpoint to get the current status of the game (Optional)
-        [HttpGet("status")]
-        public IActionResult GetGameStatus()
+        [HttpPost("{gameId}/join")]
+        public async Task<ActionResult<GameDTO>> JoinGame(Guid gameId)
         {
-            // For the sake of example, we'll assume you have a method to get the game status.
-            // You may want to refactor the `GameService` to keep track of the game state and return it.
-            return Ok(new
-            {
-                // For demonstration, returning static values, adapt this to your actual game logic
-                ficha1 = 0,
-                ficha2 = 0,
-                turnoNum = 1,
-                mensaje = "Game in progress"
-            });
+            var playerId = User.Identity.Name;
+            var game = await _gameService.JoinGameAsync(gameId, playerId);
+            return Ok(game);
+        }
+
+        [HttpPost("{gameId}/move")]
+        public async Task<ActionResult<GameMoveDTO>> MakeMove(Guid gameId)
+        {
+            var playerId = User.Identity.Name;
+            var move = await _gameService.MakeMoveAsync(gameId, playerId);
+            return Ok(move);
+        }
+
+        [HttpGet("{gameId}")]
+        public async Task<ActionResult<GameDTO>> GetGame(Guid gameId)
+        {
+            var game = await _gameService.GetGameAsync(gameId);
+            return Ok(game);
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<List<GameDTO>>> GetActiveGames()
+        {
+            var games = await _gameService.GetActiveGamesAsync();
+            return Ok(games);
         }
     }
 }

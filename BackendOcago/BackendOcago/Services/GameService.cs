@@ -1,183 +1,218 @@
-﻿using System;
+﻿using BackendOcago.Models.Database;
+using BackendOcago.Models.Database.Entities;
+using BackendOcago.Models.Database.Repositories;
+using BackendOcago.Models.Dtos;
+using System;
 using System.Collections.Generic;
 
 namespace BackendOcago.Services
 {
-    public class GameService
+    public class GameService : IGameService
     {
-        private int dado;
-        private int ficha1 = 0;
-        private int ficha2 = 0;
-        private int turnoNum = 1;
-        private int turnosRestantes1 = 1;
-        private int turnosRestantes2 = 1;
-        private bool turnoJugador1 = true;
-        private Random rand = new Random();
+        private readonly IGameRepository _repository;
+        private readonly Random _random;
 
-        // Lista para almacenar los resultados de cada turno
-        public List<JuegoOcaTurno> Turnos { get; private set; } = new List<JuegoOcaTurno>();
-
-        public JuegoOcaResult JugarTurnos()
+        public GameService(IGameRepository repository)
         {
-            // Bucle de juego
-            while (ficha1 < 63 && ficha2 < 63)
-            {
-                // Turno jugador 1
-                if (turnoJugador1 && turnosRestantes1 > 0)
-                {
-                    JugarTurno(ref ficha1, ref turnosRestantes1, ref turnosRestantes2, 1);
-                    Turnos.Add(new JuegoOcaTurno
-                    {
-                        TurnoNum = turnoNum,
-                        Jugador = 1,
-                        Ficha1 = ficha1,
-                        Ficha2 = ficha2,
-                        Mensaje = $"Jugador 1 ha lanzado un dado con valor {dado}."
-                    });
-                    if (turnosRestantes1 <= 0)
-                    {
-                        turnoJugador1 = false;
-                    }
-                }
-                // Turno jugador 2
-                else if (!turnoJugador1 && turnosRestantes2 > 0)
-                {
-                    JugarTurno(ref ficha2, ref turnosRestantes2, ref turnosRestantes1, 2);
-                    Turnos.Add(new JuegoOcaTurno
-                    {
-                        TurnoNum = turnoNum,
-                        Jugador = 2,
-                        Ficha1 = ficha1,
-                        Ficha2 = ficha2,
-                        Mensaje = $"Jugador 2 ha lanzado un dado con valor {dado}."
-                    });
-                    if (turnosRestantes2 <= 0)
-                    {
-                        turnoJugador1 = true;
-                        turnoNum++;
-                    }
-                }
+            _repository = repository;
+            _random = new Random();
+        }
 
-                // Si ambos jugadores se quedan sin turnos, se reinician
-                if (turnosRestantes1 <= 0 && turnosRestantes2 <= 0)
+        public async Task<GameDTO> CreateGameAsync(string player1Id)
+        {
+            var game = new Game
+            {
+                Id = Guid.NewGuid(),
+                Player1Id = player1Id,
+                Status = GameStatus.WaitingForPlayers,
+                LastUpdated = DateTime.UtcNow
+            };
+
+            await _repository.CreateAsync(game);
+            return MapToGameDTO(game);
+        }
+
+        public async Task<GameDTO> JoinGameAsync(Guid gameId, string player2Id)
+        {
+            var game = await _repository.GetByIdAsync(gameId);
+            if (game == null) throw new ("Game not found");
+            if (game.Status != GameStatus.WaitingForPlayers)
+                throw new InvalidOperationException("Game is not available");
+            if (game.Player1Id == player2Id)
+                throw new InvalidOperationException("Cannot join your own game");
+
+            game.Player2Id = player2Id;
+            game.Status = GameStatus.InProgress;
+            game.LastUpdated = DateTime.UtcNow;
+
+            await _repository.UpdateAsync(game);
+            return MapToGameDTO(game);
+        }
+
+        public async Task<GameDTO> GetGameAsync(Guid gameId)
+        {
+            var game = await _repository.GetByIdAsync(gameId);
+            if (game == null) throw new ("Game not found");
+            return MapToGameDTO(game);
+        }
+
+        public async Task<List<GameDTO>> GetActiveGamesAsync()
+        {
+            var games = await _repository.GetActiveGamesAsync();
+            return games.Select(MapToGameDTO).ToList();
+        }
+
+        public async Task<GameMoveDTO> MakeMoveAsync(Guid gameId, string playerId)
+        {
+            var game = await _repository.GetByIdAsync(gameId);
+            if (game == null) throw new ("Game not found");
+            if (game.Status != GameStatus.InProgress)
+                throw new InvalidOperationException("Game is not in progress");
+
+            var isPlayer1 = playerId == game.Player1Id;
+            if ((isPlayer1 && !game.IsPlayer1Turn) || (!isPlayer1 && game.IsPlayer1Turn))
+                throw new InvalidOperationException("Not your turn");
+
+            var currentPosition = isPlayer1 ? game.Player1Position : game.Player2Position;
+            var remainingTurns = isPlayer1 ? game.Player1RemainingTurns : game.Player2RemainingTurns;
+
+            if (remainingTurns <= 0)
+                throw new InvalidOperationException("No remaining turns");
+
+            var diceRoll = _random.Next(1, 7);
+            var newPosition = currentPosition + diceRoll;
+            var message = $"Moved to position {newPosition}";
+            var isSpecialMove = false;
+
+            // Rebote en la casilla final
+            if (newPosition > 63)
+            {
+                newPosition = 63 - (newPosition - 63);
+                message = $"Rebote! Retrocede a la casilla {newPosition}";
+            }
+
+            // Procesar casillas especiales
+            if (IsOca(newPosition))
+            {
+                var nextOca = ProcessOca(newPosition);
+                message = "¡De oca a oca y tiro porque me toca!";
+                isSpecialMove = true;
+                newPosition = nextOca;
+                if (isPlayer1) game.Player1RemainingTurns++;
+                else game.Player2RemainingTurns++;
+            }
+            else if (IsSpecial(newPosition))
+            {
+                var (specialPosition, specialTurns, specialMessage) = ProcessSpecial(newPosition);
+                message = specialMessage;
+                isSpecialMove = true;
+                newPosition = specialPosition;
+
+                if (specialTurns < 0)
                 {
-                    turnosRestantes1 = 1;
-                    turnosRestantes2 = 1;
+                    if (isPlayer1) game.Player2RemainingTurns += Math.Abs(specialTurns);
+                    else game.Player1RemainingTurns += Math.Abs(specialTurns);
+                }
+                else if (specialTurns > 0)
+                {
+                    if (isPlayer1) game.Player1RemainingTurns += specialTurns - 1;
+                    else game.Player2RemainingTurns += specialTurns - 1;
+                }
+                else // specialTurns == 0
+                {
+                    if (isPlayer1) game.Player1RemainingTurns = 0;
+                    else game.Player2RemainingTurns = 0;
                 }
             }
 
-            // Resultado final del juego
-            return new JuegoOcaResult
+            // Actualizar posición y turnos
+            if (isPlayer1)
             {
-                Ficha1 = ficha1,
-                Ficha2 = ficha2,
-                Ganador = ficha1 >= 63 ? "Jugador 1" : "Jugador 2",
-                TurnoNum = turnoNum,
+                game.Player1Position = newPosition;
+                game.Player1RemainingTurns--;
+                if (game.Player1RemainingTurns <= 0) game.IsPlayer1Turn = false;
+            }
+            else
+            {
+                game.Player2Position = newPosition;
+                game.Player2RemainingTurns--;
+                if (game.Player2RemainingTurns <= 0) game.IsPlayer1Turn = true;
+            }
 
-                DetallesTurnos = Turnos // Agregar los detalles de los turnos al resultado final
+            // Verificar victoria
+            if (newPosition >= 63)
+            {
+                game.Status = GameStatus.Finished;
+                game.Winner = playerId;
+                message = $"¡Jugador {(isPlayer1 ? "1" : "2")} ha ganado!";
+            }
+
+            game.LastUpdated = DateTime.UtcNow;
+            await _repository.UpdateAsync(game);
+
+            return new GameMoveDTO
+            {
+                GameId = gameId,
+                PlayerId = playerId,
+                DiceRoll = diceRoll,
+                NewPosition = newPosition,
+                Message = message,
+                IsSpecialMove = isSpecialMove,
+                GameStatus = game.Status
             };
         }
 
-        private void JugarTurno(ref int ficha, ref int turnosRestantes, ref int turnosRestantesOponente, int jugador)
+        private bool IsOca(int position)
         {
-            ficha = LanzarDado(ficha, jugador);
-            dado = jugador;
-
-            if (ficha > 63)
-            {
-                ficha = 63 - (ficha - 63);
-            }
-
-            if (IsOca(ficha))
-            {
-                ficha = Oca(ficha);
-                turnosRestantes++;
-            }
-            else if (IsEspecial(ficha))
-            {
-                (int nuevaPosicion, int nuevosTurnos) = Special(ficha);
-                ficha = nuevaPosicion;
-                if (nuevosTurnos < 0)
-                {
-                    turnosRestantesOponente += Math.Abs(nuevosTurnos);
-                }
-                else
-                {
-                    turnosRestantes += nuevosTurnos;
-                }
-                if (nuevosTurnos == 0)
-                {
-                    turnosRestantes = 0;
-                }
-            }
-
-            turnosRestantes--;
+            int[] ocas = { 5, 9, 14, 18, 23, 27, 32, 36, 41, 45, 50, 54, 59 };
+            return Array.IndexOf(ocas, position) != -1;
         }
 
-        // Métodos auxiliares
-
-        private bool IsEspecial(int casilla)
+        private bool IsSpecial(int position)
         {
             int[] especiales = { 6, 12, 19, 26, 31, 42, 52, 53, 58 };
-            return Array.IndexOf(especiales, casilla) != -1;
+            return Array.IndexOf(especiales, position) != -1;
         }
 
-        private (int, int) Special(int casilla)
+        private int ProcessOca(int position)
         {
-            return casilla switch
+            if (position == 59) return 63;
+            int[] ocas = { 5, 9, 14, 18, 23, 27, 32, 36, 41, 45, 50, 54, 59 };
+            return ocas.First(x => x > position);
+        }
+
+        private (int position, int turns, string message) ProcessSpecial(int position)
+        {
+            return position switch
             {
-                6 => (12, 1),   // De puente a puente y tiro porque me lleva la corriente
-                12 => (6, 1),   // De puente a puente y tiro porque me lleva la corriente
-                19 => (19, -1), // Posada: un turno sin jugar (el oponente gana un turno)
-                26 => (53, 1),  // De dados a dados y tiro porque me ha tocado
-                31 => (31, -2), // Pozo: dos turnos sin jugar (el oponente gana dos turnos)
-                42 => (30, 1),  // Laberinto: retrocede a la casilla 30
-                52 => (52, -2), // Cárcel: dos turnos sin jugar (el oponente gana dos turnos)
-                53 => (26, 1),  // De dados a dados y tiro porque me ha tocado
-                58 => (1, 1),   // Muerte: vuelve al inicio
-                _ => (casilla, 1)
+                6 => (12, 1, "¡De puente a puente y tiro porque me lleva la corriente!"),
+                12 => (6, 1, "¡De puente a puente y tiro porque me lleva la corriente!"),
+                19 => (19, -1, "¡Posada! Pierdes un turno."),
+                26 => (53, 1, "¡De dados a dados y tiro porque me ha tocado!"),
+                31 => (31, -2, "¡Pozo! Pierdes dos turnos."),
+                42 => (30, 0, "¡Laberinto! Retrocedes a la casilla 30."),
+                52 => (52, -2, "¡Cárcel! Pierdes dos turnos."),
+                53 => (26, 1, "¡De dados a dados y tiro porque me ha tocado!"),
+                58 => (1, 0, "¡Muerte! Vuelves al inicio."),
+                _ => (position, 1, "Casilla normal")
             };
         }
 
-        private bool IsOca(int casilla)
+        private GameDTO MapToGameDTO(Game game)
         {
-            int[] ocas = { 5, 9, 14, 18, 23, 27, 32, 36, 41, 45, 50, 54, 59 };
-            return Array.IndexOf(ocas, casilla) != -1;
-        }
-
-        private int Oca(int casilla)
-        {
-            int[] ocas = { 5, 9, 14, 18, 23, 27, 32, 36, 41, 45, 50, 54, 59 };
-            int index = Array.IndexOf(ocas, casilla);
-            return index == ocas.Length - 1 ? 63 : ocas[index + 1];
-        }
-
-        private int LanzarDado(int ficha, int jugador)
-        {
-            Random rand = new Random();
-            int dado = rand.Next(1, 7);
-            int nuevaPosicion = ficha + dado;
-            return nuevaPosicion;
-        }
-
-        // Resultado del juego
-        public class JuegoOcaResult
-        {
-            public int Ficha1 { get; set; }
-            public int Ficha2 { get; set; }
-            public string Ganador { get; set; }
-            public int TurnoNum { get; set; }
-            public List<JuegoOcaTurno> DetallesTurnos { get; set; } // Lista de detalles de cada turno
-        }
-
-        // Información de cada turno
-        public class JuegoOcaTurno
-        {
-            public int TurnoNum { get; set; }
-            public int Jugador { get; set; }
-            public int Ficha1 { get; set; }
-            public int Ficha2 { get; set; }
-            public string Mensaje { get; set; }
+            return new GameDTO
+            {
+                Id = game.Id,
+                Player1Id = game.Player1Id,
+                Player2Id = game.Player2Id,
+                Player1Position = game.Player1Position,
+                Player2Position = game.Player2Position,
+                IsPlayer1Turn = game.IsPlayer1Turn,
+                Player1RemainingTurns = game.Player1RemainingTurns,
+                Player2RemainingTurns = game.Player2RemainingTurns,
+                Status = game.Status,
+                Winner = game.Winner
+            };
         }
     }
 }

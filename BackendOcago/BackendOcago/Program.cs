@@ -41,9 +41,12 @@ public class Program
         builder.Services.AddScoped<UserRepository>();
         builder.Services.AddScoped<ImageRepository>();
         builder.Services.AddScoped<FriendshipRepository>();
+        builder.Services.AddScoped<IGameRepository, GameRepository>();
 
         // Servicios
         builder.Services.AddTransient<ImageService>();
+        
+        builder.Services.AddScoped<IGameService, GameService>();
         builder.Services.AddScoped<AuthService>();
         builder.Services.AddScoped<UserService>();
         builder.Services.AddScoped<FriendshipService>();
@@ -57,6 +60,7 @@ public class Program
         builder.Services.AddTransient<UserMapper>();
         builder.Services.AddTransient<ImageMapper>();
         builder.Services.AddScoped<FriendshipMapper>();
+        
 
         builder.Services.AddTransient<Middleware>();
 
