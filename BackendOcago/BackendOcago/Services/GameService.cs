@@ -65,7 +65,7 @@ namespace BackendOcago.Services
         public async Task<GameMoveDTO> MakeMoveAsync(Guid gameId, string playerId)
         {
             var game = await _repository.GetByIdAsync(gameId);
-            if (game == null) throw new ("Game not found");
+            if (game == null) throw new("Game not found");
             if (game.Status != GameStatus.InProgress)
                 throw new InvalidOperationException("Game is not in progress");
 
@@ -118,10 +118,10 @@ namespace BackendOcago.Services
                     if (isPlayer1) game.Player1RemainingTurns += specialTurns - 1;
                     else game.Player2RemainingTurns += specialTurns - 1;
                 }
-                else // specialTurns == 0
+                else
                 {
-                    if (isPlayer1) game.Player1RemainingTurns = 0;
-                    else game.Player2RemainingTurns = 0;
+                    if (isPlayer1) game.Player1RemainingTurns = Math.Max(1, game.Player1RemainingTurns);
+                    else game.Player2RemainingTurns = Math.Max(1, game.Player2RemainingTurns);
                 }
             }
 
@@ -129,14 +129,18 @@ namespace BackendOcago.Services
             if (isPlayer1)
             {
                 game.Player1Position = newPosition;
-                game.Player1RemainingTurns--;
-                if (game.Player1RemainingTurns <= 0) game.IsPlayer1Turn = false;
+                game.Player1RemainingTurns = Math.Max(0, game.Player1RemainingTurns - 1);
+                if (game.Player1RemainingTurns == 0 && game.Player2RemainingTurns == 0)
+                    game.Player2RemainingTurns = 1; 
+                game.IsPlayer1Turn = game.Player1RemainingTurns > 0;
             }
             else
             {
                 game.Player2Position = newPosition;
-                game.Player2RemainingTurns--;
-                if (game.Player2RemainingTurns <= 0) game.IsPlayer1Turn = true;
+                game.Player2RemainingTurns = Math.Max(0, game.Player2RemainingTurns - 1);
+                if (game.Player1RemainingTurns == 0 && game.Player2RemainingTurns == 0)
+                    game.Player1RemainingTurns = 1; 
+                game.IsPlayer1Turn = game.Player1RemainingTurns > 0;
             }
 
             // Verificar victoria
@@ -161,6 +165,7 @@ namespace BackendOcago.Services
                 GameStatus = game.Status
             };
         }
+
 
         private bool IsOca(int position)
         {

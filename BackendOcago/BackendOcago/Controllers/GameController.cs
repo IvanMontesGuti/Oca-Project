@@ -18,26 +18,24 @@ namespace BackendOcago.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<GameDTO>> CreateGame()
+        public async Task<ActionResult<GameDTO>> CreateGame(String userId)
         {
-            var playerId = User.Identity.Name;
-            var game = await _gameService.CreateGameAsync(playerId);
+            var game = await _gameService.CreateGameAsync(userId);
             return Ok(game);
         }
 
         [HttpPost("{gameId}/join")]
-        public async Task<ActionResult<GameDTO>> JoinGame(Guid gameId)
+        public async Task<ActionResult<GameDTO>> JoinGame(Guid gameId, string UserId)
         {
-            var playerId = User.Identity.Name;
-            var game = await _gameService.JoinGameAsync(gameId, playerId);
+            var game = await _gameService.JoinGameAsync(gameId, UserId);
             return Ok(game);
         }
 
         [HttpPost("{gameId}/move")]
-        public async Task<ActionResult<GameMoveDTO>> MakeMove(Guid gameId)
+        public async Task<ActionResult<GameMoveDTO>> MakeMove(Guid gameId, string UserId)
         {
-            var playerId = User.Identity.Name;
-            var move = await _gameService.MakeMoveAsync(gameId, playerId);
+            
+            var move = await _gameService.MakeMoveAsync(gameId, UserId);
             return Ok(move);
         }
 
