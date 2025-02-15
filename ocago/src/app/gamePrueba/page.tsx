@@ -73,28 +73,15 @@ export default function GameBoard() {
         </div>
 
         {/* Game Board */}
-        <div className="flex-1">
-          <div className="bg-[#1A1625] rounded-xl p-8">
-            <div className="grid grid-cols-8 gap-2 relative">
-              {/* Game board squares would be mapped here */}
-              <div className="aspect-square bg-yellow-300 rounded-lg relative">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-sm">01</span>
-                </div>
-              </div>
-              {/* More squares would follow... */}
-
-              {/* Center Logo */}
-              <div className="absolute left-1/4 right-1/4 top-1/3 bottom-1/3 bg-yellow-300 rounded-3xl flex items-center justify-center overflow-hidden">
-                <Image
-                  src="images/tablero.svg"
-                  alt="OcaGo Logo"
-                  width={400}
-                  height={200}
-                  className="object-contain"
-                />
-              </div>
-            </div>
+        <div className="flex-1 flex items-center justify-center ">
+          <div className="relative w-full max-w-4xl min-h-[600px] flex items-center justify-center">
+            <Image
+              src="images/tablero.svg" // Asegúrate de que la imagen esté en la carpeta public/
+              alt="Tablero de juego"
+              width={800}
+              height={800}
+              className="object-contain"
+            />
           </div>
         </div>
       </div>
@@ -120,4 +107,3 @@ export default function GameBoard() {
     </div>
   )
 }
-
