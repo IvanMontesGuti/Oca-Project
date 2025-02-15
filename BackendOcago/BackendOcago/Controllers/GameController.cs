@@ -52,5 +52,7 @@ namespace BackendOcago.Controllers
             var games = await _gameService.GetActiveGamesAsync();
             return Ok(games);
         }
+
+
     }
 }

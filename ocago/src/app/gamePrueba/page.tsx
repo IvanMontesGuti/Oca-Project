@@ -1,11 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Image from "next/image"
 import { Dice1Icon as Dice } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card } from "@/components/ui/card"
+import { GAME_GET_BY_ID_URL, GAME_MOVE_URL } from "@/lib/endpoints/config"
+
 
 interface GameState {
   currentPlayer: string
@@ -24,13 +26,26 @@ export default function GameBoard() {
     diceValue: null,
   })
 
-  const rollDice = () => {
+  useEffect(() => {
+    const fetchGame = async () => {
+      const response = await fetch(GAME_GET_BY_ID_URL("324687324"))
+      const data = await response.json()
+      setGameState(data)
+    }
+    fetchGame()
+  }, [])
+
+  const rollDice = async () => {
     const newDiceValue = Math.floor(Math.random() * 6) + 1
     setGameState((prev) => ({
       ...prev,
       diceValue: newDiceValue,
       remainingThrows: prev.remainingThrows - 1,
     }))
+
+    await fetch(GAME_MOVE_URL("324687324", "IVAN"), {
+      method: "POST",
+    })
   }
 
   return (
@@ -76,7 +91,7 @@ export default function GameBoard() {
         <div className="flex-1 flex items-center justify-center ">
           <div className="relative w-full max-w-4xl min-h-[600px] flex items-center justify-center">
             <Image
-              src="images/tablero.svg" // Asegúrate de que la imagen esté en la carpeta public/
+              src="images/tablero.svg"
               alt="Tablero de juego"
               width={800}
               height={800}
