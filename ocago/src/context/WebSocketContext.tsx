@@ -192,7 +192,7 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
     const message = JSON.stringify({
       Type: "lobbyInvitationResponse",
       SenderId: String(userId),
-      ReceiverId: String(userId), // El receptor es el usuario que está respondiendo
+      ReceiverId: String(userId), 
       LobbyId: lobbyId,
       Status: accepted ? "accepted" : "rejected",
       Message: accepted
@@ -241,10 +241,10 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
   };
 
   const handleLobbyInvitationResponse = (message: any) => {
-    // Se le envía el toast a ambos usuarios (emisor y receptor de la invitación)
+    
     toast.info(`${message.Message}`, { duration: 5000, icon: "🎮" });
 
-    // Notificar al emisor de la invitación
+    
     toast[message.Status === "accepted" ? "success" : "info"](
       `Tu invitación ha sido ${message.Status === "accepted" ? "aceptada" : "rechazada"}`,
       { duration: 3000, icon: message.Status === "accepted" ? "✅" : "❌" }

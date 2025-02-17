@@ -4,6 +4,11 @@ using BackendOcago.Models.Database.Repositories;
 using BackendOcago.Models.Dtos;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using System.Net.WebSockets;
+using System.Text;
+using System.Threading;
 
 namespace BackendOcago.Services
 {
@@ -11,11 +16,38 @@ namespace BackendOcago.Services
     {
         private readonly IGameRepository _repository;
         private readonly Random _random;
+        private static readonly Dictionary<string, WebSocket> _connectedPlayers = new();
 
         public GameService(IGameRepository repository)
         {
             _repository = repository;
             _random = new Random();
+        }
+
+        public async Task HandleWebSocketAsync(WebSocket webSocket, string playerId)
+        {
+            _connectedPlayers[playerId] = webSocket;
+            await BroadcastMessageAsync($"Player {playerId} connected. Active players: {string.Join(", ", _connectedPlayers.Keys)}");
+
+            var buffer = new byte[1024 * 4];
+            while (webSocket.State == WebSocketState.Open)
+            {
+                var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                if (result.MessageType == WebSocketMessageType.Close)
+                {
+                    _connectedPlayers.Remove(playerId);
+                    await BroadcastMessageAsync($"Player {playerId} disconnected. Active players: {string.Join(", ", _connectedPlayers.Keys)}");
+                    await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Connection closed", CancellationToken.None);
+                }
+            }
+        }
+
+        private async Task BroadcastMessageAsync(string message)
+        {
+            var buffer = Encoding.UTF8.GetBytes(message);
+            var tasks = _connectedPlayers.Values.Select(socket =>
+                socket.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, CancellationToken.None));
+            await Task.WhenAll(tasks);
         }
 
         public async Task<GameDTO> CreateGameAsync(string player1Id)
@@ -29,14 +61,15 @@ namespace BackendOcago.Services
             };
 
             await _repository.CreateAsync(game);
+            await BroadcastMessageAsync($"New game created by player {player1Id}");
             return MapToGameDTO(game);
         }
 
         public async Task<GameDTO> JoinGameAsync(Guid gameId, string player2Id)
         {
             var game = await _repository.GetByIdAsync(gameId);
-            if (game == null) throw new ("Game not found");
-            if (game.Status != GameStatus.WaitingForPlayers)
+            if (game == null) throw new("Game not found");
+            if (game.Status != GameStatus.WaitingForPlayers && game.Status != GameStatus.InProgress)
                 throw new InvalidOperationException("Game is not available");
             if (game.Player1Id == player2Id)
                 throw new InvalidOperationException("Cannot join your own game");
@@ -46,13 +79,14 @@ namespace BackendOcago.Services
             game.LastUpdated = DateTime.UtcNow;
 
             await _repository.UpdateAsync(game);
+            await BroadcastMessageAsync($"Player {player2Id} joined game {gameId}");
             return MapToGameDTO(game);
         }
 
         public async Task<GameDTO> GetGameAsync(Guid gameId)
         {
             var game = await _repository.GetByIdAsync(gameId);
-            if (game == null) throw new ("Game not found");
+            if (game == null) throw new("Game not found");
             return MapToGameDTO(game);
         }
 
@@ -60,147 +94,6 @@ namespace BackendOcago.Services
         {
             var games = await _repository.GetActiveGamesAsync();
             return games.Select(MapToGameDTO).ToList();
-        }
-
-        public async Task<GameMoveDTO> MakeMoveAsync(Guid gameId, string playerId)
-        {
-            var game = await _repository.GetByIdAsync(gameId);
-            if (game == null) throw new("Game not found");
-            if (game.Status != GameStatus.InProgress)
-                throw new InvalidOperationException("Game is not in progress");
-
-            var isPlayer1 = playerId == game.Player1Id;
-            if ((isPlayer1 && !game.IsPlayer1Turn) || (!isPlayer1 && game.IsPlayer1Turn))
-                throw new InvalidOperationException("Not your turn");
-
-            var currentPosition = isPlayer1 ? game.Player1Position : game.Player2Position;
-            var remainingTurns = isPlayer1 ? game.Player1RemainingTurns : game.Player2RemainingTurns;
-
-            if (remainingTurns <= 0)
-                throw new InvalidOperationException("No remaining turns");
-
-            var diceRoll = _random.Next(1, 7);
-            var newPosition = currentPosition + diceRoll;
-            var message = $"Moved to position {newPosition}";
-            var isSpecialMove = false;
-
-            // Rebote en la casilla final
-            if (newPosition > 63)
-            {
-                newPosition = 63 - (newPosition - 63);
-                message = $"Rebote! Retrocede a la casilla {newPosition}";
-            }
-
-            // Procesar casillas especiales
-            if (IsOca(newPosition))
-            {
-                var nextOca = ProcessOca(newPosition);
-                message = "¡De oca a oca y tiro porque me toca!";
-                isSpecialMove = true;
-                newPosition = nextOca;
-                if (isPlayer1) game.Player1RemainingTurns++;
-                else game.Player2RemainingTurns++;
-            }
-            else if (IsSpecial(newPosition))
-            {
-                var (specialPosition, specialTurns, specialMessage) = ProcessSpecial(newPosition);
-                message = specialMessage;
-                isSpecialMove = true;
-                newPosition = specialPosition;
-
-                if (specialTurns < 0)
-                {
-                    if (isPlayer1) game.Player2RemainingTurns += Math.Abs(specialTurns);
-                    else game.Player1RemainingTurns += Math.Abs(specialTurns);
-                }
-                else if (specialTurns > 0)
-                {
-                    if (isPlayer1) game.Player1RemainingTurns += specialTurns - 1;
-                    else game.Player2RemainingTurns += specialTurns - 1;
-                }
-                else
-                {
-                    if (isPlayer1) game.Player1RemainingTurns = Math.Max(1, game.Player1RemainingTurns);
-                    else game.Player2RemainingTurns = Math.Max(1, game.Player2RemainingTurns);
-                }
-            }
-
-            // Actualizar posición y turnos
-            if (isPlayer1)
-            {
-                game.Player1Position = newPosition;
-                game.Player1RemainingTurns = Math.Max(0, game.Player1RemainingTurns - 1);
-                if (game.Player1RemainingTurns == 0 && game.Player2RemainingTurns == 0)
-                    game.Player2RemainingTurns = 1; 
-                game.IsPlayer1Turn = game.Player1RemainingTurns > 0;
-            }
-            else
-            {
-                game.Player2Position = newPosition;
-                game.Player2RemainingTurns = Math.Max(0, game.Player2RemainingTurns - 1);
-                if (game.Player1RemainingTurns == 0 && game.Player2RemainingTurns == 0)
-                    game.Player1RemainingTurns = 1; 
-                game.IsPlayer1Turn = game.Player1RemainingTurns > 0;
-            }
-
-            // Verificar victoria
-            if (newPosition >= 63)
-            {
-                game.Status = GameStatus.Finished;
-                game.Winner = playerId;
-                message = $"¡Jugador {(isPlayer1 ? "1" : "2")} ha ganado!";
-            }
-
-            game.LastUpdated = DateTime.UtcNow;
-            await _repository.UpdateAsync(game);
-
-            return new GameMoveDTO
-            {
-                GameId = gameId,
-                PlayerId = playerId,
-                DiceRoll = diceRoll,
-                NewPosition = newPosition,
-                Message = message,
-                IsSpecialMove = isSpecialMove,
-                GameStatus = game.Status
-            };
-        }
-
-
-        private bool IsOca(int position)
-        {
-            int[] ocas = { 5, 9, 14, 18, 23, 27, 32, 36, 41, 45, 50, 54, 59 };
-            return Array.IndexOf(ocas, position) != -1;
-        }
-
-        private bool IsSpecial(int position)
-        {
-            int[] especiales = { 6, 12, 19, 26, 31, 42, 52, 53, 58 };
-            return Array.IndexOf(especiales, position) != -1;
-        }
-
-        private int ProcessOca(int position)
-        {
-            if (position == 59) return 63;
-            int[] ocas = { 5, 9, 14, 18, 23, 27, 32, 36, 41, 45, 50, 54, 59 };
-            return ocas.First(x => x > position);
-        }
-
-        private (int position, int turns, string message) ProcessSpecial(int position)
-        {
-            return position switch
-            {
-                6 => (12, 1, "¡De puente a puente y tiro porque me lleva la corriente!"),
-                12 => (6, 1, "¡De puente a puente y tiro porque me lleva la corriente!"),
-                19 => (19, -1, "¡Posada! Pierdes un turno."),
-                26 => (53, 1, "¡De dados a dados y tiro porque me ha tocado!"),
-                31 => (31, -2, "¡Pozo! Pierdes dos turnos."),
-                42 => (30, 0, "¡Laberinto! Retrocedes a la casilla 30."),
-                52 => (52, -2, "¡Cárcel! Pierdes dos turnos."),
-                53 => (26, 1, "¡De dados a dados y tiro porque me ha tocado!"),
-                58 => (1, 0, "¡Muerte! Vuelves al inicio."),
-                _ => (position, 1, "Casilla normal")
-            };
         }
 
         private GameDTO MapToGameDTO(Game game)
@@ -215,9 +108,17 @@ namespace BackendOcago.Services
                 IsPlayer1Turn = game.IsPlayer1Turn,
                 Player1RemainingTurns = game.Player1RemainingTurns,
                 Player2RemainingTurns = game.Player2RemainingTurns,
-                Status = game.Status,
+                Status = game.Status, 
                 Winner = game.Winner
             };
         }
+
+        public Task<GameMoveDTO> MakeMoveAsync(Guid gameId, string playerId)
+        {
+            throw new NotImplementedException();
+        }
     }
+
+
+
 }

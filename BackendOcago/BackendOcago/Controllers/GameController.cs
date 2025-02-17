@@ -1,11 +1,12 @@
-﻿using BackendOcago.Models.Dtos;
+﻿using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Net.WebSockets;
+using System.Threading.Tasks;
 using BackendOcago.Services;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+using BackendOcago.Models.Dtos;
 
 namespace BackendOcago.Controllers
 {
-    
     [ApiController]
     [Route("api/[controller]")]
     public class GameController : ControllerBase
@@ -17,26 +18,32 @@ namespace BackendOcago.Controllers
             _gameService = gameService;
         }
 
-        [HttpPost]
-        public async Task<ActionResult<GameDTO>> CreateGame(String userId)
+        [HttpGet("ws/game/connect/{playerId}")]
+        public async Task ConnectWebSocket(string playerId)
         {
-            var game = await _gameService.CreateGameAsync(userId);
+            if (HttpContext.WebSockets.IsWebSocketRequest)
+            {
+                using var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
+                await _gameService.HandleWebSocketAsync(webSocket, playerId);
+            }
+            else
+            {
+                HttpContext.Response.StatusCode = 400;
+            }
+        }
+
+        [HttpPost("create")]
+        public async Task<ActionResult<GameDTO>> CreateGame([FromQuery] string playerId)
+        {
+            var game = await _gameService.CreateGameAsync(playerId);
             return Ok(game);
         }
 
         [HttpPost("{gameId}/join")]
-        public async Task<ActionResult<GameDTO>> JoinGame(Guid gameId, string UserId)
+        public async Task<ActionResult<GameDTO>> JoinGame(Guid gameId, [FromQuery] string playerId)
         {
-            var game = await _gameService.JoinGameAsync(gameId, UserId);
+            var game = await _gameService.JoinGameAsync(gameId, playerId);
             return Ok(game);
-        }
-
-        [HttpPost("{gameId}/move")]
-        public async Task<ActionResult<GameMoveDTO>> MakeMove(Guid gameId, string UserId)
-        {
-            
-            var move = await _gameService.MakeMoveAsync(gameId, UserId);
-            return Ok(move);
         }
 
         [HttpGet("{gameId}")]
@@ -46,13 +53,11 @@ namespace BackendOcago.Controllers
             return Ok(game);
         }
 
-        [HttpGet]
+        [HttpGet("active")]
         public async Task<ActionResult<List<GameDTO>>> GetActiveGames()
         {
             var games = await _gameService.GetActiveGamesAsync();
             return Ok(games);
         }
-
-
     }
 }
