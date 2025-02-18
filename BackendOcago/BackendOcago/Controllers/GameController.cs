@@ -1,30 +1,36 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Net.WebSockets;
-using System.Threading.Tasks;
+﻿using BackendOcago.Models.Dtos;
 using BackendOcago.Services;
-using BackendOcago.Models.Dtos;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using System.Net.WebSockets;
+using System.Text;
+using System.Text.Json;
 
 namespace BackendOcago.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
-    public class GameController : ControllerBase
+    [Route("ws/game/{userId}")]
+    public class GameWebSocketController : ControllerBase
     {
-        private readonly IGameService _gameService;
+        private readonly GameService _gameService;
+        private static readonly Dictionary<string, WebSocket> _connections = new();
 
-        public GameController(IGameService gameService)
+        public GameWebSocketController(GameService gameService)
         {
             _gameService = gameService;
         }
 
-        [HttpGet("ws/game/connect/{playerId}")]
-        public async Task ConnectWebSocket(string playerId)
+        [HttpGet("connect")]
+        public async Task Connect(string userId)
         {
             if (HttpContext.WebSockets.IsWebSocketRequest)
             {
                 using var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-                await _gameService.HandleWebSocketAsync(webSocket, playerId);
+                _connections[userId] = webSocket;
+
+                Console.WriteLine($"🔗 Usuario {userId} conectado. Total conexiones: {_connections.Count}");
+
+                await HandleWebSocketConnection(userId, webSocket);
             }
             else
             {
@@ -32,32 +38,94 @@ namespace BackendOcago.Controllers
             }
         }
 
-        [HttpPost("create")]
-        public async Task<ActionResult<GameDTO>> CreateGame([FromQuery] string playerId)
+
+        private async Task HandleWebSocketConnection(string userId, WebSocket webSocket)
         {
-            var game = await _gameService.CreateGameAsync(playerId);
-            return Ok(game);
+            var buffer = new byte[1024 * 4];
+            var receiveResult = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+
+            while (!receiveResult.CloseStatus.HasValue)
+            {
+                var message = Encoding.UTF8.GetString(buffer, 0, receiveResult.Count);
+                await ProcessMessage(userId, message);
+
+                receiveResult = await webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+            }
+
+            _connections.Remove(userId);
+            await webSocket.CloseAsync(receiveResult.CloseStatus.Value, receiveResult.CloseStatusDescription, CancellationToken.None);
         }
 
-        [HttpPost("{gameId}/join")]
-        public async Task<ActionResult<GameDTO>> JoinGame(Guid gameId, [FromQuery] string playerId)
+        private async Task ProcessMessage(string userId, string message)
         {
-            var game = await _gameService.JoinGameAsync(gameId, playerId);
-            return Ok(game);
+            try
+            {
+                var jsonMessage = JsonSerializer.Deserialize<WebSocketRequest>(message);
+                if (jsonMessage == null) return;
+
+                switch (jsonMessage.Action)
+                {
+                    case "CreateGame":
+                        var game = await _gameService.CreateGameAsync(userId);
+                        await SendMessageToClient(userId, game);
+                        break;
+                    case "JoinGame":
+                        var joinedGame = await _gameService.JoinGameAsync(jsonMessage.GameId, userId);
+                        if (joinedGame != null)
+                        {
+                            await NotifyPlayers(joinedGame);
+                        }
+                        break;
+
+                    case "MakeMove":
+                        var move = await _gameService.MakeMoveAsync(jsonMessage.GameId, userId);
+                        await NotifyPlayers(move);
+                        break;
+                    case "GetGame":
+                        var gameInfo = await _gameService.GetGameAsync(jsonMessage.GameId);
+                        await SendMessageToClient(userId, gameInfo);
+                        break;
+                    case "GetActiveGames":
+                        var games = await _gameService.GetActiveGamesAsync();
+                        await SendMessageToClient(userId, games);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                await SendMessageToClient(userId, new { error = ex.Message });
+            }
         }
 
-        [HttpGet("{gameId}")]
-        public async Task<ActionResult<GameDTO>> GetGame(Guid gameId)
+        private async Task NotifyPlayers(object data)
         {
-            var game = await _gameService.GetGameAsync(gameId);
-            return Ok(game);
+            if (data is GameDTO game)
+            {
+                if (!string.IsNullOrEmpty(game.Player1Id))
+                {
+                    await SendMessageToClient(game.Player1Id, game);
+                }
+                if (!string.IsNullOrEmpty(game.Player2Id))
+                {
+                    await SendMessageToClient(game.Player2Id, game);
+                }
+            }
         }
 
-        [HttpGet("active")]
-        public async Task<ActionResult<List<GameDTO>>> GetActiveGames()
+        private async Task SendMessageToClient(string userId, object data)
         {
-            var games = await _gameService.GetActiveGamesAsync();
-            return Ok(games);
+            if (_connections.TryGetValue(userId, out var socket) && socket.State == WebSocketState.Open)
+            {
+                var json = JsonSerializer.Serialize(data);
+                var bytes = Encoding.UTF8.GetBytes(json);
+                await socket.SendAsync(new ArraySegment<byte>(bytes), WebSocketMessageType.Text, true, CancellationToken.None);
+            }
         }
+    }
+
+    public class WebSocketRequest
+    {
+        public string Action { get; set; }
+        public Guid GameId { get; set; }
     }
 }

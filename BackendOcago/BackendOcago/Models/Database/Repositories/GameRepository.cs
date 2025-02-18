@@ -3,11 +3,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BackendOcago.Models.Database.Repositories
 {
-    public class GameRepository : IGameRepository
+    public class GameRepository : Repository<Game>
     {
         private readonly DataContext _context;
 
-        public GameRepository(DataContext context)
+        public GameRepository(DataContext context) : base(context)
         {
             _context = context;
         }
@@ -33,10 +33,22 @@ namespace BackendOcago.Models.Database.Repositories
             return game;
         }
 
+        /*
         public async Task UpdateAsync(Game game)
         {
             _context.Entry(game).State = EntityState.Modified;
             await _context.SaveChangesAsync();
         }
+        */
+
+        public async Task newUpdateAsync(Game game)
+        {
+            _context.Games.Update(game);
+            Console.WriteLine("Juego Actualizado"+game);
+            await _context.SaveChangesAsync();
+            Console.WriteLine("SAVES"+ game);
+            // Asegura que los cambios se persisten en la base de datos
+        }
+
     }
 }

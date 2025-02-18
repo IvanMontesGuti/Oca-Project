@@ -41,12 +41,12 @@ public class Program
         builder.Services.AddScoped<UserRepository>();
         builder.Services.AddScoped<ImageRepository>();
         builder.Services.AddScoped<FriendshipRepository>();
-        builder.Services.AddScoped<IGameRepository, GameRepository>();
+        builder.Services.AddScoped<GameRepository>();
 
         // Servicios
         builder.Services.AddTransient<ImageService>();
         
-        builder.Services.AddScoped<IGameService, GameService>();
+        builder.Services.AddScoped<GameService>();
         builder.Services.AddScoped<AuthService>();
         builder.Services.AddScoped<UserService>();
         builder.Services.AddScoped<FriendshipService>();
