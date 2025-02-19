@@ -37,7 +37,7 @@ public class LobbyService
     public async Task SetUserStatusAsync(string userId, UserStatus status)
     {
         _userStatuses.AddOrUpdate(userId, status, (key, oldValue) => status);
-        // Convertir el userId a long, asumiendo que el string se puede parsear a long.
+
         if (long.TryParse(userId, out long id))
         {
             await _userService.UpdateStatus(status, id);
@@ -65,15 +65,13 @@ public class LobbyService
         _userStatuses.TryRemove(userId, out _);
         RemoveFromRandomQueue(userId);
 
-        // Asegurar que el usuario se marca como desconectado en la base de datos
         if (long.TryParse(userId, out long id))
         {
             await _userService.UpdateStatus(UserStatus.Desconectado, id);
         }
     }
 
-
-    public async Task<(bool paired, string opponent, string lobbyId)?> AddToRandomQueueAsync(string userId)
+    public Task<(bool paired, string opponent, string lobbyId)?> AddToRandomQueueAsync(string userId)
     {
         lock (_randomQueue)
         {
@@ -87,16 +85,16 @@ public class LobbyService
                 string player1 = _randomQueue.Dequeue();
                 string player2 = _randomQueue.Dequeue();
 
-                _userStatuses[player1] = UserStatus.Jugando;
-                _userStatuses[player2] = UserStatus.Jugando;
+                _userStatuses[player1] = UserStatus.BuscandoPartida;
+                _userStatuses[player2] = UserStatus.BuscandoPartida;
 
                 string lobbyId = Guid.NewGuid().ToString();
                 _lobbies[lobbyId] = new List<string> { player1, player2 };
 
-                return (true, player2, lobbyId);
+                return Task.FromResult<(bool paired, string opponent, string lobbyId)?>((true, player2, lobbyId));
             }
         }
-        return (false, null, null);
+        return Task.FromResult<(bool paired, string opponent, string lobbyId)?>((false, null, null));
     }
 
 
@@ -105,7 +103,6 @@ public class LobbyService
     {
         lock (_randomQueue)
         {
-            // Reconstruir la cola sin el usuario
             var newQueue = new Queue<string>(_randomQueue.Where(u => u != userId));
             while (_randomQueue.Count > 0)
             {
@@ -134,7 +131,6 @@ public class LobbyService
         return newHost;
     }
 
-    // Método para verificar si un usuario está en un lobby
     public bool IsUserInLobby(string userId)
     {
         return _userLobbies.ContainsKey(userId);
@@ -147,7 +143,7 @@ public class LobbyService
         _userLobbies[userId] = lobbyId;
 
         Console.WriteLine($"Lobby creado: {lobbyId} por usuario {userId}");
-        Console.WriteLine($"Lobbies actuales después de crear: {string.Join(", ", _lobbies.Keys)}");  // <-- Log extra
+        Console.WriteLine($"Lobbies actuales después de crear: {string.Join(", ", _lobbies.Keys)}"); 
 
         return lobbyId;
     }

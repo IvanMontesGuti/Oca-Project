@@ -64,6 +64,28 @@ namespace BackendOcago.Services
             var all = accepted.Concat(pendingReceived);
             return _mapper.ToDto(all);
         }
+        public async Task<List<Friendship>> GetPendingFriendRequestsAsync(long receiverId)
+        {
+            var allFriendships = await _unitOfWork.FriendshipRepository.GetAllAsync();
+            return allFriendships
+                .Where(f => f.ReceiverId == receiverId && f.Status == FriendshipInvitationStatus.Pendiente)
+                .ToList();
+        }
+        public async Task<IEnumerable<Friendship>> GetAcceptedFriendshipsForUserAsync(long userId)
+        {
+            var allFriendships = await _unitOfWork.FriendshipRepository.GetAllAsync();
+
+            return allFriendships
+                .Where(f =>
+                    (f.SenderId == userId || f.ReceiverId == userId) &&
+                     f.Status == FriendshipInvitationStatus.Aceptada
+                )
+                .ToList();
+        }
+
+
+
+
 
         /* ----- UPDATE ----- */
         public async Task<bool> AcceptFriendRequestAsync(long friendshipId, long userId)

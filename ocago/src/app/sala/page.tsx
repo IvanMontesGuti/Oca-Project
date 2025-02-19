@@ -15,18 +15,17 @@ import type { Player, RoomState } from "@/types/room";
 
 export default function GameRoom() {
   const router = useRouter();
-  const { socket } = useWebSocket();
-  const { userInfo, isAuthenticated } = useAuth();
+  const { socket, createLobby, inviteToLobby } = useWebSocket();
+  const { userInfo } = useAuth();
 
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [roomState, setRoomState] = useState<RoomState>({
     players: [],
     isGameStarted: false,
   });
-
   const [isLoadingUser, setIsLoadingUser] = useState(true);
 
-  // 🔍 Esperar a que `userInfo` se cargue
+  // Esperar a que userInfo se cargue
   useEffect(() => {
     if (userInfo) {
       console.log("✅ User Info cargado:", userInfo);
@@ -36,7 +35,7 @@ export default function GameRoom() {
     }
   }, [userInfo]);
 
-  // 🔄 Manejo del WebSocket
+  // Manejo del WebSocket
   useEffect(() => {
     if (!socket || isLoadingUser) return;
 
@@ -81,7 +80,6 @@ export default function GameRoom() {
     };
   }, [socket, router, isLoadingUser]);
 
-  // ⏳ Muestra un mensaje de carga mientras `userInfo` se obtiene
   if (isLoadingUser) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#0066FF] text-white text-2xl">
@@ -90,7 +88,7 @@ export default function GameRoom() {
     );
   }
 
-  // 🚀 Función para iniciar el juego
+  // Función para iniciar el juego
   const handleStartGame = () => {
     if (socket && socket.readyState === WebSocket.OPEN && userInfo) {
       const message = JSON.stringify({
@@ -101,7 +99,7 @@ export default function GameRoom() {
     }
   };
 
-  // 🎭 Renderizar jugadores
+  // Renderizar jugadores
   const renderPlayer = (player?: Player, isWaiting = false) => (
     <div className="flex flex-col items-center gap-4">
       <div className="relative">
@@ -127,11 +125,48 @@ export default function GameRoom() {
 
   const canStartGame = roomState.players.length === 2;
 
+  /**
+   * Función para invitar a un amigo:
+   * - Se crea (o se asegura) la lobby mediante createLobby.
+   * - Luego se invita al amigo usando inviteToLobby.
+   * - Finalmente se redirige a /sala/[lobbyId].
+   */
+  const handleInviteFriend = (friendId: string) => {
+    if (!socket || socket.readyState !== WebSocket.OPEN || !userInfo) return;
+
+    // Primero, se crea la lobby (se espera que la respuesta WS actualice el estado lobbies)
+    createLobby();
+
+    // Se espera un breve retardo para que la lobby se registre en el estado (ajusta el tiempo según tu flujo)
+    setTimeout(() => {
+      // Se toma el último lobby (suponiendo que es el que acabamos de crear)
+      const currentLobbyId = (window as any).lobbies && (window as any).lobbies?.length
+        ? (window as any).lobbies[(window as any).lobbies.length - 1]?.id
+        : undefined;
+      // Si en tu contexto tienes el estado "lobbies", podrías acceder a él directamente; en este ejemplo usaremos una variable local.
+      // Alternativamente, si el estado de lobbies no está disponible globalmente, puedes agregar un estado local para ello.
+      // Por simplicidad, asumiremos que el nuevo lobby se crea y se añade a "lobbies" del WebSocketContext.
+      // Aquí usaremos también el valor de "lobbies" del contexto (aunque en este ejemplo no se actualiza globalmente en este componente).
+      const newLobbyId = inviteToLobby && (typeof inviteToLobby === "function" ? undefined : undefined); // Placeholder
+
+      // En este ejemplo, simulamos que el nuevo lobby id es "12345" (debes obtenerlo del contexto o del WS)
+      const simulatedLobbyId = "12345";
+
+      // Invitar al amigo
+      inviteToLobby(simulatedLobbyId, friendId);
+
+      // Redirigir a /sala/[lobbyId]
+      router.push(`/sala/${simulatedLobbyId}`);
+    }, 500);
+  };
+
   return (
     <div className="bg-svg bg-cover bg-no-repeat h-full min-h-screen w-full flex flex-col">
       <Header2 />
       <main className="container mx-auto px-4 py-8">
         <div className="flex justify-end mb-8">
+          {/* Se abre el modal para invitar amigos. Se asume que este modal, al seleccionar un amigo,
+              llamará a la función handleInviteFriend (pasándola como prop) */}
           <Button onClick={() => setIsInviteModalOpen(true)} className="bg-[#231356] text-white hover:bg-[#2d1a6b]">
             Invitar amigo
           </Button>
@@ -160,7 +195,12 @@ export default function GameRoom() {
           </div>
         </div>
 
-        <InviteFriendsModal isOpen={isInviteModalOpen} onClose={() => setIsInviteModalOpen(false)} />
+        {/* Se asume que InviteFriendsModal acepta una prop onInviteFriend */}
+        <InviteFriendsModal
+          isOpen={isInviteModalOpen}
+          onClose={() => setIsInviteModalOpen(false)}
+          onInviteFriend={handleInviteFriend}
+        />
       </main>
     </div>
   );

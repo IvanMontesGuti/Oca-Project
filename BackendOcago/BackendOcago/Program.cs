@@ -58,7 +58,7 @@ public class Program
         builder.Services.AddTransient<ImageMapper>();
         builder.Services.AddScoped<FriendshipMapper>();
 
-        builder.Services.AddTransient<Middleware>();
+        builder.Services.AddScoped<Middleware>();
 
 
         // Swagger/OpenAPI configuración

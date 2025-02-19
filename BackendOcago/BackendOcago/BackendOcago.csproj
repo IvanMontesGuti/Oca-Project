@@ -8,9 +8,13 @@
 
   <ItemGroup>
     <Compile Remove="Models\Constants\**" />
+    <Compile Remove="WebSocketAdvanced\**" />
     <Content Remove="Models\Constants\**" />
+    <Content Remove="WebSocketAdvanced\**" />
     <EmbeddedResource Remove="Models\Constants\**" />
+    <EmbeddedResource Remove="WebSocketAdvanced\**" />
     <None Remove="Models\Constants\**" />
+    <None Remove="WebSocketAdvanced\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -30,7 +34,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="WebSocketAdvanced\" />
     <Folder Include="wwwroot\images\" />
   </ItemGroup>
 
