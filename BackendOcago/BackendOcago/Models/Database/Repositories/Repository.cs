@@ -64,10 +64,13 @@ public async Task<ICollection<TEntity>> GetAllAsync()
         return await GetByIdAsync(id) != null;
     }
 
-    public Task<TEntity> UpdateAsync(TEntity entity)
+    public async Task<TEntity> UpdateAsync(TEntity entity)
     {
-        throw new NotImplementedException();
+        _dbContext.Set<TEntity>().Update(entity);
+        await _dbContext.SaveChangesAsync();
+        return entity;
     }
+
 
     public Task DeleteAsync(TEntity entity)
     {

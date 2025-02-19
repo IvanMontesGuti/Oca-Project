@@ -25,10 +25,16 @@ namespace BackendOcago.Controllers
         {
             if (HttpContext.WebSockets.IsWebSocketRequest)
             {
-                using var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-                _connections[userId] = webSocket;
+                var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
 
-                Console.WriteLine($"🔗 Usuario {userId} conectado. Total conexiones: {_connections.Count}");
+                if (_connections.ContainsKey(userId))
+                {
+                    Console.WriteLine($"🔄 Usuario {userId} ya estaba conectado. Reemplazando conexión.");
+                    _connections[userId].Abort(); // Cerrar la conexión anterior si existe
+                }
+
+                _connections[userId] = webSocket;
+                Console.WriteLine($"✅ Usuario {userId} conectado. Total conexiones activas: {_connections.Count}");
 
                 await HandleWebSocketConnection(userId, webSocket);
             }
