@@ -26,6 +26,38 @@ namespace BackendOcago.Services
             _unitOfWork = unitOfWork;
             _random = new Random();
         }
+        public async Task ConnectPlayerAsync(string userId, WebSocket socket)
+        {
+            _connectedPlayers[userId] = socket;
+            Console.WriteLine($"✅ WebSocket registrado para {userId}");
+
+            // Escucha mensajes entrantes (opcional)
+            await ListenToWebSocket(userId, socket);
+        }
+
+        private async Task ListenToWebSocket(string userId, WebSocket socket)
+        {
+            var buffer = new byte[1024 * 4];
+
+            try
+            {
+                while (socket.State == WebSocketState.Open)
+                {
+                    var result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+                    if (result.MessageType == WebSocketMessageType.Close)
+                    {
+                        _connectedPlayers.TryRemove(userId, out _);
+                        Console.WriteLine($"❌ WebSocket cerrado para {userId}");
+                        await socket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Cerrado por el usuario", CancellationToken.None);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ Error en WebSocket de {userId}: {ex.Message}");
+            }
+        }
+
 
         public async Task<GameDTO> CreateGameAsync(string userId)
         {
@@ -38,6 +70,7 @@ namespace BackendOcago.Services
             };
 
             await _unitOfWork.GameRepository.InsertAsync(game);
+            await _unitOfWork.GameRepository.CreateAsync(game);
             await _unitOfWork.GameRepository.SaveAsync();
 
             _activeGames[game.Id] = (userId, null);
@@ -59,7 +92,7 @@ namespace BackendOcago.Services
             await _unitOfWork.GameRepository.SaveAsync();
 
             _activeGames[game.Id] = (game.Player1Id, userId);
-
+            Console.WriteLine("active games; "+ _activeGames);
             await NotifyPlayersAsync(game);
             return MapToGameDTO(game);
         }
@@ -149,7 +182,8 @@ namespace BackendOcago.Services
 
         private async Task SendMessageIfConnected(string userId, ArraySegment<byte> message)
         {
-            if (_connectedPlayers.TryGetValue(userId, out var socket) && socket.State == WebSocketState.Open)
+            var socket = WebSocketConnectionManager.GetConnection(userId);
+            if (socket != null && socket.State == WebSocketState.Open)
             {
                 await socket.SendAsync(message, WebSocketMessageType.Text, true, CancellationToken.None);
             }
@@ -158,6 +192,38 @@ namespace BackendOcago.Services
                 Console.WriteLine($"⚠️ No se pudo enviar mensaje a {userId}: WebSocket no conectado.");
             }
         }
+
+
+        // Nueva clase para gestionar las conexiones WebSocket
+        public static class WebSocketConnectionManager
+        {
+            // Diccionario estático para almacenar las conexiones activas
+            private static readonly ConcurrentDictionary<string, WebSocket> _connections = new();
+
+            public static void AddConnection(string userId, WebSocket webSocket)
+            {
+                if (_connections.ContainsKey(userId))
+                {
+                    _connections[userId].Abort();
+                }
+
+                _connections[userId] = webSocket;
+            }
+
+            public static WebSocket GetConnection(string userId)
+            {
+                _connections.TryGetValue(userId, out var socket);
+                return socket;
+            }
+
+            public static void RemoveConnection(string userId)
+            {
+                _connections.TryRemove(userId, out _);
+            }
+
+            public static int ActiveConnectionsCount => _connections.Count;
+        }
+
 
         private GameDTO MapToGameDTO(Game game)
         {

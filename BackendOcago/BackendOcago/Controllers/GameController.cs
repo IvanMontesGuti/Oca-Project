@@ -21,6 +21,7 @@ namespace BackendOcago.Controllers
         }
 
         [HttpGet("connect")]
+        
         public async Task Connect(string userId)
         {
             if (HttpContext.WebSockets.IsWebSocketRequest)
@@ -29,8 +30,8 @@ namespace BackendOcago.Controllers
 
                 if (_connections.ContainsKey(userId))
                 {
-                    Console.WriteLine($"🔄 Usuario {userId} ya estaba conectado. Reemplazando conexión.");
-                    _connections[userId].Abort(); // Cerrar la conexión anterior si existe
+                    Console.WriteLine($"🔄 Usuario {userId} ya estaba conectado. Cerrando conexión anterior.");
+                    _connections[userId].Abort();
                 }
 
                 _connections[userId] = webSocket;
