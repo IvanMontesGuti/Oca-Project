@@ -88,21 +88,24 @@ namespace BackendOcago.Services
             game.Status = GameStatus.InProgress;
             game.LastUpdated = DateTime.UtcNow;
 
-            // Asegurarnos de que la actualización se realiza correctamente
             try
             {
                 await _unitOfWork.GameRepository.newUpdateAsync(game);
-                // Verificar que la actualización fue exitosa
-                var updatedGame = await _unitOfWork.GameRepository.GetByIdAsync(gameId);
-                if (updatedGame.Player2Id != userId)
-                {
-                    throw new Exception("Failed to update game state");
-                }
 
                 _activeGames[game.Id] = (game.Player1Id, userId);
-                Console.WriteLine($"Game updated successfully. Player2Id: {updatedGame.Player2Id}, Status: {updatedGame.Status}");
+                Console.WriteLine($"Game updated successfully. Player2Id: {userId}, Status: {game.Status}");
 
-                return MapToGameDTO(updatedGame);
+                var gameDto = MapToGameDTO(game);
+
+                // 🚀 Si el jugador 2 es "bot" y es su turno, hacer que mueva automáticamente
+                if (userId == "bot" && !game.IsPlayer1Turn)
+                {
+                    Console.WriteLine("🤖 Bot detectado. Ejecutando turno automático...");
+                    await Task.Delay(1000); // Pequeña pausa para simular respuesta humana
+                    await MakeMoveAsync(game.Id, userId);
+                }
+
+                return gameDto;
             }
             catch (Exception ex)
             {
@@ -110,6 +113,7 @@ namespace BackendOcago.Services
                 throw;
             }
         }
+
 
         public async Task<GameMoveDTO> MakeMoveAsync(Guid gameId, string userId)
         {
