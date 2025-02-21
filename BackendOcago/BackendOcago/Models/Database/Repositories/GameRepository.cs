@@ -14,18 +14,7 @@ namespace BackendOcago.Models.Database.Repositories
 
         public async Task<Game> GetByIdAsync(Guid id)
         {
-            var game = await _context.Games
-                .AsNoTracking() // Evitar el tracking para obtener datos frescos
-                .FirstOrDefaultAsync(g => g.Id == id);
-
-            _context.Entry(game).State = EntityState.Detached;
-            return game;
-        }
-
-        public async Task UpdateAsync(Game game)
-        {
-            _context.Entry(game).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
+            return await _context.Games.FindAsync(id);
         }
 
         public async Task<List<Game>> GetActiveGamesAsync()
