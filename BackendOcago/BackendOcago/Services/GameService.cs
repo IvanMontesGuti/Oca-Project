@@ -88,13 +88,27 @@ namespace BackendOcago.Services
             game.Status = GameStatus.InProgress;
             game.LastUpdated = DateTime.UtcNow;
 
-            await _unitOfWork.GameRepository.UpdateAsync(game);
-            await _unitOfWork.GameRepository.SaveAsync();
+            // Asegurarnos de que la actualización se realiza correctamente
+            try
+            {
+                await _unitOfWork.GameRepository.newUpdateAsync(game);
+                // Verificar que la actualización fue exitosa
+                var updatedGame = await _unitOfWork.GameRepository.GetByIdAsync(gameId);
+                if (updatedGame.Player2Id != userId)
+                {
+                    throw new Exception("Failed to update game state");
+                }
 
-            _activeGames[game.Id] = (game.Player1Id, userId);
-            Console.WriteLine("active games; "+ _activeGames);
-            await NotifyPlayersAsync(game);
-            return MapToGameDTO(game);
+                _activeGames[game.Id] = (game.Player1Id, userId);
+                Console.WriteLine($"Game updated successfully. Player2Id: {updatedGame.Player2Id}, Status: {updatedGame.Status}");
+
+                return MapToGameDTO(updatedGame);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error updating game: {ex.Message}");
+                throw;
+            }
         }
 
         public async Task<GameMoveDTO> MakeMoveAsync(Guid gameId, string userId)
@@ -157,6 +171,10 @@ namespace BackendOcago.Services
         {
             var game = await _unitOfWork.GameRepository.GetByIdAsync(gameId);
             if (game == null) throw new Exception("Game not found");
+
+            // Agregamos logging para debug
+            Console.WriteLine($"Retrieved game {gameId}: Player1={game.Player1Id}, Player2={game.Player2Id}, Status={game.Status}");
+
             return MapToGameDTO(game);
         }
 

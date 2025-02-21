@@ -21,7 +21,6 @@ namespace BackendOcago.Controllers
         }
 
         [HttpGet("connect")]
-        
         public async Task Connect(string userId)
         {
             if (HttpContext.WebSockets.IsWebSocketRequest)
@@ -44,7 +43,6 @@ namespace BackendOcago.Controllers
                 HttpContext.Response.StatusCode = 400;
             }
         }
-
 
         private async Task HandleWebSocketConnection(string userId, WebSocket webSocket)
         {
@@ -74,47 +72,68 @@ namespace BackendOcago.Controllers
                 {
                     case "CreateGame":
                         var game = await _gameService.CreateGameAsync(userId);
-                        await SendMessageToClient(userId, game);
+                        await SendMessageToClient(userId, new
+                        {
+                            action = "gameUpdate",
+                            data = game
+                        });
                         break;
                     case "JoinGame":
                         var joinedGame = await _gameService.JoinGameAsync(jsonMessage.GameId, userId);
                         if (joinedGame != null)
                         {
-                            await NotifyPlayers(joinedGame);
+                            await NotifyPlayers(joinedGame, "gameUpdate");
                         }
                         break;
-
                     case "MakeMove":
                         var move = await _gameService.MakeMoveAsync(jsonMessage.GameId, userId);
-                        await NotifyPlayers(move);
+                        await NotifyPlayers(move, "moveUpdate");
                         break;
                     case "GetGame":
                         var gameInfo = await _gameService.GetGameAsync(jsonMessage.GameId);
-                        await SendMessageToClient(userId, gameInfo);
+                        await SendMessageToClient(userId, new
+                        {
+                            action = "gameUpdate",
+                            data = gameInfo
+                        });
                         break;
                     case "GetActiveGames":
                         var games = await _gameService.GetActiveGamesAsync();
-                        await SendMessageToClient(userId, games);
+                        await SendMessageToClient(userId, new
+                        {
+                            action = "activeGames",
+                            data = games
+                        });
                         break;
                 }
             }
             catch (Exception ex)
             {
-                await SendMessageToClient(userId, new { error = ex.Message });
+                await SendMessageToClient(userId, new
+                {
+                    action = "error",
+                    data = new { error = ex.Message }
+                });
             }
         }
 
-        private async Task NotifyPlayers(object data)
+        private async Task NotifyPlayers(object data, string action)
         {
             if (data is GameDTO game)
             {
+                var messageObject = new
+                {
+                    action = action,
+                    data = game
+                };
+
                 if (!string.IsNullOrEmpty(game.Player1Id))
                 {
-                    await SendMessageToClient(game.Player1Id, game);
+                    await SendMessageToClient(game.Player1Id, messageObject);
                 }
                 if (!string.IsNullOrEmpty(game.Player2Id))
                 {
-                    await SendMessageToClient(game.Player2Id, game);
+                    await SendMessageToClient(game.Player2Id, messageObject);
                 }
             }
         }
