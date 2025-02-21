@@ -14,13 +14,79 @@ namespace BackendOcago.Models.Database.Repositories
 
         public async Task<Game> GetByIdAsync(Guid id)
         {
-            // Usar Include para asegurarnos de cargar todas las relaciones necesarias
-            var game = await _context.Games
-                .AsNoTracking()
-                .FirstOrDefaultAsync(g => g.Id == id);
+            try
+            {
+                // Siempre usar AsNoTracking para evitar problemas de tracking
+                var game = await _context.Games
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(g => g.Id == id);
 
-            Console.WriteLine($"GetByIdAsync - Game {id}: Player2Id={game?.Player2Id}, Status={game?.Status}");
-            return game;
+                if (game != null)
+                {
+                    Console.WriteLine($"GetByIdAsync - Retrieved game {id}:");
+                    Console.WriteLine($"Player1Id: {game.Player1Id}");
+                    Console.WriteLine($"Player2Id: {game.Player2Id}");
+                    Console.WriteLine($"Status: {game.Status}");
+                    Console.WriteLine($"IsPlayer1Turn: {game.IsPlayer1Turn}");
+                }
+
+                return game;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetByIdAsync: {ex.Message}");
+                throw;
+            }
+        }
+
+        public async Task newUpdateAsync(Game game)
+        {
+            try
+            {
+                // Limpiar el tracking de la entidad si existe
+                var existingEntry = _context.ChangeTracker
+                    .Entries<Game>()
+                    .FirstOrDefault(e => e.Entity.Id == game.Id);
+
+                if (existingEntry != null)
+                {
+                    existingEntry.State = EntityState.Detached;
+                }
+
+                // Obtener una nueva instancia del juego
+                var existingGame = await _context.Games.FindAsync(game.Id);
+                if (existingGame == null)
+                {
+                    throw new Exception($"Game {game.Id} not found");
+                }
+
+                // Actualizar todas las propiedades
+                existingGame.Player2Id = game.Player2Id;
+                existingGame.Status = game.Status;
+                existingGame.LastUpdated = game.LastUpdated;
+                existingGame.Player1Position = game.Player1Position;
+                existingGame.Player2Position = game.Player2Position;
+                existingGame.IsPlayer1Turn = game.IsPlayer1Turn;
+                existingGame.Winner = game.Winner;
+
+                // Guardar cambios
+                await _context.SaveChangesAsync();
+
+                // Actualizar el objeto original con los datos actualizados
+                game.Player2Id = existingGame.Player2Id;
+                game.Status = existingGame.Status;
+                game.Player1Position = existingGame.Player1Position;
+                game.Player2Position = existingGame.Player2Position;
+                game.IsPlayer1Turn = existingGame.IsPlayer1Turn;
+                game.Winner = existingGame.Winner;
+
+                Console.WriteLine($"Game {game.Id} updated successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error updating game: {ex.Message}");
+                throw;
+            }
         }
 
         public async Task<List<Game>> GetActiveGamesAsync()
@@ -40,55 +106,7 @@ namespace BackendOcago.Models.Database.Repositories
             return game;
         }
 
-        public async Task newUpdateAsync(Game game)
-        {
-            try
-            {
-                // Obtener una nueva instancia del contexto para esta operación
-                var existingGame = await _context.Games.FindAsync(game.Id);
-                if (existingGame == null)
-                {
-                    throw new Exception($"Game {game.Id} not found");
-                }
-
-                // Actualizar manualmente cada propiedad
-                existingGame.Player2Id = game.Player2Id;
-                existingGame.Status = game.Status;
-                existingGame.LastUpdated = game.LastUpdated;
-                existingGame.Player1Position = game.Player1Position;
-                existingGame.Player2Position = game.Player2Position;
-                existingGame.IsPlayer1Turn = game.IsPlayer1Turn;
-                existingGame.Winner = game.Winner;
-
-                // Marcar la entidad como modificada
-                _context.Entry(existingGame).State = EntityState.Modified;
-
-                Console.WriteLine($"Updating game {game.Id}:");
-                Console.WriteLine($"Player2Id: {existingGame.Player2Id}");
-                Console.WriteLine($"Status: {existingGame.Status}");
-
-                // Guardar cambios
-                await _context.SaveChangesAsync();
-
-                // Verificar la actualización
-                var updatedGame = await _context.Games
-                    .AsNoTracking()
-                    .FirstOrDefaultAsync(g => g.Id == game.Id);
-
-                Console.WriteLine($"After update - Game {game.Id}:");
-                Console.WriteLine($"Player2Id: {updatedGame?.Player2Id}");
-                Console.WriteLine($"Status: {updatedGame?.Status}");
-
-                // Actualizar el objeto original con los datos actualizados
-                game.Player2Id = updatedGame?.Player2Id;
-                game.Status = updatedGame?.Status ?? game.Status;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error updating game: {ex.Message}");
-                Console.WriteLine($"StackTrace: {ex.StackTrace}");
-                throw;
-            }
-        }
+        
+        
     }
 }

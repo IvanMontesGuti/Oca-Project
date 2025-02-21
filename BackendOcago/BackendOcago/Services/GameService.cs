@@ -113,58 +113,72 @@ namespace BackendOcago.Services
 
         public async Task<GameMoveDTO> MakeMoveAsync(Guid gameId, string userId)
         {
-            var game = await _unitOfWork.GameRepository.GetByIdAsync(gameId);
-            if (game == null) throw new Exception("Game not found");
-            if (game.Status != GameStatus.InProgress)
-                throw new InvalidOperationException("Game is not in progress");
-
-            var isPlayer1 = userId == game.Player1Id;
-            if ((isPlayer1 && !game.IsPlayer1Turn) || (!isPlayer1 && game.IsPlayer1Turn))
-                throw new InvalidOperationException("Not your turn");
-
-            var diceRoll = _random.Next(1, 7);
-            var newPosition = (isPlayer1 ? game.Player1Position : game.Player2Position) + diceRoll;
-            var message = $"Moved to position {newPosition}";
-
-            if (newPosition > 63)
+            try
             {
-                newPosition = 63 - (newPosition - 63);
-                message = $"Rebote! Retrocede a la casilla {newPosition}";
+                // Obtener el juego usando AsNoTracking para evitar problemas de tracking
+                var game = await _unitOfWork.GameRepository.GetByIdAsync(gameId);
+                if (game == null) throw new Exception("Game not found");
+
+                if (game.Status != GameStatus.InProgress)
+                    throw new InvalidOperationException("Game is not in progress");
+
+                var isPlayer1 = userId == game.Player1Id;
+                if ((isPlayer1 && !game.IsPlayer1Turn) || (!isPlayer1 && game.IsPlayer1Turn))
+                    throw new InvalidOperationException("Not your turn");
+
+                var diceRoll = _random.Next(1, 7);
+                var newPosition = (isPlayer1 ? game.Player1Position : game.Player2Position) + diceRoll;
+                var message = $"Moved to position {newPosition}";
+
+                if (newPosition > 63)
+                {
+                    newPosition = 63 - (newPosition - 63);
+                    message = $"Rebote! Retrocede a la casilla {newPosition}";
+                }
+
+                if (isPlayer1)
+                {
+                    game.Player1Position = newPosition;
+                    game.IsPlayer1Turn = false;
+                }
+                else
+                {
+                    game.Player2Position = newPosition;
+                    game.IsPlayer1Turn = true;
+                }
+
+                if (newPosition >= 63)
+                {
+                    game.Status = GameStatus.Finished;
+                    game.Winner = userId;
+                    message = $"¡Jugador {(isPlayer1 ? "1" : "2")} ha ganado!";
+                }
+
+                game.LastUpdated = DateTime.UtcNow;
+
+                // Usar el método actualizado para guardar los cambios
+                await _unitOfWork.GameRepository.newUpdateAsync(game);
+
+                var moveDto = new GameMoveDTO
+                {
+                    GameId = gameId,
+                    PlayerId = userId,
+                    DiceRoll = diceRoll,
+                    NewPosition = newPosition,
+                    Message = message,
+                    GameStatus = game.Status
+                };
+
+                // Notificar a los jugadores del movimiento
+                await NotifyPlayersAsync(game);
+
+                return moveDto;
             }
-
-            if (isPlayer1)
+            catch (Exception ex)
             {
-                game.Player1Position = newPosition;
-                game.IsPlayer1Turn = false;
+                Console.WriteLine($"Error in MakeMoveAsync: {ex.Message}");
+                throw;
             }
-            else
-            {
-                game.Player2Position = newPosition;
-                game.IsPlayer1Turn = true;
-            }
-
-            if (newPosition >= 63)
-            {
-                game.Status = GameStatus.Finished;
-                game.Winner = userId;
-                message = $"¡Jugador {(isPlayer1 ? "1" : "2")} ha ganado!";
-            }
-
-            game.LastUpdated = DateTime.UtcNow;
-            await _unitOfWork.GameRepository.UpdateAsync(game);
-            await _unitOfWork.GameRepository.SaveAsync();
-
-            await NotifyPlayersAsync(game);
-
-            return new GameMoveDTO
-            {
-                GameId = gameId,
-                PlayerId = userId,
-                DiceRoll = diceRoll,
-                NewPosition = newPosition,
-                Message = message,
-                GameStatus = game.Status
-            };
         }
 
         public async Task<GameDTO> GetGameAsync(Guid gameId)
