@@ -115,7 +115,6 @@ namespace BackendOcago.Services
         {
             try
             {
-                // Obtener el juego usando AsNoTracking para evitar problemas de tracking
                 var game = await _unitOfWork.GameRepository.GetByIdAsync(gameId);
                 if (game == null) throw new Exception("Game not found");
 
@@ -128,12 +127,12 @@ namespace BackendOcago.Services
 
                 var diceRoll = _random.Next(1, 7);
                 var newPosition = (isPlayer1 ? game.Player1Position : game.Player2Position) + diceRoll;
-                var message = $"Moved to position {newPosition}";
+                var message = $"Jugador {userId} movió {diceRoll} casillas, ahora está en {newPosition}.";
 
                 if (newPosition > 63)
                 {
                     newPosition = 63 - (newPosition - 63);
-                    message = $"Rebote! Retrocede a la casilla {newPosition}";
+                    message = $"Rebote! Retrocede a la casilla {newPosition}.";
                 }
 
                 if (isPlayer1)
@@ -147,16 +146,18 @@ namespace BackendOcago.Services
                     game.IsPlayer1Turn = true;
                 }
 
+                string nextPlayerId = game.IsPlayer1Turn ? game.Player1Id : game.Player2Id;
+
                 if (newPosition >= 63)
                 {
                     game.Status = GameStatus.Finished;
                     game.Winner = userId;
-                    message = $"¡Jugador {(isPlayer1 ? "1" : "2")} ha ganado!";
+                    message = $"¡Jugador {userId} ha ganado!";
+                    nextPlayerId = null; // No hay siguiente turno, ya terminó
                 }
 
                 game.LastUpdated = DateTime.UtcNow;
 
-                // Usar el método actualizado para guardar los cambios
                 await _unitOfWork.GameRepository.newUpdateAsync(game);
 
                 var moveDto = new GameMoveDTO
@@ -166,10 +167,10 @@ namespace BackendOcago.Services
                     DiceRoll = diceRoll,
                     NewPosition = newPosition,
                     Message = message,
-                    GameStatus = game.Status
+                    GameStatus = game.Status,
+                    NextTurnPlayerId = nextPlayerId // Nuevo campo para el siguiente turno
                 };
 
-                // Notificar a los jugadores del movimiento
                 await NotifyPlayersAsync(game);
 
                 return moveDto;
@@ -180,6 +181,7 @@ namespace BackendOcago.Services
                 throw;
             }
         }
+
 
         public async Task<GameDTO> GetGameAsync(Guid gameId)
         {

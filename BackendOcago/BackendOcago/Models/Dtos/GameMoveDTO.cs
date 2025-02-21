@@ -11,5 +11,7 @@ namespace BackendOcago.Models.Dtos
         public string Message { get; set; }
         public bool IsSpecialMove { get; set; }
         public GameStatus GameStatus { get; set; }
+
+        public string NextTurnPlayerId { get; set; }
     }
 }
