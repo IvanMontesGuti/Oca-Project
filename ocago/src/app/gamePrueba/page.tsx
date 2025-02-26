@@ -1,13 +1,15 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import type React from "react"
+
+import { useState, useEffect, useCallback } from "react"
 import Image from "next/image"
 import { Dice1Icon as Dice } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card } from "@/components/ui/card"
 import { GAME_GET_BY_ID_URL, GAME_MOVE_URL } from "@/lib/endpoints/config"
-
+import useWebSocket, { ReadyState } from "react-use-websocket"
 
 interface GameState {
   currentPlayer: string
@@ -15,6 +17,12 @@ interface GameState {
   currentPosition: number
   lastTurn: number
   diceValue: number | null
+}
+
+interface ChatMessage {
+  player: string
+  message: string
+  timestamp: string
 }
 
 export default function GameBoard() {
@@ -25,6 +33,11 @@ export default function GameBoard() {
     lastTurn: 15,
     diceValue: null,
   })
+  const [messageInput, setMessageInput] = useState("")
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
+
+  // Replace with your actual WebSocket URL
+  const { sendMessage, lastMessage, readyState } = useWebSocket("wss://your-websocket-url.com")
 
   useEffect(() => {
     const fetchGame = async () => {
@@ -34,6 +47,26 @@ export default function GameBoard() {
     }
     fetchGame()
   }, [])
+
+  useEffect(() => {
+    if (lastMessage !== null) {
+      try {
+        const data = JSON.parse(lastMessage.data)
+        if (data.type === "chat") {
+          setChatMessages((prev) => [
+            ...prev,
+            {
+              player: data.player,
+              message: data.message,
+              timestamp: new Date().toLocaleTimeString(),
+            },
+          ])
+        }
+      } catch (e) {
+        console.error("Failed to parse WebSocket message:", e)
+      }
+    }
+  }, [lastMessage])
 
   const rollDice = async () => {
     const newDiceValue = Math.floor(Math.random() * 6) + 1
@@ -46,6 +79,26 @@ export default function GameBoard() {
     await fetch(GAME_MOVE_URL("324687324", "IVAN"), {
       method: "POST",
     })
+  }
+
+  const handleSendMessage = useCallback(() => {
+    if (messageInput.trim() && readyState === ReadyState.OPEN) {
+      sendMessage(
+        JSON.stringify({
+          type: "chat",
+          player: gameState.currentPlayer,
+          message: messageInput.trim(),
+        }),
+      )
+      setMessageInput("")
+    }
+  }, [messageInput, readyState, sendMessage, gameState.currentPlayer])
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault()
+      handleSendMessage()
+    }
   }
 
   return (
@@ -76,10 +129,34 @@ export default function GameBoard() {
         <div className="w-96">
           <Card className="bg-[#1A1625] text-white p-4">
             <h2 className="text-2xl mb-4">Chat</h2>
-            <div className="h-80 bg-[#2A2438] rounded-lg mb-4"></div>
+            <div className="h-80 bg-[#2A2438] rounded-lg mb-4 p-4 overflow-y-auto flex flex-col gap-2">
+              {chatMessages.map((msg, index) => (
+                <div
+                  key={index}
+                  className={`p-2 rounded ${
+                    msg.player === gameState.currentPlayer ? "bg-yellow-300/10 ml-auto" : "bg-white/10"
+                  } max-w-[80%]`}
+                >
+                  <div className="text-xs text-yellow-300">{msg.player}</div>
+                  <div className="break-words">{msg.message}</div>
+                  <div className="text-xs text-white/50 text-right">{msg.timestamp}</div>
+                </div>
+              ))}
+            </div>
             <div className="relative">
-              <Textarea placeholder="Escribe algo..." className="bg-[#2A2438] border-none text-white resize-none" />
-              <Button size="icon" className="absolute right-2 bottom-2 bg-transparent hover:bg-transparent">
+              <Textarea
+                placeholder="Escribe algo..."
+                className="bg-[#2A2438] border-none text-white resize-none pr-12"
+                value={messageInput}
+                onChange={(e) => setMessageInput(e.target.value)}
+                onKeyPress={handleKeyPress}
+              />
+              <Button
+                size="icon"
+                className="absolute right-2 bottom-2 bg-transparent hover:bg-transparent text-yellow-300 hover:text-yellow-400"
+                onClick={handleSendMessage}
+                disabled={readyState !== ReadyState.OPEN}
+              >
                 ↑
               </Button>
             </div>
@@ -87,7 +164,7 @@ export default function GameBoard() {
         </div>
 
         {/* Game Board */}
-        <div className="flex-1 flex items-center justify-center ">
+        <div className="flex-1 flex items-center justify-center">
           <div className="relative w-full max-w-4xl min-h-[600px] flex items-center justify-center">
             <Image
               src="images/tablero.svg"
@@ -121,3 +198,4 @@ export default function GameBoard() {
     </div>
   )
 }
+

@@ -37,6 +37,7 @@ export const API_SEARCH_URL = (query) => `${API_BASE_URL}/api/Search/users?query
 
 export const API_GAME_URL = `${API_BASE_URL}/api/Game`;
 
+
 /* --- GAME CONTROLLER --- */
 export const GAME_CREATE_URL = (userId) => `${API_GAME_URL}?userId=${userId}`; // POST /api/Game
 export const GAME_JOIN_URL = (gameId, userId) => `${API_GAME_URL}/${gameId}/join?UserId=${userId}`; // POST /api/Game/{gameId}/join
