@@ -37,7 +37,7 @@ export default function GameBoard() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([])
 
   // Replace with your actual WebSocket URL
-  const { sendMessage, lastMessage, readyState } = useWebSocket("wss://your-websocket-url.com")
+  const { sendMessage, lastMessage, readyState } = useWebSocket("wss://localhost:7107")
 
   useEffect(() => {
     const fetchGame = async () => {
