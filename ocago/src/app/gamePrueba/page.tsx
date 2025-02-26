@@ -50,7 +50,6 @@ export default function GameBoard() {
 
   return (
     <div className="bg-svg bg-cover bg-no-repeat h-full min-h-screen w-full flex flex-col">
-      {/* Game IDs */}
       <div className="text-white/80 text-sm mb-4">
         <div>Id Partida: 324687324</div>
         <div>Id Sala: 23432432</div>
