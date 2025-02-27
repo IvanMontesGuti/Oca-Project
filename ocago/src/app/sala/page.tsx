@@ -6,7 +6,7 @@ import Link from "next/link";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
-import { Header2 } from "@/components/navUser";
+import { Header2 } from "@/components/Home/navUser";
 import { InviteFriendsModal } from "@/components/invite-friends-modal";
 import { useAuth } from "@/context/AuthContext";
 import { useWebSocket } from "@/context/WebSocketContext";

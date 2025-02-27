@@ -48,7 +48,7 @@ public class Program
         builder.Services.AddScoped<UserService>();
         builder.Services.AddScoped<FriendshipService>();
         builder.Services.AddScoped<SmartSearchService>();
-        builder.Services.AddScoped<LobbyService>();
+        builder.Services.AddScoped<MatchMakingService>();
 
         builder.Services.AddScoped<WebSocketHandler>();
 

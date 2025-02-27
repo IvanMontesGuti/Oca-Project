@@ -66,10 +66,25 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
         case "friendRequestReceived":
           toast.info(`📩 Tienes una nueva solicitud de amistad de ${message.Nickname}`, { duration: 5000, icon: "👥" });
           setFriendRequests((prev) => [...prev, { id: String(message.Id), nickname: message.Nickname }]);
-          toast.info(`Nueva solicitud de amistad de ${message.Nickname}`, { duration: 5000, icon: "👥" });
           break;
         case "friendsList":
           setFriends(message.Friends.map((friend: any) => ({ id: String(friend.Id), nickname: friend.Nickname })));
+          break;
+        case "matchFound":
+          toast.success(message.Message, { duration: 5000, icon: "🔥" });
+          break;
+        case "matchCanceled":
+        case "No se encontró búsqueda para cancelar.":
+          toast.info(message.Message, { duration: 5000, icon: "⚠️" });
+          break;
+        case "invitationReceived":
+          toast.info(`📩 Has recibido una invitación de ${message.HostId}`, { duration: 5000, icon: "🎮" });
+          break;
+        case "invitationResponse":
+          toast.info(message.Message, { duration: 5000, icon: message.Accepted ? "✔️" : "❌" });
+          break;
+        case "startGame":
+          toast.success("🎮 La partida ha comenzado!", { duration: 5000, icon: "🚀" });
           break;
         default:
           console.log("📩 Mensaje recibido:", message);
