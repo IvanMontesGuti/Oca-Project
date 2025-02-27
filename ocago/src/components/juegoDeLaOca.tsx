@@ -1,108 +1,121 @@
 "use client"
 
-import type React from "react"
-import { useState, useEffect } from "react"
-import Tablero from "./tablero"
-import { isOca, isEspecial, special, oca, lanzarDado } from "../utils/ocalogic"
+import { useState } from "react";
+import useWebSocket from "react-use-websocket";
+import { Button } from "@/components/ui/button";
+import Tablero from "@/components/tablero";
 
-interface Player {
-  position: number
-  turnosRestantes: number
-}
+const userId = "Ivan";
+const wsUrl = `wss://localhost:7107/ws/game/${userId}/connect`;
 
-const JuegoDeLaOca: React.FC = () => {
-  const [players, setPlayers] = useState<Player[]>([
-    { position: 0, turnosRestantes: 1 },
-    { position: 0, turnosRestantes: 1 },
-  ])
-  const [currentPlayer, setCurrentPlayer] = useState<number>(0)
-  const [turnNumber, setTurnNumber] = useState<number>(1)
-  const [gameOver, setGameOver] = useState<boolean>(false)
-  const [message, setMessage] = useState<string>("")
-
-  const jugarTurno = () => {
-    if (gameOver) return
-
-    const newPlayers = [...players]
-    const player = newPlayers[currentPlayer]
-
-    const dado = lanzarDado()
-    let newPosition = player.position + dado
-    setMessage(`Jugador ${currentPlayer + 1} ha sacado un ${dado} y avanza a la casilla ${newPosition}`)
-
-    if (newPosition > 63) {
-      newPosition = 63 - (newPosition - 63)
-    }
-
-    if (isOca(newPosition)) {
-      setMessage((prevMessage) => `${prevMessage}. ¡De oca a oca y tiro porque me toca!`)
-      newPosition = oca(newPosition)
-      player.turnosRestantes++
-    } else if (isEspecial(newPosition)) {
-      setMessage((prevMessage) => `${prevMessage}. ¡Casilla especial!`)
-      const [nuevaPosicion, nuevosTurnos] = special(newPosition)
-      newPosition = nuevaPosicion
-      if (nuevosTurnos < 0) {
-        newPlayers[1 - currentPlayer].turnosRestantes += Math.abs(nuevosTurnos)
-        setMessage(
-          (prevMessage) =>
-            `${prevMessage}. El jugador ${2 - currentPlayer} gana ${Math.abs(nuevosTurnos)} turnos adicionales.`,
-        )
-      } else {
-        player.turnosRestantes += nuevosTurnos
+export default function GameBoard() {
+  const [gameId, setGameId] = useState(null);
+  const [fichas, setFichas] = useState<Ficha[]>([]);
+  const { sendMessage } = useWebSocket(wsUrl, {
+    onMessage: (event) => {
+      const data = JSON.parse(event.data);
+      console.log("📩 Mensaje WebSocket recibido:", data);
+      if (data.action === "gameUpdate") {
+        setGameId(data.data.Id);
+        actualizarFichas(data.data);
+      } else if (data.action === "moveUpdate") {
+        animateMovement(data.data.PlayerId, data.data.NewPosition);
       }
-      if (nuevosTurnos === 0) {
-        player.turnosRestantes = 0
-      }
-    }
+    },
+  });
 
-    player.position = newPosition
-    player.turnosRestantes--
-
-    if (newPosition === 63) {
-      setGameOver(true)
-      setMessage(`¡El jugador ${currentPlayer + 1} ha ganado!`)
-    } else if (player.turnosRestantes <= 0) {
-      setCurrentPlayer(1 - currentPlayer)
-      setTurnNumber((prevTurn) => prevTurn + 1)
-    }
-
-    setPlayers(newPlayers)
+  interface Casilla {
+    casillaX: number;
+    casillaY: number;
+    playerId?: string;
   }
 
-  useEffect(() => {
-    if (players.every((player) => player.turnosRestantes <= 0)) {
-      setPlayers(players.map((player) => ({ ...player, turnosRestantes: 1 })))
+  interface Ficha {
+    playerId: string;
+    casillaX: number;
+    casillaY: number;
+    position: number;
+    color: string;
+  }
+
+  const casillas: Record<number, Casilla> = {
+    1: { casillaX: 3, casillaY: 7 }, 2: { casillaX: 4, casillaY: 7 },
+    3: { casillaX: 5, casillaY: 7 }, 4: { casillaX: 6, casillaY: 7 },
+  5: { casillaX: 7, casillaY: 7 }, 6: { casillaX: 8, casillaY: 7 },
+  7: { casillaX: 9, casillaY: 7 }, 8: { casillaX: 10, casillaY: 7 },
+  9: { casillaX: 11, casillaY: 7 }, 10: { casillaX: 11, casillaY: 6 },
+  11: { casillaX: 11, casillaY: 5 }, 12: { casillaX: 11, casillaY: 4 },
+  13: { casillaX: 11, casillaY: 3 }, 14: { casillaX: 11, casillaY: 2 },
+  15: { casillaX: 11, casillaY: 1 }, 16: { casillaX: 11, casillaY: 0 },
+  17: { casillaX: 10, casillaY: 0 }, 18: { casillaX: 9, casillaY: 0 },
+  19: { casillaX: 8, casillaY: 0 }, 20: { casillaX: 7, casillaY: 0 },
+  21: { casillaX: 6, casillaY: 0 }, 22: { casillaX: 5, casillaY: 0 },
+  23: { casillaX: 4, casillaY: 0 }, 24: { casillaX: 3, casillaY: 0 },
+  25: { casillaX: 2, casillaY: 0 }, 26: { casillaX: 1, casillaY: 0 },
+  27: { casillaX: 0, casillaY: 0 }, 28: { casillaX: 0, casillaY: 1 },
+  29: { casillaX: 0, casillaY: 2 }, 30: { casillaX: 0, casillaY: 3 },
+  31: { casillaX: 0, casillaY: 4 }, 32: { casillaX: 0, casillaY: 5 },
+  33: { casillaX: 0, casillaY: 6 }, 34: { casillaX: 1, casillaY: 6 },
+  35: { casillaX: 2, casillaY: 6 }, 36: { casillaX: 3, casillaY: 6 },
+  37: { casillaX: 4, casillaY: 6 }, 38: { casillaX: 5, casillaY: 6 },
+  39: { casillaX: 6, casillaY: 6 }, 40: { casillaX: 7, casillaY: 6 },
+  41: { casillaX: 8, casillaY: 6 }, 42: { casillaX: 9, casillaY: 6 },
+  43: { casillaX: 10, casillaY: 6 }, 44: { casillaX: 10, casillaY: 5 },
+  45: { casillaX: 10, casillaY: 4 }, 46: { casillaX: 10, casillaY: 3 },
+  47: { casillaX: 10, casillaY: 2 }, 48: { casillaX: 10, casillaY: 1 },
+  49: { casillaX: 9, casillaY: 1 }, 50: { casillaX: 8, casillaY: 1 },
+  51: { casillaX: 7, casillaY: 1 }, 52: { casillaX: 6, casillaY: 1 },
+  53: { casillaX: 5, casillaY: 1 }, 54: { casillaX: 4, casillaY: 1 },
+  55: { casillaX: 3, casillaY: 1 }, 56: { casillaX: 2, casillaY: 1 },
+  57: { casillaX: 1, casillaY: 1 }, 58: { casillaX: 1, casillaY: 2 },
+  59: { casillaX: 1, casillaY: 3 }, 60: { casillaX: 1, casillaY: 4 },
+  61: { casillaX: 1, casillaY: 5 }, 62: { casillaX: 2, casillaY: 5 },
+    63: { casillaX: 4, casillaY: 5 }
+  };
+
+  interface GameData {
+    Player1Id: string;
+    Player1Position: number;
+    Player2Id?: string;
+    Player2Position?: number;
+  }
+
+  const actualizarFichas = (data: GameData) => {
+    setFichas([
+      { playerId: data.Player1Id, casillaX: casillas[data.Player1Position].casillaX, casillaY: casillas[data.Player1Position].casillaY, position: data.Player1Position, color: "red" } ,
+      data.Player2Id ? { playerId: data.Player2Id, casillaX: casillas[data.Player2Position!].casillaX, casillaY: casillas[data.Player2Position!].casillaY, position: data.Player2Position!, color: "blue" } : null
+    ].filter(Boolean) as Ficha[]);
+  };
+
+  const animateMovement = (playerId: string, newPosition: number) => {
+    const path: Casilla[] = [];
+    for (let i = fichas.find(f => f.playerId === playerId)?.position || 1; i <= newPosition; i++) {
+      path.push({ ...casillas[i], playerId });
     }
-  }, [players])
+
+    path.forEach((pos, index) => {
+      setTimeout(() => {
+        setFichas(prevFichas => prevFichas.map(f => f.playerId === playerId ? { ...f, casillaX: pos.casillaX, casillaY: pos.casillaY, position: newPosition } : f));
+      }, index * 300);
+    });
+  };
+
+  const rollDice = () => {
+    if (gameId) {
+      sendMessage(JSON.stringify({ Action: "MakeMove", GameId: gameId }));
+    }
+  };
+  const createGame = () => {
+    sendMessage(JSON.stringify({ Action: "CreateGame" }));
+  
+};
 
   return (
-    <div className="flex flex-col items-center">
-      <h1 className="text-3xl font-bold mb-4">Juego de la Oca</h1>
-      <div className="mb-4">
-        <p>Turno: {turnNumber}</p>
-        <p>Jugador actual: {currentPlayer + 1}</p>
-        <p>Posición Jugador 1: {players[0].position}</p>
-        <p>Posición Jugador 2: {players[1].position}</p>
-      </div>
-      <button
-        onClick={jugarTurno}
-        disabled={gameOver}
-        className="mb-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-400"
-      >
-        Lanzar Dado
-      </button>
-      <p className="mb-4">{message}</p>
-      <Tablero
-        fichas={players.map((player, index) => ({
-          casillaX: player.position % 12,
-          casillaY: Math.floor(player.position / 12),
-          color: index === 0 ? "red" : "blue",
-        }))}
-      />
+    <div className="bg-svg bg-cover bg-no-repeat h-full min-h-screen w-full flex flex-col">
+      <div className="text-white/80 text-sm mb-4">ID Sala: {gameId || "Creando..."}</div>
+      <Tablero fichas={fichas} />
+      <Button onClick={createGame}>Crear Partida</Button>
+      <Button onClick={rollDice} disabled={!gameId}>Tirar Dado</Button>
     </div>
-  )
+  );
 }
-
-export default JuegoDeLaOca
-
