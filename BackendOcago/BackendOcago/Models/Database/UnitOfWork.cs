@@ -1,5 +1,6 @@
 ﻿using BackendOcago.Models.Database.Entities;
 using BackendOcago.Models.Database.Repositories;
+using Microsoft.EntityFrameworkCore;
 namespace BackendOcago.Models.Database;
 
 public class UnitOfWork
@@ -23,6 +24,7 @@ public class UnitOfWork
         GameRepository = gameRepository;
 
     }
+    
 
     public async Task<bool> SaveAsync()
     {

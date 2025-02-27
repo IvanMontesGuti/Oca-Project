@@ -88,6 +88,12 @@ namespace BackendOcago.Controllers
                     case "MakeMove":
                         var move = await _gameService.MakeMoveAsync(jsonMessage.GameId, userId);
                         await NotifyPlayers(move, "moveUpdate");
+                        var gameInfo2 = await _gameService.GetGameAsync(jsonMessage.GameId);
+                        await SendMessageToClient(userId, new
+                        {
+                            action = "gameUpdate",
+                            data = gameInfo2
+                        });
                         break;
                     case "GetGame":
                         var gameInfo = await _gameService.GetGameAsync(jsonMessage.GameId);

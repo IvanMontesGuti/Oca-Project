@@ -119,6 +119,7 @@ namespace BackendOcago.Services
         {
             try
             {
+                // Use AsNoTracking() to avoid tracking the entity or get a tracked entity directly
                 var game = await _unitOfWork.GameRepository.GetByIdAsync(gameId);
                 if (game == null) throw new Exception("Game not found");
 
@@ -126,57 +127,129 @@ namespace BackendOcago.Services
                     throw new InvalidOperationException("Game is not in progress");
 
                 var isPlayer1 = userId == game.Player1Id;
+
+                // Si el jugador tiene turnos pendientes que perder, los reduce y cede el turno
+                if (isPlayer1 ? game.Player1RemainingTurns > 0 : game.Player2RemainingTurns > 0)
+                {
+                    if (isPlayer1) game.Player1RemainingTurns--;
+                    else game.Player2RemainingTurns--;
+
+                    // El turno se mantiene en el otro jugador
+
+                    await _unitOfWork.GameRepository.UpdateAsync(game);
+                    return new GameMoveDTO
+                    {
+                        GameId = gameId,
+                        PlayerId = userId,
+                        DiceRoll = 0,
+                        NewPosition = isPlayer1 ? game.Player1Position : game.Player2Position,
+                        Message = $"Jugador {userId} pierde este turno.",
+                        GameStatus = game.Status,
+                        NextTurnPlayerId = game.IsPlayer1Turn ? game.Player1Id : game.Player2Id
+                    };
+                }
+
+                // Validar si es el turno correcto
                 if ((isPlayer1 && !game.IsPlayer1Turn) || (!isPlayer1 && game.IsPlayer1Turn))
                     throw new InvalidOperationException("Not your turn");
 
-                var diceRoll = _random.Next(1, 7);
-                var newPosition = (isPlayer1 ? game.Player1Position : game.Player2Position) + diceRoll;
-                var message = $"Jugador {userId} movió {diceRoll} casillas, ahora está en {newPosition}.";
+                int diceRoll = _random.Next(1, 7);
+                int newPosition = (isPlayer1 ? game.Player1Position : game.Player2Position) + diceRoll;
+                string message = $"Jugador {userId} lanzó {diceRoll} y llegó a la casilla {newPosition}.";
 
+                // Manejar rebote si supera 63
                 if (newPosition > 63)
                 {
                     newPosition = 63 - (newPosition - 63);
-                    message = $"Rebote! Retrocede a la casilla {newPosition}.";
+                    message = $"¡Rebote! Jugador {userId} retrocede a la casilla {newPosition}.";
                 }
 
+                // Aplicar reglas especiales
+                bool extraTurn = false;
+                switch (newPosition)
+                {
+                    case 6:
+                        newPosition = 12;
+                        extraTurn = true;
+                        message = $"🌉 ¡Puente! Jugador {userId} avanza a la casilla 12 y vuelve a tirar.";
+                        break;
+                    case 12:
+                        newPosition = 6;
+                        extraTurn = true;
+                        message = $"🌉 ¡Puente! Jugador {userId} regresa a la casilla 6 y vuelve a tirar.";
+                        break;
+                    case 19:
+                        if (isPlayer1) game.Player1RemainingTurns++;
+                        else game.Player2RemainingTurns++;
+                        message = $"🏰 ¡Posada! Jugador {userId} pierde un turno.";
+                        break;
+                    case 31:
+                        if (isPlayer1) game.Player1RemainingTurns = int.MaxValue;
+                        else game.Player2RemainingTurns = int.MaxValue;
+                        message = $"⛓️ ¡Pozo! Jugador {userId} queda atrapado hasta que otro jugador lo libere.";
+                        break;
+                    case 42:
+                        newPosition = 30;
+                        message = $"🎩 ¡Laberinto! Jugador {userId} retrocede a la casilla 30.";
+                        break;
+                    case 58:
+                        newPosition = 1;
+                        message = $"💀 ¡Calavera! Jugador {userId} vuelve a la casilla 1.";
+                        break;
+                }
+
+                // Manejo de Oca a Oca
+                int[] casillasOca = { 9, 18, 27, 36, 45, 54 };
+                if (casillasOca.Contains(newPosition))
+                {
+                    int nextOca = casillasOca.FirstOrDefault(o => o > newPosition);
+                    if (nextOca > 0) // Verificar que se encontró una siguiente oca
+                    {
+                        newPosition = nextOca;
+                        extraTurn = true;
+                        message = $"🦆 ¡De Oca en Oca! Jugador {userId} avanza a la casilla {newPosition} y vuelve a tirar.";
+                    }
+                }
+
+                // Actualizar la posición
                 if (isPlayer1)
                 {
                     game.Player1Position = newPosition;
-                    game.IsPlayer1Turn = false;
+                    if (!extraTurn) game.IsPlayer1Turn = false;
                 }
                 else
                 {
                     game.Player2Position = newPosition;
-                    game.IsPlayer1Turn = true;
+                    if (!extraTurn) game.IsPlayer1Turn = true;
                 }
 
-                string nextPlayerId = game.IsPlayer1Turn ? game.Player1Id : game.Player2Id;
-
-                if (newPosition >= 63)
+                // Si un jugador llega a 63, gana
+                if (newPosition == 63)
                 {
                     game.Status = GameStatus.Finished;
                     game.Winner = userId;
-                    message = $"¡Jugador {userId} ha ganado!";
-                    nextPlayerId = null; // No hay siguiente turno, ya terminó
+                    message = $"🏆 ¡Jugador {userId} ha ganado!";
+                    game.IsPlayer1Turn = false; // Finaliza el juego
                 }
 
                 game.LastUpdated = DateTime.UtcNow;
 
-                await _unitOfWork.GameRepository.newUpdateAsync(game);
+                await _unitOfWork.GameRepository.UpdateAsync(game);
 
                 var moveDto = new GameMoveDTO
                 {
                     GameId = gameId,
                     PlayerId = userId,
                     DiceRoll = diceRoll,
+                    Player1RemainingTurns = game.Player1RemainingTurns,
+                    Player2RemainingTurns = game.Player2RemainingTurns,
                     NewPosition = newPosition,
                     Message = message,
                     GameStatus = game.Status,
-                    NextTurnPlayerId = nextPlayerId // Nuevo campo para el siguiente turno
+                    NextTurnPlayerId = game.IsPlayer1Turn ? game.Player1Id : game.Player2Id
                 };
 
                 await NotifyPlayersAsync(game);
-
                 return moveDto;
             }
             catch (Exception ex)
@@ -187,11 +260,13 @@ namespace BackendOcago.Services
         }
 
 
+
         public async Task<GameDTO> GetGameAsync(Guid gameId)
         {
-            var game = await _unitOfWork.GameRepository.GetByIdAsync(gameId);
+            var game = await _unitOfWork.GameRepository.GetByIdAsync(gameId); // ⬅ ¡Aquí!
             if (game == null) throw new Exception("Game not found");
 
+            
             // Agregamos logging para debug
             Console.WriteLine($"Retrieved game {gameId}: Player1={game.Player1Id}, Player2={game.Player2Id}, Status={game.Status}");
 
@@ -272,6 +347,8 @@ namespace BackendOcago.Services
                 Player2Id = game.Player2Id,
                 Player1Position = game.Player1Position,
                 Player2Position = game.Player2Position,
+                Player1RemainingTurns = game.Player1RemainingTurns,
+                Player2RemainingTurns = game.Player2RemainingTurns,
                 IsPlayer1Turn = game.IsPlayer1Turn,
                 Status = game.Status,
                 Winner = game.Winner
