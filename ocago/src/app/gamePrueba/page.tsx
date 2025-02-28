@@ -42,7 +42,7 @@ interface ChatMessage {
 export default function GameBoard() {
   const { userInfo } = useAuth()
 
-  const { family_name, unique_name } = userInfo || {}
+  const { unique_name } = userInfo || {}
   // Fix userId extraction - make sure it's properly cast to string
   const userId = userInfo?.id ? String(userInfo.id) : userInfo?.unique_name
 

@@ -13,10 +13,22 @@ import { toast } from "sonner"
 import { useAuth } from "@/context/AuthContext"
 import { API_BASE_URL } from "@/lib/endpoints/config"
 
+interface DecodedToken {
+  email: string
+  role: string
+  unique_name: string
+  family_name?: string
+  nbf: number
+  exp: number
+  iat: number
+  id: number
+}
+
 export function Header2() {
   const { userInfo, logout } = useAuth()
-  const { family_name, unique_name } = userInfo
 
+  const { unique_name, family_name } = userInfo || {}
+  
   const handleLogout = () => {
     logout()
     toast.success("Sesión cerrada correctamente")
