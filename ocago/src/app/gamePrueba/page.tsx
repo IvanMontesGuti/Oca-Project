@@ -13,6 +13,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/context/AuthContext";
+import { set } from "lodash";
 
 interface DecodedToken {
   email: string;
@@ -60,17 +61,22 @@ export default function GameBoard() {
         console.log("📩 Mensaje WebSocket recibido:", data);
         
         if (data.action === "gameUpdate") {
+          
           setGameId(data.data.Id);
           actualizarFichas(data.data);
-          setCurrentTurn(data.data.CurrentTurnPlayerId || data.data.Player1Id);
           
+          if (data.IsPlayer1Turn ===true){
+            setCurrentTurn(data.data.Player2Id);
+          }else{
+            setCurrentTurn(data.data.Player1Id);
+          }
           // Actualizar turnos restantes
           const turnsRemaining: Record<string, number> = {};
           if (data.data.Player1Id) {
-            turnsRemaining[data.data.Player1Id] = data.data.Player1RemainingTurns || 10;
+            turnsRemaining[data.data.Player1Id] = data.data.Player1RemainingTurns;
           }
           if (data.data.Player2Id) {
-            turnsRemaining[data.data.Player2Id] = data.data.Player2RemainingTurns || 10;
+            turnsRemaining[data.data.Player2Id] = data.data.Player2RemainingTurns;
           }
           setRemainingTurns(turnsRemaining);
           
@@ -99,9 +105,7 @@ export default function GameBoard() {
             animateMovement(data.data.PlayerId, data.data.NewPosition);
           
             // Actualizar el turno actual después del movimiento
-            if (data.data.NextTurnPlayerId) {
-              setCurrentTurn(data.data.NextTurnPlayerId);
-            }
+            
             
             
             // Actualizar turnos restantes si están disponibles
@@ -418,7 +422,7 @@ export default function GameBoard() {
                     style={{ backgroundColor: getPlayerColor(playerId) }}
                   ></div>
                   <div className="text-white/80 text-sm">
-                    {playerId}: {turns} turnos restantes
+                    {playerId}: {turns} turnos paralizado
                   </div>
                 </div>
               ))}
