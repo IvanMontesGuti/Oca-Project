@@ -24,7 +24,8 @@ public class UserController : ControllerBase
         var users = await _userService.GetAllAsync();
         return Ok(users);
     }
-    [HttpGet("User/{id}")]
+
+    [HttpGet("{id}")]
     public async Task<IActionResult> GetUser(long id)
     {
         var user = await _userService.GetByIdAsync(id);
@@ -42,4 +43,12 @@ public class UserController : ControllerBase
     {
         return await _userService.GetStatusCount(estado);
     }
+
+    [HttpPut("Update")]
+    public async Task<IActionResult> UpdateUser([FromBody] UserDto userDto)
+    {
+        var updatedUser = await _userService.UpdateAsync(userDto);
+        return Ok(updatedUser);
+    }
+
 }

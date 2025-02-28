@@ -1,67 +1,75 @@
-import React, { useEffect, useState } from 'react';
-import Link from 'next/link'
-import Image from 'next/image'
-import { ArrowRight } from 'lucide-react'
+import Image from "next/image"
+import Link from "next/link"
+import { ArrowRight, User, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { toast } from 'sonner';
-import { jwtDecode } from 'jwt-decode';
-import { useAuth } from '@/context/AuthContext';
-
-interface DecodedToken {
-    email: string;
-    role: string;
-    unique_name: string;
-    family_name?: string; 
-    nbf: number;
-    exp: number;
-    iat: number;
-    id: number;
-}
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { toast } from "sonner"
+import { useAuth } from "@/context/AuthContext"
+import { API_BASE_URL } from "@/lib/endpoints/config"
 
 export function Header2() {
+  const { userInfo, logout } = useAuth()
+  const { family_name, unique_name } = userInfo
 
-const {userInfo} = useAuth();
+  const handleLogout = () => {
+    logout()
+    toast.success("Sesión cerrada correctamente")
+  }
 
-
-const { family_name, unique_name} = userInfo;
   return (
-    <>
     <nav className="container mx-auto px-4 py-6 flex justify-between items-center">
-      
-      <div className="flex items-center gap-2 ">
-      <Image
-                src="/images/logo.svg"
-                alt="logo"
-                width={50}
-                height={50}
-                
-              />
+      <div className="flex items-center gap-2">
+        <Image src="/images/logo.svg" alt="logo" width={50} height={50} />
         <span className="text-white text-2xl font-fredoka flex items-center gap-2">
           OcaGo! <ArrowRight className="h-5 w-5" />
         </span>
       </div>
-      <div className="flex gap-4">
-      
-        <Link
-          href="/dashboard"
-          className="text-white hover:text-gray-200 transition-colors font-montserrat"
-        >
-          <div className="flex flex-col lg:flex-row gap-8 items-center justify-center">
-          <p className="text-white text-center mb-2">
-                  {unique_name}
-                  
-          </p>
-          <p><img
-                      src={"https://localhost:7107/" + family_name}
-                      alt="Avatar"
-                      className="w-14 h-14 rounded-full mx-auto mb-4 border border-gray-300"
-                  /></p>
-          </div>
-        </Link>
-        
-      </div>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="p-0 h-auto hover:bg-transparent">
+            <div className="flex flex-col lg:flex-row gap-4 items-center justify-center">
+              <p className="text-white text-center">{unique_name}</p>
+              <div className="w-14 h-14 rounded-full overflow-hidden border border-gray-300 hover:border-white transition-colors">
+                <img src={`${API_BASE_URL}/${family_name}`} alt="Avatar" className="w-full h-full object-cover" />
+              </div>
+            </div>
+          </Button>
+        </DropdownMenuTrigger>
+
+        <DropdownMenuContent align="end" className="w-56 mt-2">
+          <DropdownMenuItem asChild>
+            <Link href="/profile" className="cursor-pointer flex items-center gap-2">
+              <User className="h-4 w-4" />
+              <span>Mi Perfil</span>
+            </Link>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem asChild>
+            <Link href="/menu" className="cursor-pointer flex items-center gap-2">
+              <ArrowRight className="h-4 w-4" />
+              <span>Menu</span>
+            </Link>
+          </DropdownMenuItem>
+
+          <DropdownMenuSeparator />
+
+          <DropdownMenuItem
+            onClick={handleLogout}
+            className="cursor-pointer text-red-500 hover:text-red-600 focus:text-red-600 flex items-center gap-2"
+          >
+            <LogOut className="h-4 w-4" />
+            <span>Cerrar Sesión</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </nav>
-      </>
-  );
+  )
 }
+
