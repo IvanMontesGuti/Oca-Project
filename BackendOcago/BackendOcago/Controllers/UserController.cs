@@ -45,10 +45,30 @@ public class UserController : ControllerBase
     }
 
     [HttpPut("Update")]
-    public async Task<IActionResult> UpdateUser([FromBody] UserDto userDto)
+    public async Task<IActionResult> UpdateUser(long userId, string newMail, string newNickname)
     {
-        var updatedUser = await _userService.UpdateAsync(userDto);
+        var updatedUser = await _userService.UpdateUserAsync(userId, newMail, newNickname);
         return Ok(updatedUser);
+    }
+
+    [HttpPut("ChangePassword")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePassword changePassword)
+    {
+        try
+        {
+            bool result = await _userService.ChangePasswordAsync(changePassword.UserId, changePassword.OldPassword, changePassword.NewPassword);
+            if (result) {
+                return Ok("La contraseña se ha cambiado correctamente!");
+            }
+            else
+            {
+                return BadRequest("No se pudo cambiar la contraseña.");
+            }
+        }
+        catch(Exception ex) 
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
 }

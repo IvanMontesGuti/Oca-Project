@@ -81,13 +81,13 @@ public class UserService
 
     /* ----- UPDATE ----- */
 
-    public async Task<UserDto> UpdateAsync(UserDto user)
+    public async Task<UserDto> UpdateAsync(UserDto userDto)
     {
-        User userEntity = await _unitOfWork.UserRepository.GetByIdAsync(user.Id) ?? throw new Exception("El usuario especificado no existe");
+        var userEntity = await _unitOfWork.UserRepository.GetByIdAsync(userDto.Id) ?? throw new Exception("El usuario especificado no existe");
 
-        userEntity.Mail = user.Mail;
-        userEntity.Nickname = user.Nickname;
-        userEntity.AvatarUrl = user.AvatarUrl;
+        userEntity.Mail = userDto.Mail;
+        userEntity.Nickname = userDto.Nickname;
+        userEntity.AvatarUrl = userDto.AvatarUrl;
 
         _unitOfWork.UserRepository.Update(userEntity);
 
@@ -96,6 +96,35 @@ public class UserService
         return _mapper.ToDto(userEntity);
     }
 
+    public async Task<UserDto> UpdateUserAsync(long userId, string newMail, string newNickname)
+    {
+        var userEntity = await _unitOfWork.UserRepository.GetByIdAsync(userId) ?? throw new Exception("El usuario especificado no existe");
+
+        userEntity.Mail = newMail;
+        userEntity.Nickname = newNickname;
+        userEntity.AvatarUrl = "images/" + newNickname + ".png";
+
+        _unitOfWork.UserRepository.Update(userEntity);
+
+        await _unitOfWork.UserRepository.SaveAsync();
+
+        return _mapper.ToDto(userEntity);
+    }
+
+    public async Task<bool> ChangePasswordAsync(long userId, string oldPassword, string newPassword)
+    {
+        var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
+        if (user == null) { throw new Exception("El usuario no existe"); }
+
+        if (!(user.Password == oldPassword)) { throw new Exception("Contraseña incorrecta"); }
+        else user.Password = AuthService.HashPassword(newPassword);
+
+        await _unitOfWork.UserRepository.UpdateAsync(user);
+        await _unitOfWork.SaveAsync();
+
+        return true;
+       
+    }
     /*
     public async Task<UserDto> UpdateRole(HandleRole handleRole)
     {
