@@ -35,3 +35,12 @@ export const FRIENDSHIP_DELETE_REQUEST_URL = (friendsipId) => `${API_FRIENDSHIP_
 
 export const API_SEARCH_URL = (query) => `${API_BASE_URL}/api/Search/users?query=${query}`; // GET /api/Search/users?query={query}
 
+export const API_GAME_URL = `${API_BASE_URL}/api/Game`;
+
+
+/* --- GAME CONTROLLER --- */
+export const GAME_CREATE_URL = (userId) => `${API_GAME_URL}?userId=${userId}`; // POST /api/Game
+export const GAME_JOIN_URL = (gameId, userId) => `${API_GAME_URL}/${gameId}/join?UserId=${userId}`; // POST /api/Game/{gameId}/join
+export const GAME_MOVE_URL = (gameId, userId) => `${API_GAME_URL}/${gameId}/move?UserId=${userId}`; // POST /api/Game/{gameId}/move
+export const GAME_GET_BY_ID_URL = (gameId) => `${API_GAME_URL}/${gameId}`; // GET /api/Game/{gameId}
+export const GAME_GET_ACTIVE_URL = `${API_GAME_URL}`; // GET /api/Game

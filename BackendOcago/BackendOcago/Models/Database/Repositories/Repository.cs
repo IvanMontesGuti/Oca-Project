@@ -64,10 +64,34 @@ public async Task<ICollection<TEntity>> GetAllAsync()
         return await GetByIdAsync(id) != null;
     }
 
-    public Task<TEntity> UpdateAsync(TEntity entity)
+    public async Task<TEntity> UpdateAsync(TEntity entity)
     {
-        throw new NotImplementedException();
+        try
+        {
+            // First detach any existing entity with the same key
+            var keyValues = _dbContext.Model.FindEntityType(typeof(TEntity)).FindPrimaryKey().Properties
+                .Select(p => p.PropertyInfo.GetValue(entity)).ToArray();
+
+            var existingEntity = _dbContext.Set<TEntity>().Find(keyValues);
+            if (existingEntity != null)
+            {
+                _dbContext.Entry(existingEntity).State = EntityState.Detached;
+            }
+
+            // Now attach and mark as modified
+            _dbContext.Set<TEntity>().Attach(entity);
+            _dbContext.Entry(entity).State = EntityState.Modified;
+
+            await _dbContext.SaveChangesAsync();
+            return entity;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error in UpdateAsync: {ex.Message}");
+            throw;
+        }
     }
+
 
     public Task DeleteAsync(TEntity entity)
     {
