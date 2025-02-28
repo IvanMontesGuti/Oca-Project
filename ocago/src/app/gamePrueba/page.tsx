@@ -12,11 +12,28 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { useAuth } from "@/context/AuthContext";
 
-const userId = "Ivan";
-const wsUrl = `wss://localhost:7107/ws/game/${userId}/connect`;
+interface DecodedToken {
+  email: string;
+  role: string;
+  unique_name: string;
+  family_name?: string; 
+  nbf: number;
+  exp: number;
+  iat: number;
+  id: number;
+}
 
 export default function GameBoard() {
+  const {userInfo} = useAuth();
+  
+  
+  const { family_name, unique_name} = userInfo || {};
+  const userId = userInfo?.unique_name.toString();
+
+  const wsUrl = `wss://localhost:7107/ws/game/${userId}/connect`;
+  
   const [gameId, setGameId] = useState<string | null>(null);
   const [fichas, setFichas] = useState<Ficha[]>([]);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -457,6 +474,7 @@ export default function GameBoard() {
         >
           {isDiceRolling ? 'Lanzando...' : 'Tirar Dado'}
         </Button>
+        
       </div>
       
       {isAnimating && (

@@ -119,7 +119,6 @@ namespace BackendOcago.Services
         {
             try
             {
-                // Use AsNoTracking() to avoid tracking the entity or get a tracked entity directly
                 var game = await _unitOfWork.GameRepository.GetByIdAsync(gameId);
                 if (game == null) throw new Exception("Game not found");
 
@@ -127,34 +126,45 @@ namespace BackendOcago.Services
                     throw new InvalidOperationException("Game is not in progress");
 
                 var isPlayer1 = userId == game.Player1Id;
+                int currentPosition = isPlayer1 ? game.Player1Position : game.Player2Position;
 
-                // Si el jugador tiene turnos pendientes que perder, los reduce y cede el turno
-                if (isPlayer1 ? game.Player1RemainingTurns > 0 : game.Player2RemainingTurns > 0)
+                // Verificar que sea el turno del jugador
+                if ((isPlayer1 && !game.IsPlayer1Turn) || (!isPlayer1 && game.IsPlayer1Turn))
+                    throw new InvalidOperationException("Not your turn");
+
+                // Verificar si hay turnos pendientes por perder
+                // Un valor positivo de PlayerRemainingTurns significa turnos que el jugador debe saltar
+                if ((isPlayer1 && game.Player1RemainingTurns > 0) || (!isPlayer1 && game.Player2RemainingTurns > 0))
                 {
-                    if (isPlayer1) game.Player1RemainingTurns--;
-                    else game.Player2RemainingTurns--;
+                    if (isPlayer1)
+                        game.Player1RemainingTurns--;
+                    else
+                        game.Player2RemainingTurns--;
 
-                    // El turno se mantiene en el otro jugador
+                    // Cambiar el turno al otro jugador
+                    game.IsPlayer1Turn = !game.IsPlayer1Turn;
 
                     await _unitOfWork.GameRepository.UpdateAsync(game);
+
                     return new GameMoveDTO
                     {
                         GameId = gameId,
                         PlayerId = userId,
                         DiceRoll = 0,
-                        NewPosition = isPlayer1 ? game.Player1Position : game.Player2Position,
+                        Player1RemainingTurns = game.Player1RemainingTurns,
+                        Player2RemainingTurns = game.Player2RemainingTurns,
+                        NewPosition = currentPosition, // La posición no cambia
                         Message = $"Jugador {userId} pierde este turno.",
                         GameStatus = game.Status,
-                        NextTurnPlayerId = game.IsPlayer1Turn ? game.Player1Id : game.Player2Id
+                        NextTurnPlayerId = isPlayer1 ? game.Player2Id : game.Player1Id
                     };
                 }
 
-                // Validar si es el turno correcto
-                if ((isPlayer1 && !game.IsPlayer1Turn) || (!isPlayer1 && game.IsPlayer1Turn))
-                    throw new InvalidOperationException("Not your turn");
+                // Si llegamos aquí, el jugador puede mover normalmente
 
+                // Tirar el dado y calcular nueva posición
                 int diceRoll = _random.Next(1, 7);
-                int newPosition = (isPlayer1 ? game.Player1Position : game.Player2Position) + diceRoll;
+                int newPosition = currentPosition + diceRoll;
                 string message = $"Jugador {userId} lanzó {diceRoll} y llegó a la casilla {newPosition}.";
 
                 // Manejar rebote si supera 63
@@ -166,6 +176,23 @@ namespace BackendOcago.Services
 
                 // Aplicar reglas especiales
                 bool extraTurn = false;
+
+                // Verificar si el otro jugador está en el pozo y liberarlo
+                if (newPosition == 31)
+                {
+                    if (isPlayer1 && game.Player2RemainingTurns == int.MaxValue)
+                    {
+                        game.Player2RemainingTurns = 0;
+                        message += " ¡Has liberado al otro jugador del pozo!";
+                    }
+                    else if (!isPlayer1 && game.Player1RemainingTurns == int.MaxValue)
+                    {
+                        game.Player1RemainingTurns = 0;
+                        message += " ¡Has liberado al otro jugador del pozo!";
+                    }
+                }
+
+                // Aplicar reglas según la nueva posición
                 switch (newPosition)
                 {
                     case 6:
@@ -179,13 +206,21 @@ namespace BackendOcago.Services
                         message = $"🌉 ¡Puente! Jugador {userId} regresa a la casilla 6 y vuelve a tirar.";
                         break;
                     case 19:
-                        if (isPlayer1) game.Player1RemainingTurns++;
-                        else game.Player2RemainingTurns++;
+                        // Posada: perder un turno
+                        if (isPlayer1)
+                            game.Player1RemainingTurns = 1;
+                        else
+                            game.Player2RemainingTurns = 1;
+
                         message = $"🏰 ¡Posada! Jugador {userId} pierde un turno.";
                         break;
                     case 31:
-                        if (isPlayer1) game.Player1RemainingTurns = int.MaxValue;
-                        else game.Player2RemainingTurns = int.MaxValue;
+                        // Pozo: quedar atrapado
+                        if (isPlayer1)
+                            game.Player1RemainingTurns = int.MaxValue;
+                        else
+                            game.Player2RemainingTurns = int.MaxValue;
+
                         message = $"⛓️ ¡Pozo! Jugador {userId} queda atrapado hasta que otro jugador lo libere.";
                         break;
                     case 42:
@@ -199,28 +234,36 @@ namespace BackendOcago.Services
                 }
 
                 // Manejo de Oca a Oca
-                int[] casillasOca = { 9, 18, 27, 36, 45, 54 };
+                int[] casillasOca = { 5, 9, 14, 18, 23, 27, 32, 36, 41, 45, 50, 54, 59 };
                 if (casillasOca.Contains(newPosition))
                 {
-                    int nextOca = casillasOca.FirstOrDefault(o => o > newPosition);
-                    if (nextOca > 0) // Verificar que se encontró una siguiente oca
+                    // Buscar la siguiente oca en la lista
+                    int nextOcaIndex = Array.IndexOf(casillasOca, newPosition) + 1;
+                    if (nextOcaIndex < casillasOca.Length)
                     {
+                        int nextOca = casillasOca[nextOcaIndex];
                         newPosition = nextOca;
                         extraTurn = true;
                         message = $"🦆 ¡De Oca en Oca! Jugador {userId} avanza a la casilla {newPosition} y vuelve a tirar.";
                     }
+                    else
+                    {
+                        // Si es la última oca
+                        extraTurn = true;
+                        message = $"🦆 ¡Oca! Jugador {userId} vuelve a tirar.";
+                    }
                 }
 
-                // Actualizar la posición
+                // Actualizar la posición del jugador
                 if (isPlayer1)
-                {
                     game.Player1Position = newPosition;
-                    if (!extraTurn) game.IsPlayer1Turn = false;
-                }
                 else
-                {
                     game.Player2Position = newPosition;
-                    if (!extraTurn) game.IsPlayer1Turn = true;
+
+                // Cambiar el turno solo si no hay turno extra
+                if (!extraTurn)
+                {
+                    game.IsPlayer1Turn = !game.IsPlayer1Turn;
                 }
 
                 // Si un jugador llega a 63, gana
@@ -233,8 +276,16 @@ namespace BackendOcago.Services
                 }
 
                 game.LastUpdated = DateTime.UtcNow;
-
                 await _unitOfWork.GameRepository.UpdateAsync(game);
+
+                string nextTurnPlayerId = game.IsPlayer1Turn ? game.Player1Id : game.Player2Id;
+
+                // Mensaje adicional si el siguiente jugador tiene turnos por perder
+                if ((game.IsPlayer1Turn && game.Player1RemainingTurns > 0) ||
+                    (!game.IsPlayer1Turn && game.Player2RemainingTurns > 0))
+                {
+                    message += " El siguiente jugador perderá su turno.";
+                }
 
                 var moveDto = new GameMoveDTO
                 {
@@ -246,7 +297,7 @@ namespace BackendOcago.Services
                     NewPosition = newPosition,
                     Message = message,
                     GameStatus = game.Status,
-                    NextTurnPlayerId = game.IsPlayer1Turn ? game.Player1Id : game.Player2Id
+                    NextTurnPlayerId = nextTurnPlayerId
                 };
 
                 await NotifyPlayersAsync(game);
