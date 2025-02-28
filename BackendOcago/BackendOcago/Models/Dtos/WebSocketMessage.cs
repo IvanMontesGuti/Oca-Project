@@ -8,8 +8,6 @@
         public bool Accepted { get; set; }
         public string Message { get; set; }
         public List<string> ConnectedUsers { get; set; }
-
-        public string LobbyId { get; set; }
-
+        public string MatchRequestId { get; set; } 
     }
 }

@@ -51,7 +51,7 @@ public class Program
         builder.Services.AddScoped<UserService>();
         builder.Services.AddScoped<FriendshipService>();
         builder.Services.AddScoped<SmartSearchService>();
-        builder.Services.AddScoped<LobbyService>();
+        builder.Services.AddScoped<MatchMakingService>();
 
         builder.Services.AddScoped<WebSocketHandler>();
 
@@ -62,7 +62,7 @@ public class Program
         builder.Services.AddScoped<FriendshipMapper>();
         
 
-        builder.Services.AddTransient<Middleware>();
+        builder.Services.AddScoped<Middleware>();
 
 
         // Swagger/OpenAPI configuración

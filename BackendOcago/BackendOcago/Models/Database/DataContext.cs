@@ -1,4 +1,7 @@
 ﻿using BackendOcago.Models.Database.Entities;
+﻿
+using BackendOcago.Models.Database.Entities;
+using BackendOcago.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace BackendOcago.Models.Database
@@ -12,6 +15,7 @@ namespace BackendOcago.Models.Database
         public DbSet<Friendship> Friendships { get; set; }
         public DbSet<Lobby> Lobbies { get; set; }
         public DbSet<Game> Games { get; set; }
+        public DbSet<MatchRequest> MatchRequests { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

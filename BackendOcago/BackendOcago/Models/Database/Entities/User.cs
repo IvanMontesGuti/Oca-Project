@@ -1,4 +1,5 @@
 ﻿using BackendOcago.Models.Database.Enum;
+using BackendOcago.Models.Dtos;
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -23,9 +24,5 @@ public class User
 
     [InverseProperty("Receiver")]
     public List<Friendship> ReceivedFriendships { get; set; } = new();  // Relaciones recibidas
-
-    [InverseProperty("Usuarios")]
-    public Lobby? Lobby { get; set; }
-
 
 }

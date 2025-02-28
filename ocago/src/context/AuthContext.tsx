@@ -10,15 +10,13 @@ interface JwtPayload {
 }
 
 interface DecodedToken {
+  id: string;
+  nickname: string;
   avatarUrl: string;
   email: string;
   role: string;
   unique_name: string;
   family_name?: string;
-  nbf: number;
-  exp: number;
-  iat: number;
-  id: number;
 }
 
 interface AuthContextType {
@@ -29,6 +27,7 @@ interface AuthContextType {
   register: (nickname: string, email: string, password: string, avatarUrl: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
+  updateUserInfo: (newInfo: any) => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -153,9 +152,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       sessionStorage.removeItem("accessToken");
     }
   };
+  const updateUserInfo = (newInfo: any) => {
+    setUserInfo((prevInfo) => ({ ...prevInfo, ...newInfo }))
+  }
 
   return (
-    <AuthContext.Provider value={{ token, userId, userInfo, login, register, logout, isAuthenticated }}>
+    <AuthContext.Provider value={{ token, userId, userInfo, login, register, logout, isAuthenticated, updateUserInfo}}>
       {children}
     </AuthContext.Provider>
   );

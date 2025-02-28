@@ -2,8 +2,8 @@
 
 import { Preguntas } from '@/components/preguntas'
 import { Header } from '@/components/header'
-import { Header2 } from '@/components/navUser' 
-import { InfoPage } from '@/components/infoPage'
+import { Header2 } from '@/components/Home/navUser' 
+import { InfoPage } from '@/components/Home/infoPage'
 import { jwtDecode } from "jwt-decode"
 import { useEffect, useState } from 'react'
 import { useAuth } from "@/context/AuthContext";

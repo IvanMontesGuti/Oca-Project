@@ -6,11 +6,11 @@ import Link from 'next/link'
 import Image from "next/image"
 import { Toaster } from 'sonner'
 //import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import FriendsPanel from "@/components/FriendsPanel";
-import { WebInfo } from "@/components/WebInfo";
+import FriendsPanel from "@/components/Friends/FriendsPanel";
+import { WebInfo } from "@/components/Home/WebInfo";
 //import { UPDATE_USER_STATE } from "@/lib/endpoints/config";
 //import { FETCH_PUT } from "@/lib/endpoints/useFetch";
-import { Header2 } from "@/components/navUser";
+import { Header2 } from "@/components/Home/navUser";
 import { useAuth } from "@/context/AuthContext";
 import { Header } from "@/components/header";
 

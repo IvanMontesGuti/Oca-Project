@@ -18,16 +18,6 @@ public class UserService
         
     }
 
-    //public async Task<UserDto> UpdateAvatarAsync(long userId, string base64Image)
-    //{
-    //    User user = await _unitOfWork.UserRepository.GetByIdAsync(userId) ?? throw new Exception("El usuario especificado no existe");
-
-    //    user.Avatar = base64Image;
-    //    _unitOfWork.UserRepository.Update(user);
-    //    await _unitOfWork.SaveAsync();
-
-    //    return _mapper.ToDto(user);
-    //}
 
     /* ----- GET ----- */
 
@@ -36,8 +26,6 @@ public class UserService
         User user = await _unitOfWork.UserRepository.GetUserDataByIdAsync(id);
         return _mapper.ToDto(user);
     }
-
-
 
     public async Task<IEnumerable<UserDto>> GetAllAsync()
     {

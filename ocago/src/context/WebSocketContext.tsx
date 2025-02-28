@@ -1,39 +1,36 @@
 "use client";
 
 import React, { createContext, ReactNode, useContext, useEffect, useState } from "react";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
-interface FriendRequest {
+interface Friend {
   id: string;
-  senderId: string;
-}
-
-interface Lobby {
-  id: string;
-  hostId: string;
+  nickname: string;
+  status: number;
+  avatarUrl?: string;
 }
 
 interface WebSocketContextType {
   socket: WebSocket | null;
-  sendFriendRequest: (receiverId: string) => void;
-  respondFriendRequest: (senderId: string, accepted: boolean) => void;
-  createLobby: () => void;
-  inviteToLobby: (lobbyId: string, receiverId: string) => void;
-  respondLobbyInvitation: (lobbyId: string, accepted: boolean) => void;
-  lobbies: Lobby[];
-  friendRequests: FriendRequest[];
-  connectedUsers: number;
+  sendMessage: (message: object) => void;
+  sendInvitation: (receiverId: string) => void;
+  respondInvitation: (matchRequestId: string, accepted: boolean) => void;
+  friendRequests: Friend[];
+  friends: Friend[];
+  fetchPendingRequests: () => void;
+  fetchFriends: () => void;
 }
 
 export const WebSocketContext = createContext<WebSocketContextType | null>(null);
 
 export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const router = useRouter();
+  const { userId, userInfo } = useAuth();
   const [socket, setSocket] = useState<WebSocket | null>(null);
-  const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
-  const [lobbies, setLobbies] = useState<Lobby[]>([]);
-  const [connectedUsers, setConnectedUsers] = useState<number>(0);
-  const { userId } = useAuth();
+  const [friendRequests, setFriendRequests] = useState<Friend[]>([]);
+  const [friends, setFriends] = useState<Friend[]>([]);
 
   useEffect(() => {
     if (userId) {
@@ -42,9 +39,12 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
 
       ws.onopen = () => {
         console.log("✅ WebSocket Connected");
-        toast.success("Conectado", { duration: 3000, icon: "🌐" });
-        ws.send(JSON.stringify({ Type: "viewPendingRequests" }));
+        toast.success("Conectado al servidor", { duration: 3000, icon: "🌐" });
+        fetchPendingRequests();
+        fetchFriends();
       };
+
+      ws.onmessage = (event) => handleWebSocketMessages(event.data);
 
       ws.onclose = () => {
         console.log("❌ WebSocket Disconnected");
@@ -56,8 +56,6 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
         toast.error("Error de conexión", { duration: 3000, icon: "⚠️" });
       };
 
-      ws.onmessage = (event) => handleWebSocketMessages(event.data);
-
       return () => {
         ws.close();
       };
@@ -67,53 +65,138 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
   const handleWebSocketMessages = (data: string) => {
     try {
       const message = JSON.parse(data);
-
       switch (message.Type) {
-        case "viewPendingRequests":
-          console.log("📩 Solicitudes pendientes recibidas:", message.Requests);
-          setFriendRequests(message.Requests.map((req: any) => ({
-            id: String(req.SenderId),
-            senderId: String(req.SenderId),
+
+        case "pendingFriendRequests":
+          setFriendRequests(message.Requests.map((req: any) => ({ id: String(req.Id), nickname: req.Nickname })));
+          break;
+        case "sendFriendRequest":
+          console.log("📩 Solicitud de amistad recibida:", message);
+
+          if (!message.SenderId) {
+            console.error("⚠️ Error: SenderId es undefined en sendFriendRequest:", message);
+            return;
+          }
+
+          toast.custom(() => (
+            <div className="flex flex-col bg-[#1B0F40] text-white p-4 rounded-lg">
+              <p className="text-white">
+                📩 Has recibido una solicitud de amistad de <strong>{message.SenderNickname}</strong>
+              </p>
+              <div className="flex gap-2 mt-2">
+                <button
+                  className="bg-green-500 text-white px-4 py-2 rounded"
+                  onClick={() => {
+                    sendMessage({
+                      Type: "respondFriendRequest",
+                      SenderId: String(userInfo.id),
+                      ReceiverId: String(message.SenderId),
+                      Accepted: true, // Aceptar solicitud
+                    });
+                    toast.dismiss();
+                  }}
+                >
+                  Aceptar
+                </button>
+                <button
+                  className="bg-red-500 text-white px-4 py-2 rounded"
+                  onClick={() => {
+                    sendMessage({
+                      Type: "respondFriendRequest",
+                      SenderId: String(userInfo.id),
+                      ReceiverId: String(message.SenderId),
+                      Accepted: false, // Rechazar solicitud
+                    });
+                    toast.dismiss();
+                  }}
+                >
+                  Rechazar
+                </button>
+              </div>
+            </div>
+          ), { duration: 10000 });
+
+          break;
+        case "friendsList":
+          setFriends(message.Friends.map((friend: any) => ({
+            id: String(friend.Id),
+            nickname: friend.Nickname,
+            status: friend.Status,
+            avatarUrl: friend.avatarUrl
           })));
           break;
+        case "invitationSent":
+          console.log("📨 Invitación enviada:", message);
 
-        case "friendRequestReceived":
-          toast.info(`Nueva solicitud de amistad de ${message.senderNickname}`, { duration: 5000, icon: "👥" });
-          setFriendRequests((prev) => [...prev, { id: message.requestId, senderId: message.senderId }]);
+          if (message.MatchRequestId) {
+            router.push(`/sala/${message.MatchRequestId}`);
+          } else {
+            console.error("⚠️ No se recibió MatchRequestId en invitationSent");
+          }
+          break;
+          
+        case "invitationReceived":
+          console.log("📩 Invitación recibida:", message);
+
+          if (!message.MatchRequestId) {
+            console.error("⚠️ Error: MatchRequestId es undefined en invitationReceived:", message);
+            return;
+          }
+
+          // Si el usuario es el host, redirigirlo también
+          if (userInfo?.id === message.HostId) {
+            console.log("🏆 El host también se une a la sala.");
+            router.push(`/sala/${message.MatchRequestId}`);
+          }
+
+          toast.custom(() => (
+            <div className="flex flex-col bg-[#1B0F40] text-white p-4 rounded-lg">
+              <p className="text-white">
+                🎮 Invitación de partida de <strong>{message.HostNickname}</strong>
+              </p>
+              <div className="flex gap-2 mt-2">
+                <button
+                  className="bg-green-500 text-white px-4 py-2 rounded"
+                  onClick={() => {
+                    sendMessage({
+                      Type: "respondInvitation",
+                      SenderId: String(userInfo.id),
+                      matchRequestId: message.MatchRequestId,
+                      Accepted: true,
+                    });
+                    router.push(`/sala/${message.MatchRequestId}`); // Redirigir al guest también
+                    toast.dismiss();
+                  }}
+                >
+                  Aceptar
+                </button>
+                <button
+                  className="bg-red-500 text-white px-4 py-2 rounded"
+                  onClick={() => {
+                    sendMessage({
+                      Type: "respondInvitation",
+                      SenderId: String(userInfo.id),
+                      matchRequestId: message.MatchRequestId,
+                      Accepted: false,
+                    });
+                    toast.dismiss();
+                  }}
+                >
+                  Rechazar
+                </button>
+              </div>
+            </div>
+          ), { duration: 10000 });
           break;
 
-        case "friendRequestAccepted":
-          toast.success(`${message.senderNickname} aceptó tu solicitud de amistad`, { duration: 5000, icon: "✅" });
-          setFriendRequests((prev) => prev.filter((req) => req.senderId !== message.senderId));
-          break;
 
-        case "friendRequestRejected":
-          toast.error(`${message.senderNickname} rechazó tu solicitud de amistad`, { duration: 5000, icon: "❌" });
-          setFriendRequests((prev) => prev.filter((req) => req.senderId !== message.senderId));
-          break;
 
-        case "userConnected":
-          setConnectedUsers((prev) => prev + 1);
+        case "invitationResponse":
+          toast.info(message.Message, { duration: 5000, icon: message.Accepted ? "✔️" : "❌" });
           break;
-
-        case "userDisconnected":
-          setConnectedUsers((prev) => prev - 1);
+        case "startGame":
+          toast.success("🎮 La partida ha comenzado!", { duration: 5000, icon: "🚀" });
           break;
-
-        case "lobbyCreated":
-          console.log("🏠 Nueva lobby creada:", message);
-          setLobbies((prev) => [...prev, { id: message.lobbyId, hostId: message.hostId }]);
-          toast.success("Lobby creada con éxito", { duration: 3000, icon: "🎮" });
-          break;
-
-        case "lobbyInvitation":
-          handleLobbyInvitation(message);
-          break;
-
-        case "lobbyInvitationResponse":
-          handleLobbyInvitationResponse(message);
-          break;
-
         default:
           console.log("📩 Mensaje recibido:", message);
           break;
@@ -123,145 +206,62 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
     }
   };
 
-  const sendFriendRequest = (receiverId: string) => {
-    if (!socket || socket.readyState !== WebSocket.OPEN) return;
+  const sendMessage = (message: object) => {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      try {
+        const jsonMessage = JSON.stringify(message);
+        socket.send(jsonMessage);
+        console.log("📨 Mensaje enviado:", jsonMessage);
+      } catch (error) {
+        console.error("⚠️ Error al enviar el mensaje WebSocket:", error);
+      }
+    } else {
+      console.warn("⚠️ No hay conexión WebSocket activa.");
+    }
+  };
 
-    const message = JSON.stringify({
-      Type: "sendFriendRequest",
+  const sendInvitation = (receiverId: string) => {
+    if (!userId) return;
+    sendMessage({
+      type: "sendInvitation",
+      senderId: String(userId),
+      receiverId: receiverId,
+      HostNickname: String(userId)
+    });
+  };
+
+  const respondInvitation = (matchRequestId: string, accepted: boolean) => {
+    if (!userId) return;
+    sendMessage({
+      Type: "respondInvitation",
       SenderId: String(userId),
-      ReceiverId: String(receiverId),
+      matchRequestId: matchRequestId,
+      Accepted: accepted
     });
-
-    console.log("📨 Enviando solicitud de amistad:", message);
-    socket.send(message);
-    toast.info("Solicitud de amistad enviada", { duration: 3000, icon: "📤" });
   };
 
-  const respondFriendRequest = (senderId: string, accepted: boolean) => {
-    if (!socket || socket.readyState !== WebSocket.OPEN) return;
-
-    const message = JSON.stringify({
-      Type: "respondFriendRequest",
-      SenderId: String(senderId),
-      ReceiverId: String(userId),
-      Accepted: accepted,
-    });
-
-    console.log("📨 Respondiendo solicitud de amistad:", message);
-    socket.send(message);
-
-    setFriendRequests((prev) => prev.filter((req) => req.senderId !== senderId));
-
-    toast[accepted ? "success" : "info"](
-      accepted ? "Solicitud de amistad aceptada" : "Solicitud de amistad rechazada",
-      { duration: 3000, icon: accepted ? "🤝" : "👋" }
-    );
+  const fetchPendingRequests = () => {
+    if (userId) {
+      sendMessage({ type: "getPendingFriendRequests", userId: String(userId) });
+    }
   };
 
-  const createLobby = () => {
-    if (!socket || socket.readyState !== WebSocket.OPEN) return;
-
-    const message = JSON.stringify({
-      Type: "createLobby",
-      HostId: String(userId),
-    });
-
-    console.log("🏠 Creando lobby:", message);
-    socket.send(message);
-    toast.info("Creando lobby...", { duration: 3000, icon: "🎮" });
-  };
-
-  const inviteToLobby = (lobbyId: string, receiverId: string) => {
-    if (!socket || socket.readyState !== WebSocket.OPEN) return;
-
-    const message = JSON.stringify({
-      Type: "lobbyInvitation",
-      LobbyId: lobbyId,
-      SenderId: String(userId),
-      ReceiverId: String(receiverId),
-    });
-
-    console.log("📩 Enviando invitación a la lobby:", message);
-    socket.send(message);
-    toast.info("Invitación enviada", { duration: 3000, icon: "🎮" });
-  };
-
-  const respondLobbyInvitation = (lobbyId: string, accepted: boolean) => {
-    if (!socket || socket.readyState !== WebSocket.OPEN) return;
-
-    const message = JSON.stringify({
-      Type: "lobbyInvitationResponse",
-      SenderId: String(userId),
-      ReceiverId: String(userId), 
-      LobbyId: lobbyId,
-      Status: accepted ? "accepted" : "rejected",
-      Message: accepted
-        ? "La invitación para unirte al lobby ha sido aceptada."
-        : "La invitación para unirte al lobby ha sido rechazada.",
-    });
-
-    console.log("📨 Respondiendo invitación a la lobby:", message);
-    socket.send(message);
-
-    toast[accepted ? "success" : "info"](
-      accepted ? "Invitación aceptada" : "Invitación rechazada",
-      { duration: 3000, icon: accepted ? "✅" : "❌" }
-    );
-  };
-
-  const handleLobbyInvitation = (message: any) => {
-    toast(
-      (t) => (
-        <div className="flex flex-col">
-          <p>🎮 {message.senderNickname} te ha invitado a un lobby</p>
-          <div className="flex justify-between mt-2">
-            <button
-              className="bg-green-500 text-white px-4 py-2 rounded"
-              onClick={() => {
-                respondLobbyInvitation(message.lobbyId, true);
-                toast.dismiss(t);
-              }}
-            >
-              Aceptar
-            </button>
-            <button
-              className="bg-red-500 text-white px-4 py-2 rounded"
-              onClick={() => {
-                respondLobbyInvitation(message.lobbyId, false);
-                toast.dismiss(t);
-              }}
-            >
-              Rechazar
-            </button>
-          </div>
-        </div>
-      ),
-      { duration: 30000 }
-    );
-  };
-
-  const handleLobbyInvitationResponse = (message: any) => {
-    
-    toast.info(`${message.Message}`, { duration: 5000, icon: "🎮" });
-
-    
-    toast[message.Status === "accepted" ? "success" : "info"](
-      `Tu invitación ha sido ${message.Status === "accepted" ? "aceptada" : "rechazada"}`,
-      { duration: 3000, icon: message.Status === "accepted" ? "✅" : "❌" }
-    );
+  const fetchFriends = () => {
+    if (userId) {
+      sendMessage({ type: "getFriends", senderId: String(userId) });
+    }
   };
 
   return (
     <WebSocketContext.Provider value={{
       socket,
-      sendFriendRequest,
-      respondFriendRequest,
-      createLobby,
-      inviteToLobby,
-      respondLobbyInvitation,
-      lobbies,
+      sendMessage,
+      sendInvitation,
+      respondInvitation,
       friendRequests,
-      connectedUsers
+      friends,
+      fetchPendingRequests,
+      fetchFriends
     }}>
       {children}
     </WebSocketContext.Provider>

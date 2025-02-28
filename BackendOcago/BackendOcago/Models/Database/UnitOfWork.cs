@@ -13,7 +13,6 @@ public class UnitOfWork
     public GameRepository GameRepository { get; init; }
     public FriendshipRepository FriendshipRepository { get; init; }
     public UserRepository UserRepository => _userRepository ??= new UserRepository(_dataContext);
-    
 
 
     public UnitOfWork(DataContext dataContext, ImageRepository imageRepository, FriendshipRepository friendshipRepository, GameRepository gameRepository)
