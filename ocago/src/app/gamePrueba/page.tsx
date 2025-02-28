@@ -72,9 +72,10 @@ export default function GameBoard() {
         } else if (data.action === "moveUpdate") {
           // Actualizar el valor del dado
           if (data.data.DiceValue) {
-            // Animar el dado
+            console.log("🎲 Dado recibido:", data.data.DiceValue);
             animateDiceRoll(data.data.DiceValue);
           }
+          
           
           // Después de que termine la animación del dado, mover la ficha
           setTimeout(() => {
@@ -84,6 +85,7 @@ export default function GameBoard() {
             if (data.data.NextTurnPlayerId) {
               setCurrentTurn(data.data.NextTurnPlayerId);
             }
+            
             
             // Actualizar turnos restantes si están disponibles
             if (data.data.PlayerId && data.data.RemainingTurns !== undefined) {
@@ -275,6 +277,7 @@ export default function GameBoard() {
               : f
           )
         );
+        
         setIsAnimating(false);
       }
     };
