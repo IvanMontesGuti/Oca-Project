@@ -152,10 +152,11 @@ export default function GameBoard() {
           setGameId(data.data.Id)
           actualizarFichas(data.data)
 
-          if (data.IsPlayer1Turn === true) {
-            setCurrentTurn(data.data.Player2Id)
-          } else {
+          // Fix: Use comparison (==) instead of assignment (=)
+          if (data.data.IsPlayer1Turn === true) {
             setCurrentTurn(data.data.Player1Id)
+          } else {
+            setCurrentTurn(data.data.Player2Id)
           }
           // Actualizar turnos restantes
           const turnsRemaining: Record<string, number> = {}
@@ -186,9 +187,29 @@ export default function GameBoard() {
             animateDiceRoll(data.data.DiceValue)
           }
 
+          // Update the position immediately for the opponent's move
+          if (data.data.PlayerId !== userId) {
+            // Update the position in state right away
+            setFichas((prevFichas) =>
+              prevFichas.map((ficha) =>
+                ficha.playerId === data.data.PlayerId
+                  ? {
+                      ...ficha,
+                      position: data.data.NewPosition,
+                      casillaX: casillas[data.data.NewPosition].casillaX,
+                      casillaY: casillas[data.data.NewPosition].casillaY,
+                    }
+                  : ficha,
+              ),
+            )
+          }
+
           // Después de que termine la animación del dado, mover la ficha
           setTimeout(() => {
-            animateMovement(data.data.PlayerId, data.data.NewPosition)
+            // Only animate your own piece movement
+            if (data.data.PlayerId === userId) {
+              animateMovement(data.data.PlayerId, data.data.NewPosition)
+            }
 
             // Actualizar turnos restantes si están disponibles
             if (data.data.PlayerId && data.data.RemainingTurns !== undefined) {
@@ -855,6 +876,7 @@ export default function GameBoard() {
     </div>
   )
 }
+
 
 
 
