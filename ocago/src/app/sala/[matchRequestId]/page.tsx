@@ -1,50 +1,65 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { useWebSocket } from "@/context/WebSocketContext";
-import { useAuth } from "@/context/AuthContext";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { API_BASE_URL } from "@/lib/endpoints/config";
-import { Crown, Shield, Swords, X, CheckCircle2, Clock } from "lucide-react";
-import { toast } from "sonner";
-import { motion, AnimatePresence } from "framer-motion";
-import { Header2 } from "@/components/Home/navUser";
+import { useEffect, useState } from "react"
+import { useParams, useRouter } from "next/navigation"
+import { useWebSocket } from "@/context/WebSocketContext"
+import { useAuth } from "@/context/AuthContext"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Button } from "@/components/ui/button"
+import { API_BASE_URL } from "@/lib/endpoints/config"
+import { Crown, X } from "lucide-react"
+import { toast } from "sonner"
+import { Header2 } from "@/components/Home/navUser"
 
 interface Player {
-  id: string;
-  nickname: string;
-  avatarUrl?: string;
-  isReady: boolean;
-  isHost: boolean;
+  id: string
+  nickname: string
+  avatarUrl?: string
+  isReady: boolean
+  isHost: boolean
 }
 
 export default function GameRoom() {
-  const { matchRequestId } = useParams();
-  const router = useRouter();
-  const { sendMessage, socket } = useWebSocket();
-  const { userInfo } = useAuth();
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [gameId, setGameId] = useState<string | null>(null);
-  const [countdown, setCountdown] = useState<number | null>(null);
+  const { matchRequestId } = useParams()
+  const router = useRouter()
+  const { sendMessage, socket } = useWebSocket()
+  const { userInfo } = useAuth()
+  const [players, setPlayers] = useState<Player[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [gameId, setGameId] = useState<string | null>(null)
+  const [countdown, setCountdown] = useState<number | null>(null)
 
   useEffect(() => {
     if (!userInfo?.id || !matchRequestId) {
-      router.push("/");
-      return;
+      router.push("/")
+      return
+    }
+
+    // Add a check for socket connection
+    if (!socket) {
+      console.error("WebSocket connection not available")
+      toast.error("Error de conexión. Intentando reconectar...", {
+        duration: 3000,
+        icon: "🔌",
+      })
+      return
     }
 
     sendMessage({
       type: "getRoomInfo",
       senderId: String(userInfo.id),
       matchRequestId: String(matchRequestId),
-    });
+    })
 
     const handleMessage = (event: MessageEvent) => {
       try {
-        const message = JSON.parse(event.data);
+        const message = JSON.parse(event.data)
+
+        // Handle ping response if needed
+        if (message.Type === "pong") {
+          console.log("💓 Pong received from server")
+          return
+        }
 
         switch (message.Type) {
           case "roomInfo":
@@ -55,99 +70,109 @@ export default function GameRoom() {
                 avatarUrl: player.AvatarUrl,
                 isReady: player.IsReady || false,
                 isHost: player.IsHost || false,
-              }))
-            );
-            setGameId(message.GameId);
-            setIsLoading(false);
-            break;
+              })),
+            )
+            setGameId(message.GameId)
+            setIsLoading(false)
+            break
 
           case "playerReady":
             setPlayers((prev) =>
-              prev.map((player) => (player.id === String(message.PlayerId) ? { ...player, isReady: true } : player))
-            );
-            break;
+              prev.map((player) => (player.id === String(message.PlayerId) ? { ...player, isReady: true } : player)),
+            )
+            break
 
           case "playerLeft":
             toast.error(`${message.Nickname} ha abandonado la sala`, {
               duration: 3000,
               icon: "🚪",
-            });
-            setTimeout(() => router.push("/"), 2000);
-            break;
+            })
+            setTimeout(() => router.push("/"), 2000)
+            break
 
           case "allPlayersReady":
-            setCountdown(5);
-            break;
+            setCountdown(5)
+            break
 
           case "gameStarting":
             if (gameId) {
               toast.success("¡La partida está comenzando!", {
                 duration: 3000,
                 icon: "🎮",
-              });
+              })
               //¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡Importante!!!!!!!!!!!!!!!!!!!!!!!!!!
-              router.push(`/game/${gameId}`);
+              router.push(`/game/${gameId}`)
             }
-            break;
+            break
         }
       } catch (error) {
-        console.error("Error al procesar mensaje:", error);
+        console.error("Error al procesar mensaje:", error)
       }
-    };
+    }
+
+    const handleSocketError = (error: Event) => {
+      console.error("Error en la conexión WebSocket:", error)
+      toast.error("Error de conexión. Intentando reconectar...", {
+        duration: 3000,
+        icon: "🔌",
+      })
+    }
 
     if (socket) {
-      socket.addEventListener("message", handleMessage);
+      socket.addEventListener("message", handleMessage)
+      socket.addEventListener("error", handleSocketError)
     }
 
     return () => {
       if (socket) {
-        socket.removeEventListener("message", handleMessage);
+        socket.removeEventListener("message", handleMessage)
+        socket.removeEventListener("error", handleSocketError)
       }
-    };
-  }, [userInfo, matchRequestId, sendMessage, socket, router, gameId]);
+    }
+  }, [userInfo, matchRequestId, sendMessage, socket, router, gameId])
 
   useEffect(() => {
-    if (countdown === null) return;
+    if (countdown === null) return
     if (countdown > 0) {
-      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-      return () => clearTimeout(timer);
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000)
+      return () => clearTimeout(timer)
     }
-  }, [countdown]);
+  }, [countdown])
 
   const handleReadyConfirmation = (accepted: boolean) => {
-    if (!userInfo?.id) return;
+    if (!userInfo?.id) return
 
     sendMessage({
       type: "confirmReady",
       senderId: String(userInfo.id),
       matchRequestId: String(matchRequestId),
       Accepted: accepted,
-    });
+    })
 
     if (!accepted) {
-      router.push("/");
+      router.push("/")
     }
-  };
+  }
 
   const handleLeaveRoom = () => {
-    if (!userInfo?.id) return;
+    if (!userInfo?.id) return
 
     sendMessage({
       type: "leaveRoom",
       senderId: String(userInfo.id),
       matchRequestId: String(matchRequestId),
-    });
+    })
 
-    router.push("/");
-  };
+    router.push("/")
+  }
 
-  const currentPlayer = players.find((player) => player.id === String(userInfo?.id));
-  const isCurrentPlayerReady = currentPlayer?.isReady || false;
-  const areAllPlayersReady = players.length === 2 && players.every((player) => player.isReady);
+  const currentPlayer = players.find((player) => player.id === String(userInfo?.id))
+  const isCurrentPlayerReady = currentPlayer?.isReady || false
+  const areAllPlayersReady = players.length === 2 && players.every((player) => player.isReady)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-purple-900 flex flex-col items-center justify-center p-4">
-      <Header2/>
+      <Header2 />
       <div className="w-full max-w-4xl bg-black/30 backdrop-blur-md rounded-2xl overflow-hidden shadow-2xl border border-purple-500/20">
         <div className="p-6">
           <div className="flex justify-between items-center mb-8">
@@ -182,13 +207,18 @@ export default function GameRoom() {
 
                     <div className="flex items-center space-x-4">
                       <Avatar className="h-16 w-16 ring-2 ring-white/20">
-                        <AvatarImage src={player.avatarUrl ? `${API_BASE_URL}/${player.avatarUrl}` : undefined} alt={player.nickname} />
+                        <AvatarImage
+                          src={player.avatarUrl ? `${API_BASE_URL}/${player.avatarUrl}` : undefined}
+                          alt={player.nickname}
+                        />
                         <AvatarFallback>{player.nickname.slice(0, 2).toUpperCase()}</AvatarFallback>
                       </Avatar>
 
                       <div>
                         <h3 className="text-xl font-bold text-white">{player.nickname}</h3>
-                        <p className="text-gray-300">{player.isReady ? "Listo para jugar" : "Esperando confirmación..."}</p>
+                        <p className="text-gray-300">
+                          {player.isReady ? "Listo para jugar" : "Esperando confirmación..."}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -199,5 +229,6 @@ export default function GameRoom() {
         </div>
       </div>
     </div>
-  );
+  )
 }
+
