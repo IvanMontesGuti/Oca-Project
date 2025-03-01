@@ -164,7 +164,7 @@ export function WebInfo() {
     };
     
     // Set up interval (request every 30 seconds)
-    const interval = setInterval(requestActiveGames, 30000);
+    const interval = setInterval(requestActiveGames, 300000000);
     
     return () => {
       clearInterval(interval);

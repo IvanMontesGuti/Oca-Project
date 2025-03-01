@@ -72,7 +72,7 @@ export default function GameBoard() {
 
   // Turn counter and timer
   const [turnNumber, setTurnNumber] = useState(1)
-  const [turnTimer, setTurnTimer] = useState(30)
+  const [turnTimer, setTurnTimer] = useState(60)
   const [showTurnAnimation, setShowTurnAnimation] = useState(false)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -88,14 +88,32 @@ export default function GameBoard() {
       setWsConnected(false)
       setWsError("Error de conexión al servidor de juego. Intente nuevamente.")
     },
-    onClose: () => {
-      console.log("WebSocket desconectado")
+    onClose: (event) => {
+      console.log("WebSocket desconectado", event)
       setWsConnected(false)
+
+      // Only surrender if it was not a normal closure and game is in progress
+      if (event.code !== 1000 && gameId && isGameStarted && currentTurn === userId) {
+        console.log("Conexión perdida durante el turno, abandonando partida...")
+        surrenderGame()
+      }
     },
-    reconnectAttempts: 5,
-    reconnectInterval: 3000,
+    reconnectAttempts: 10, // Increase reconnect attempts
+    reconnectInterval: (attemptNumber) => Math.min(1000 * attemptNumber, 10000), // Exponential backoff
     retryOnError: true,
-    shouldReconnect: () => true,
+    shouldReconnect: (closeEvent) => {
+      // Don't reconnect if we're navigating away or if the game is over
+      if (closeEvent.code === 1000 || winner) {
+        return false
+      }
+      return true
+    },
+    heartbeat: {
+      message: JSON.stringify({ Type: "ping", SenderId: userId }),
+      returnMessage: JSON.stringify({ Type: "pong" }),
+      timeout: 30000, // 30 seconds
+      interval: 25000, // 25 seconds
+    },
   })
 
   // Scroll chat to bottom when new messages arrive
@@ -107,7 +125,7 @@ export default function GameBoard() {
   useEffect(() => {
     if (currentTurn && gameId && isGameStarted) {
       // Reset timer when turn changes
-      setTurnTimer(30)
+      setTurnTimer(60)
 
       // Clear any existing timer
       if (timerRef.current) {
@@ -118,8 +136,11 @@ export default function GameBoard() {
       timerRef.current = setInterval(() => {
         setTurnTimer((prev) => {
           if (prev <= 1) {
-            // Time's up - could trigger auto-move or skip turn
+            // Time's up - surrender and return to menu
             clearInterval(timerRef.current!)
+            if (currentTurn === userId) {
+              surrenderGame()
+            }
             return 0
           }
           return prev - 1
@@ -139,7 +160,7 @@ export default function GameBoard() {
         clearInterval(timerRef.current)
       }
     }
-  }, [currentTurn, gameId, isGameStarted])
+  }, [currentTurn, gameId, isGameStarted, userId])
 
   // Procesar mensajes WebSocket
   useEffect(() => {
@@ -227,7 +248,56 @@ export default function GameBoard() {
         console.error("Error al procesar mensaje:", error)
       }
     }
-  }, [lastMessage])
+  }, [lastMessage, userId])
+
+  // Add this effect to handle page unload
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      // If it's the player's turn, surrender before leaving
+      if (gameId && isGameStarted && currentTurn === userId) {
+        surrenderGame()
+      }
+    }
+
+    window.addEventListener("beforeunload", handleBeforeUnload)
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload)
+    }
+  }, [gameId, isGameStarted, currentTurn, userId])
+
+  // Add this effect to handle reconnection and check for pending surrenders
+  useEffect(() => {
+    if (wsConnected) {
+      // Check if there's a pending surrender in localStorage
+      const pendingSurrender = localStorage.getItem("game_surrender")
+      if (pendingSurrender) {
+        try {
+          const { gameId, playerId, timestamp } = JSON.parse(pendingSurrender)
+          // Only process if it's recent (within last 5 minutes)
+          const surrenderTime = new Date(timestamp)
+          const now = new Date()
+          const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000)
+
+          if (surrenderTime > fiveMinutesAgo) {
+            // Resend the surrender message
+            sendMessage(
+              JSON.stringify({
+                Action: "Surrender",
+                GameId: gameId,
+              }),
+            )
+          }
+
+          // Clear the pending surrender
+          localStorage.removeItem("game_surrender")
+        } catch (error) {
+          console.error("Error processing pending surrender:", error)
+          localStorage.removeItem("game_surrender")
+        }
+      }
+    }
+  }, [wsConnected, sendMessage])
 
   interface Casilla {
     casillaX: number
@@ -504,6 +574,39 @@ export default function GameBoard() {
     setIsGameStarted(false)
   }
 
+  const surrenderGame = () => {
+    if (gameId) {
+      try {
+        // Try to send surrender message
+        sendMessageWithFallback(
+          JSON.stringify({
+            Action: "Surrender",
+            GameId: gameId,
+          }),
+        )
+
+        // Store surrender info in localStorage as a fallback
+        localStorage.setItem(
+          "game_surrender",
+          JSON.stringify({
+            gameId,
+            playerId: userId,
+            timestamp: new Date().toISOString(),
+          }),
+        )
+
+        // Navigate back to menu with a small delay to allow message to be sent
+        setTimeout(() => {
+          window.location.href = "/menu"
+        }, 300)
+      } catch (error) {
+        console.error("Error al abandonar partida:", error)
+        // Navigate anyway
+        window.location.href = "/menu"
+      }
+    }
+  }
+
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
@@ -671,16 +774,20 @@ export default function GameBoard() {
                 <div className={`text-white font-medium ${turnTimer <= 10 ? "text-red-500 animate-pulse" : ""}`}>
                   {turnTimer}s
                 </div>
-                <Progress value={(turnTimer / 30) * 100} className="w-24 h-2" />
+                <Progress value={(turnTimer / 60) * 100} className="w-24 h-2" />
               </div>
             )}
 
             <div className="flex gap-6">
               {Object.entries(remainingTurns).map(([playerId, turns]) => (
-                <div key={playerId} className="flex items-center gap-2">
+                <div
+                  key={playerId}
+                  className={`flex items-center gap-2 ${playerId === userId && turns > 0 && currentTurn === userId ? "bg-red-500/50 p-1 rounded animate-pulse" : ""}`}
+                >
                   <div className="w-3 h-3 rounded-full" style={{ backgroundColor: getPlayerColor(playerId) }}></div>
                   <div className="text-white/80 text-sm">
-                    {playerId}: {turns} turnos paralizado
+                    {playerId === userId ? "Tú" : playerId}: {turns > 0 ? `${turns} turnos penalizado` : ""}
+                    {playerId === userId && turns > 0 && currentTurn === userId && " - Debes tirar pero no avanzarás"}
                   </div>
                 </div>
               ))}
@@ -743,6 +850,11 @@ export default function GameBoard() {
                 className={`bg-blue-600 hover:bg-blue-700 ${currentTurn === userId ? "animate-pulse" : ""}`}
               >
                 {isDiceRolling ? "Lanzando..." : "Tirar Dado"}
+              </Button>
+            )}
+            {gameId && isGameStarted && (
+              <Button onClick={surrenderGame} className="bg-red-600 hover:bg-red-700">
+                Abandonar Partida
               </Button>
             )}
           </div>
@@ -834,6 +946,8 @@ export default function GameBoard() {
                 {winner}
               </span>{" "}
               ha ganado la partida
+              <div className="mt-2 text-sm">ID Partida: {gameId}</div>
+              <div className="text-sm">Turnos jugados: {turnNumber}</div>
             </DialogDescription>
           </DialogHeader>
 
@@ -876,7 +990,4 @@ export default function GameBoard() {
     </div>
   )
 }
-
-
-
 
