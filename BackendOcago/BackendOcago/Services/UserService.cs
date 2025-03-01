@@ -114,17 +114,28 @@ public class UserService
     public async Task<bool> ChangePasswordAsync(long userId, string oldPassword, string newPassword)
     {
         var user = await _unitOfWork.UserRepository.GetByIdAsync(userId);
-        if (user == null) { throw new Exception("El usuario no existe"); }
+        if (user == null)
+        {
+            throw new Exception("El usuario no existe");
+        }
 
-        if (!(user.Password == oldPassword)) { throw new Exception("Contraseña incorrecta"); }
-        else user.Password = AuthService.HashPassword(newPassword);
+        // Verificamos la contraseña antigua comparando el hash.
+        var hashedOldPassword = AuthService.HashPassword(oldPassword);
+        if (user.Password != hashedOldPassword)
+        {
+            throw new Exception("Contraseña incorrecta");
+        }
 
-        await _unitOfWork.UserRepository.UpdateAsync(user);
+        // Actualizamos la contraseña con el hash de la nueva.
+        user.Password = AuthService.HashPassword(newPassword);
+
+        // Actualizamos la entidad en el repositorio y guardamos los cambios.
+        _unitOfWork.UserRepository.Update(user);
         await _unitOfWork.SaveAsync();
 
         return true;
-       
     }
+
     /*
     public async Task<UserDto> UpdateRole(HandleRole handleRole)
     {
