@@ -97,7 +97,7 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
         console.log("📩 Mensaje recibido:", message) // Log all incoming messages
 
         switch (
-          message.Type.toLowerCase() // Convert to lowercase for case-insensitive comparison
+          message.Type // Convert to lowercase for case-insensitive comparison
         ) {
           case "pendingfriendrequests":
             setFriendRequests(

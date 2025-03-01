@@ -245,15 +245,15 @@ namespace BackendOcago.Services
 
                 // Manejar rebote si supera 63
                 if (newPosition == 63)
-                {
-                    game.Status = GameStatus.Finished;
-                    game.Winner = userId;
-                    message = $"🏆 ¡Jugador {userId} ha ganado!";
-                    game.IsPlayer1Turn = false; // Finaliza el juego
-
-                    // Actualizar la lista de juegos de los usuarios cuando termina la partida
-                    await UpdateUserGamesAsync(game);
-                }
+            {
+                game.Status = GameStatus.Finished;
+                game.Winner = userId;
+                message = $"🏆 ¡Jugador {userId} ha ganado!";
+                game.IsPlayer1Turn = false; // Finaliza el juego
+                
+                // Actualizar la lista de juegos de los usuarios cuando termina la partida
+                await UpdateUserGamesAsync(game);
+            }
 
                 // Aplicar reglas especiales
                 bool extraTurn = false;

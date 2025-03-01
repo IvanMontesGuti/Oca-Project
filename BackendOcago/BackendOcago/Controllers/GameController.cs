@@ -108,7 +108,7 @@ namespace BackendOcago.Controllers
                         await SendMessageToClient(userId, new
                         {
                             action = "activeGames",
-                            data = games
+                            data = games.Count
                         });
                         break;
                     case "Surrender":
