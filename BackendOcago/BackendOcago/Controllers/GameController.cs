@@ -111,6 +111,19 @@ namespace BackendOcago.Controllers
                             data = games
                         });
                         break;
+                    case "Surrender":
+                        var surrenderResult = await _gameService.SurrenderGameAsync(jsonMessage.GameId, userId);
+                        await NotifyPlayers(surrenderResult, "gameUpdate");
+                        // Enviar mensaje adicional sobre la rendición
+                        await NotifyPlayers(new
+                        {
+                            GameId = jsonMessage.GameId,
+                            PlayerId = userId,
+                            Message = $"Jugador {userId} se ha rendido.",
+                            GameStatus = surrenderResult.Status,
+                            Winner = surrenderResult.Winner
+                        }, "surrenderUpdate");
+                        break;
                 }
             }
             catch (Exception ex)
@@ -140,6 +153,30 @@ namespace BackendOcago.Controllers
                 if (!string.IsNullOrEmpty(game.Player2Id))
                 {
                     await SendMessageToClient(game.Player2Id, messageObject);
+                }
+            }
+            else
+            {
+                // Para mensajes genéricos como la notificación de rendición
+                var messageObject = new
+                {
+                    action = action,
+                    data = data
+                };
+
+                if (data.GetType().GetProperty("GameId") != null)
+                {
+                    var gameId = (Guid)data.GetType().GetProperty("GameId").GetValue(data);
+                    var gameInfo = await _gameService.GetGameAsync(gameId);
+
+                    if (!string.IsNullOrEmpty(gameInfo.Player1Id))
+                    {
+                        await SendMessageToClient(gameInfo.Player1Id, messageObject);
+                    }
+                    if (!string.IsNullOrEmpty(gameInfo.Player2Id))
+                    {
+                        await SendMessageToClient(gameInfo.Player2Id, messageObject);
+                    }
                 }
             }
         }

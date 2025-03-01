@@ -74,9 +74,12 @@ namespace BackendOcago.Services
             await _unitOfWork.GameRepository.SaveAsync();
 
             _activeGames[game.Id] = (userId, null);
+
+            // Actualizar la lista de juegos del usuario
+            await UpdateUserGamesAsync(game);
+
             return MapToGameDTO(game);
         }
-
         public async Task<GameDTO> JoinGameAsync(Guid gameId, string userId)
         {
             var game = await _unitOfWork.GameRepository.GetByIdAsync(gameId);
@@ -95,6 +98,9 @@ namespace BackendOcago.Services
                 _activeGames[game.Id] = (game.Player1Id, userId);
                 Console.WriteLine($"Game updated successfully. Player2Id: {userId}, Status: {game.Status}");
 
+                // Actualizar la lista de juegos del usuario
+                await UpdateUserGamesAsync(game);
+
                 var gameDto = MapToGameDTO(game);
 
                 // 🚀 Si el jugador 2 es "bot" y es su turno, hacer que mueva automáticamente
@@ -111,6 +117,76 @@ namespace BackendOcago.Services
             {
                 Console.WriteLine($"Error updating game: {ex.Message}");
                 throw;
+            }
+        }
+
+        public async Task<GameDTO> SurrenderGameAsync(Guid gameId, string userId)
+        {
+            var game = await _unitOfWork.GameRepository.GetByIdAsync(gameId);
+            if (game == null) throw new Exception("Game not found");
+
+            if (game.Status != GameStatus.InProgress)
+                throw new InvalidOperationException("Game is not in progress");
+
+            // Verificar que el usuario está en la partida
+            if (game.Player1Id != userId && game.Player2Id != userId)
+                throw new InvalidOperationException("You are not part of this game");
+
+            // Determinar quién es el ganador (el otro jugador)
+            game.Winner = game.Player1Id == userId ? game.Player2Id : game.Player1Id;
+            game.Status = GameStatus.Finished;
+            game.LastUpdated = DateTime.UtcNow;
+
+            Console.WriteLine($"🏳️ Jugador {userId} se ha rendido. Ganador: {game.Winner}");
+
+            await _unitOfWork.GameRepository.UpdateAsync(game);
+
+            // Actualizar las listas de juegos de los usuarios
+            await UpdateUserGamesAsync(game);
+
+            return MapToGameDTO(game);
+        }
+
+        private async Task UpdateUserGamesAsync(Game game)
+        {
+            try
+            {
+                // Obtener los usuarios
+                var player1 = await _unitOfWork.UserRepository.GetByIdAsync(game.Player1Id);
+                if (player1 != null)
+                {
+                    if (player1.Games == null)
+                        player1.Games = new List<Game>();
+
+                    // Verificar si el juego ya existe en la lista
+                    if (!player1.Games.Any(g => g.Id == game.Id))
+                    {
+                        player1.Games.Add(game);
+                        await _unitOfWork.UserRepository.UpdateAsync(player1);
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(game.Player2Id))
+                {
+                    var player2 = await _unitOfWork.UserRepository.GetByIdAsync(game.Player2Id);
+                    if (player2 != null)
+                    {
+                        if (player2.Games == null)
+                            player2.Games = new List<Game>();
+
+                        // Verificar si el juego ya existe en la lista
+                        if (!player2.Games.Any(g => g.Id == game.Id))
+                        {
+                            player2.Games.Add(game);
+                            await _unitOfWork.UserRepository.UpdateAsync(player2);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error updating user games: {ex.Message}");
+                // No lanzamos la excepción para no interrumpir el flujo principal
             }
         }
 
@@ -168,10 +244,15 @@ namespace BackendOcago.Services
                 string message = $"Jugador {userId} lanzó {diceRoll} y llegó a la casilla {newPosition}.";
 
                 // Manejar rebote si supera 63
-                if (newPosition > 63)
+                if (newPosition == 63)
                 {
-                    newPosition = 63 - (newPosition - 63);
-                    message = $"¡Rebote! Jugador {userId} retrocede a la casilla {newPosition}.";
+                    game.Status = GameStatus.Finished;
+                    game.Winner = userId;
+                    message = $"🏆 ¡Jugador {userId} ha ganado!";
+                    game.IsPlayer1Turn = false; // Finaliza el juego
+
+                    // Actualizar la lista de juegos de los usuarios cuando termina la partida
+                    await UpdateUserGamesAsync(game);
                 }
 
                 // Aplicar reglas especiales
