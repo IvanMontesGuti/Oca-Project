@@ -1,6 +1,8 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
+import { useRouter } from "next/navigation"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Send, Dice5, Trophy, Clock } from "lucide-react"
@@ -34,12 +36,13 @@ interface GameState {
 }
 
 export default function WebSocketGame() {
+  const router = useRouter()
   const [username, setUsername] = useState<string>("")
   const [gameIdInput, setGameIdInput] = useState<string>("")
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false)
   const [message, setMessage] = useState<string>("")
   const [showWinnerModal, setShowWinnerModal] = useState<boolean>(false)
-  const [inactivityTimer, setInactivityTimer] = useState<number>(120) // 2 minutes in seconds
+  const [inactivityTimer, setInactivityTimer] = useState<number>(120)
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false)
 
   const [gameState, setGameState] = useState<GameState>({
@@ -85,14 +88,9 @@ export default function WebSocketGame() {
         if (response.data.Status === 1 && !isTimerRunning) {
           startInactivityTimer()
         }
-      }
-
-      // Handle other response types
-      if (response.activeGames) {
-        setGameState((prev) => ({ ...prev, activeGames: response.activeGames }))
-      }
-
-      if (response.message) {
+      } else if (response.action === "activeGames" && response.data) {
+        setGameState((prev) => ({ ...prev, activeGames: response.data }))
+      } else if (response.action === "chatMessage" && response.data) {
         setGameState((prev) => ({
           ...prev,
           messages: [...prev.messages, { sender: response.sender || "System", text: response.message }],
@@ -218,46 +216,13 @@ export default function WebSocketGame() {
     }
   }, [stopInactivityTimer])
 
-  // Generate board cells
-  const renderBoardCells = () => {
-    const cells = []
-    const totalCells = 63
-
-    // Special cells with images (simplified for this example)
-    const specialCells = [1, 5, 9, 14, 18, 23, 27, 32, 36, 41, 45, 50, 54, 59]
-
-    for (let i = 1; i <= totalCells; i++) {
-      const isSpecial = specialCells.includes(i)
-      const isPlayer1Here = gameState.gameData?.Player1Position === i
-      const isPlayer2Here = gameState.gameData?.Player2Position === i
-
-      cells.push(
-        <div
-          key={i}
-          className={`relative flex items-center justify-center border border-black text-sm
-            ${isSpecial ? "bg-pink-500" : "bg-yellow-400"}
-            ${i === 63 ? "col-span-2 row-span-2" : ""}`}
-        >
-          {i}
-          {isSpecial && (
-            <div className="absolute inset-0 flex items-center justify-center opacity-70">
-              <img src={`/placeholder.svg?height=30&width=30`} alt="Special" className="w-full h-full object-contain" />
-            </div>
-          )}
-          {isPlayer1Here && (
-            <div className="absolute top-0 left-0 w-4 h-4 bg-red-600 rounded-full border-2 border-white"></div>
-          )}
-          {isPlayer2Here && (
-            <div className="absolute top-0 right-0 w-4 h-4 bg-blue-600 rounded-full border-2 border-white"></div>
-          )}
-        </div>,
-      )
-    }
-
-    return cells
+  // Función modificada para cerrar el modal y redirigir
+  const closeWinnerModalAndRedirect = () => {
+    setShowWinnerModal(false)
+    router.push("/menu")
   }
 
-  // Winner modal
+  // Winner modal actualizado
   const WinnerModal = () => {
     if (!showWinnerModal || !gameState.gameData?.Winner) return null
 
@@ -267,7 +232,7 @@ export default function WebSocketGame() {
           <Trophy className="w-24 h-24 mx-auto text-yellow-400 mb-4" />
           <h2 className="text-3xl font-bold mb-4">¡Ganador!</h2>
           <p className="text-2xl mb-6">{gameState.gameData.Winner}</p>
-          <Button onClick={() => setShowWinnerModal(false)} className="bg-yellow-400 text-black hover:bg-yellow-500">
+          <Button onClick={closeWinnerModalAndRedirect} className="bg-yellow-400 text-black hover:bg-yellow-500">
             Cerrar
           </Button>
         </div>
@@ -410,11 +375,32 @@ export default function WebSocketGame() {
 
         {/* Game board */}
         <div className="w-3/4 bg-gray-900 rounded-lg p-4">
-          <div className="relative grid grid-cols-8 grid-rows-8 gap-1 h-full">
-            {renderBoardCells()}
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="bg-yellow-400 rounded-full p-8 text-blue-900 font-bold text-4xl">OcaGo!</div>
-            </div>
+          <div className="relative w-full h-full">
+            <Image src="/images/tablero.svg" alt="Tablero de OcaGo" layout="fill" objectFit="contain" />
+            {gameState.gameData && (
+              <>
+                {/* Player 1 token */}
+                <div
+                  className="absolute w-6 h-6 bg-red-600 rounded-full border-2 border-white"
+                  style={{
+                    left: `${(gameState.gameData.Player1Position % 8) * 12.5}%`,
+                    top: `${Math.floor(gameState.gameData.Player1Position / 8) * 12.5}%`,
+                    transform: "translate(-50%, -50%)",
+                  }}
+                />
+                {/* Player 2 token */}
+                {gameState.gameData.Player2Id && (
+                  <div
+                    className="absolute w-6 h-6 bg-blue-600 rounded-full border-2 border-white"
+                    style={{
+                      left: `${(gameState.gameData.Player2Position % 8) * 12.5}%`,
+                      top: `${Math.floor(gameState.gameData.Player2Position / 8) * 12.5}%`,
+                      transform: "translate(-50%, -50%)",
+                    }}
+                  />
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -445,5 +431,4 @@ export default function WebSocketGame() {
     </div>
   )
 }
-
 
