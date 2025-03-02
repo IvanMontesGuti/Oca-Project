@@ -118,7 +118,7 @@ export default function WebSocketGame() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false)
   const [message, setMessage] = useState<string>("")
   const [showWinnerModal, setShowWinnerModal] = useState<boolean>(false)
-  const [inactivityTimer, setInactivityTimer] = useState<number>(120)
+  const [inactivityTimer, setInactivityTimer] = useState<number>(30)
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false)
 
   const [gameState, setGameState] = useState<GameState>({
@@ -192,15 +192,13 @@ export default function WebSocketGame() {
   // Inactivity timer functions
   const startInactivityTimer = () => {
     setIsTimerRunning(true)
-    setInactivityTimer(30) // Reset to 2 minutes
-    if(inactivityTimer <= 1){
-      surrender()
-    }
+    setInactivityTimer(30) // Reset to 30 seconds
 
     timerRef.current = setInterval(() => {
       setInactivityTimer((prev) => {
         if (prev <= 1) {
           // Time's up, call surrender
+          console.log("Timer reached zero, surrendering...")
           surrender()
           stopInactivityTimer()
           return 0
@@ -254,7 +252,12 @@ export default function WebSocketGame() {
 
   const surrender = () => {
     if (gameState.gameData?.Id) {
+      console.log("Executing surrender for game:", gameState.gameData.Id)
       sendMessage({ Action: "Surrender", GameId: gameState.gameData.Id })
+      // Asegurar que el timer se detiene
+      stopInactivityTimer()
+    } else {
+      console.error("Cannot surrender: No active game")
     }
   }
 
@@ -469,16 +472,16 @@ export default function WebSocketGame() {
 
         {/* Game board */}
         <div className="w-3/4 bg-gray-900 rounded-lg p-4">
-          <div className="relative w-full h-full">
-            <Image src="/images/tablero.svg" alt="Tablero de OcaGo" layout="fill" objectFit="contain" />
+          <div className="relative w-full h-full" style={{ aspectRatio: "1478/1102" }}>
+            <Image src="/images/tablero2.svg" alt="Tablero de OcaGo" layout="fill" objectFit="contain" />
             {gameState.gameData && (
               <>
                 {/* Player 1 token */}
                 <div
                   className="absolute w-6 h-6 bg-red-600 rounded-full border-2 border-white"
                   style={{
-                    left: `${(POSITION_COORDINATES[gameState.gameData.Player1Position]?.x || 0) * (100 / 12)}%`,
-                    top: `${(POSITION_COORDINATES[gameState.gameData.Player1Position]?.y || 0) * (100 / 9)}%`,
+                    left: `calc(${(POSITION_COORDINATES[gameState.gameData.Player1Position]?.x || 0) * (100 / 12)}%)`,
+                    top: `calc(${(POSITION_COORDINATES[gameState.gameData.Player1Position]?.y || 0) * (100 / 9)}%)`,
                     transform: "translate(-50%, -50%)",
                     zIndex: 10,
                   }}
@@ -488,8 +491,8 @@ export default function WebSocketGame() {
                   <div
                     className="absolute w-6 h-6 bg-blue-600 rounded-full border-2 border-white"
                     style={{
-                      left: `${(POSITION_COORDINATES[gameState.gameData.Player2Position]?.x || 0) * (100 / 12)}%`,
-                      top: `${(POSITION_COORDINATES[gameState.gameData.Player2Position]?.y || 0) * (100 / 9)}%`,
+                      left: `calc(${(POSITION_COORDINATES[gameState.gameData.Player2Position]?.x || 0) * (100 / 12)}%)`,
+                      top: `calc(${(POSITION_COORDINATES[gameState.gameData.Player2Position]?.y || 0) * (100 / 9)}%)`,
                       transform: "translate(-50%, -50%)",
                       zIndex: 10,
                     }}
