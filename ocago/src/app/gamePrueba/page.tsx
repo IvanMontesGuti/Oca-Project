@@ -9,9 +9,18 @@ import { Send, Dice5, Trophy, Clock } from "lucide-react"
 
 // Define types for our WebSocket messages
 type WebSocketMessage = {
-  Action: "CreateGame" | "JoinGame" | "Surrender" | "MakeMove" | "GetGame" | "GetActiveGames" | "SendMessage"
+  Action: "CreateGame" | "JoinGame" | "Surrender" | "MakeMove" | "GetGame" | "GetActiveGames" | "SendChat"
   GameId?: string
-  Message?: string
+  ChatMessage?: string
+}
+
+// Define a type for the chat message data
+type ChatMessageData = {
+  GameId: string
+  Message: string
+  SenderId: string
+  SenderName: string
+  Timestamp: string
 }
 
 // Game state interface based on the actual response structure
@@ -91,9 +100,10 @@ export default function WebSocketGame() {
       } else if (response.action === "activeGames" && response.data) {
         setGameState((prev) => ({ ...prev, activeGames: response.data }))
       } else if (response.action === "chatMessage" && response.data) {
+        const chatData = response.data as ChatMessageData
         setGameState((prev) => ({
           ...prev,
-          messages: [...prev.messages, { sender: response.sender || "System", text: response.message }],
+          messages: [...prev.messages, { sender: chatData.SenderName, text: chatData.Message }],
         }))
       }
     }
@@ -185,12 +195,6 @@ export default function WebSocketGame() {
     }
   }
 
-  const getGameInfo = () => {
-    if (gameState.gameData?.Id) {
-      sendMessage({ Action: "GetGame", GameId: gameState.gameData.Id })
-    }
-  }
-
   const getActiveGames = () => {
     sendMessage({ Action: "GetActiveGames" })
   }
@@ -198,9 +202,9 @@ export default function WebSocketGame() {
   const sendChatMessage = () => {
     if (message.trim() && gameState.gameData?.Id) {
       sendMessage({
-        Action: "SendMessage",
+        Action: "SendChat",
         GameId: gameState.gameData.Id,
-        Message: message,
+        ChatMessage: message,
       })
       setMessage("")
     }
@@ -362,9 +366,6 @@ export default function WebSocketGame() {
                       ? "In progress"
                       : "Finished"}
                 </div>
-                <Button onClick={getGameInfo} className="w-full bg-blue-600 hover:bg-blue-700">
-                  Refresh Game Info
-                </Button>
               </>
             )}
             <Button onClick={getActiveGames} className="w-full bg-purple-600 hover:bg-purple-700">

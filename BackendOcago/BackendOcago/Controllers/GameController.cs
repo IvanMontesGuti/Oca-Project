@@ -124,6 +124,43 @@ namespace BackendOcago.Controllers
                             Winner = surrenderResult.Winner
                         }, "surrenderUpdate");
                         break;
+                    case "SendChat":
+                        // Procesar mensaje de chat
+                        if (string.IsNullOrEmpty(jsonMessage.ChatMessage))
+                        {
+                            Console.WriteLine("❌ Mensaje de chat vacío, ignorando");
+                            break;
+                        }
+
+                        Console.WriteLine($"💬 Mensaje de chat recibido de {userId} para partida {jsonMessage.GameId}: {jsonMessage.ChatMessage}");
+
+                        // Obtener información del juego para verificar que el usuario está en la partida
+                        var chatGameInfo = await _gameService.GetGameAsync(jsonMessage.GameId);
+
+                        // Verificar que el usuario sea parte de la partida
+                        if (chatGameInfo.Player1Id != userId && chatGameInfo.Player2Id != userId)
+                        {
+                            await SendMessageToClient(userId, new
+                            {
+                                action = "error",
+                                data = new { error = "No puedes enviar mensajes a una partida en la que no participas" }
+                            });
+                            break;
+                        }
+
+                        // Crear objeto de mensaje de chat
+                        var chatMessage = new
+                        {
+                            GameId = jsonMessage.GameId,
+                            SenderId = userId,
+                            SenderName = userId, // Podrías obtener el nombre real del usuario si lo tienes
+                            Message = jsonMessage.ChatMessage,
+                            Timestamp = DateTime.UtcNow
+                        };
+
+                        // Notificar a ambos jugadores
+                        await NotifyChatMessage(chatGameInfo, chatMessage);
+                        break;
                 }
             }
             catch (Exception ex)
@@ -134,6 +171,28 @@ namespace BackendOcago.Controllers
                     data = new { error = ex.Message }
                 });
             }
+        }
+
+        private async Task NotifyChatMessage(GameDTO game, object chatMessage)
+        {
+            var messageObject = new
+            {
+                action = "chatMessage",
+                data = chatMessage
+            };
+
+            // Enviar mensaje a ambos jugadores
+            if (!string.IsNullOrEmpty(game.Player1Id))
+            {
+                await SendMessageToClient(game.Player1Id, messageObject);
+            }
+
+            if (!string.IsNullOrEmpty(game.Player2Id))
+            {
+                await SendMessageToClient(game.Player2Id, messageObject);
+            }
+
+            Console.WriteLine($"💬 Mensaje de chat enviado a jugadores de partida {game.Id}");
         }
 
         private async Task NotifyPlayers(object data, string action)
@@ -196,5 +255,6 @@ namespace BackendOcago.Controllers
     {
         public string Action { get; set; }
         public Guid GameId { get; set; }
+        public string ChatMessage { get; set; } // Nuevo campo para mensajes de chat
     }
 }
