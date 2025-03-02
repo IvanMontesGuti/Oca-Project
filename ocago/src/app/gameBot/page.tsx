@@ -239,7 +239,7 @@ export default function WebSocketGame() {
   }
 
   // Game actions
-  const CreateBotGame = () => {
+  const createBotGame = () => {
     sendMessage({ Action: "CreateBotGame" })
   }
 
@@ -384,6 +384,30 @@ export default function WebSocketGame() {
 
       <div className="flex flex-1 gap-4">
         {/* Left sidebar */}
+        <div className="w-1/4 flex flex-col gap-4">
+          <div className="bg-gray-900 rounded-lg p-4 flex-1">
+            <h2 className="text-2xl font-bold mb-2">Chat</h2>
+            <div className="bg-gray-700 rounded-lg p-2 h-[calc(100%-80px)] overflow-y-auto mb-2">
+              {gameState.messages.map((msg, index) => (
+                <div key={index} className="mb-2">
+                  <span className="font-bold">{msg.sender}: </span>
+                  <span>{msg.text}</span>
+                </div>
+              ))}
+            </div>
+            <div className="flex">
+              <Input
+                type="text"
+                placeholder="Escribe algo..."
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                className="flex-1 bg-gray-800"
+              />
+              <Button onClick={sendChatMessage} className="ml-2 bg-blue-600 hover:bg-blue-700" size="icon">
+                <Send size={16} />
+              </Button>
+            </div>
+          </div>
 
           <div className="bg-blue-900 rounded-lg p-4 flex flex-col items-center">
             <div className="w-24 h-24 bg-yellow-400 rounded-lg mb-4 flex items-center justify-center">
@@ -405,7 +429,7 @@ export default function WebSocketGame() {
           <div className="space-y-2">
             {!gameState.gameData?.Id ? (
               <>
-                <Button onClick={CreateBotGame} className="w-full bg-green-600 hover:bg-green-700">
+                <Button onClick={createBotGame} className="w-full bg-green-600 hover:bg-green-700">
                   Create New Game
                 </Button>
                 <div className="flex gap-2">
@@ -502,4 +526,3 @@ export default function WebSocketGame() {
     </div>
   )
 }
-
