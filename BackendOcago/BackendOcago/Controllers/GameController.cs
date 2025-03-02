@@ -95,6 +95,14 @@ namespace BackendOcago.Controllers
                             data = gameInfo2
                         });
                         break;
+                    case "CreateBotGame":
+                        var botGame = await _gameService.CreateBotGameAsync(userId);
+                        await SendMessageToClient(userId, new
+                        {
+                            action = "gameUpdate",
+                            data = botGame
+                        });
+                        break;
                     case "GetGame":
                         var gameInfo = await _gameService.GetGameAsync(jsonMessage.GameId);
                         await SendMessageToClient(userId, new
