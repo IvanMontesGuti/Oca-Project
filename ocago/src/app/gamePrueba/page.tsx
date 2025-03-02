@@ -194,6 +194,12 @@ export default function WebSocketGame() {
       resetInactivityTimer()
     }
   }
+  
+  const getGameInfo = () => {
+    if (gameState.gameData?.Id) {
+      sendMessage({ Action: "GetGame", GameId: gameState.gameData.Id })
+    }
+  }
 
   const getActiveGames = () => {
     sendMessage({ Action: "GetActiveGames" })
@@ -366,6 +372,9 @@ export default function WebSocketGame() {
                       ? "In progress"
                       : "Finished"}
                 </div>
+                <Button onClick={getGameInfo} className="w-full bg-blue-600 hover:bg-blue-700">
+                  Refresh Game Info
+                </Button>
               </>
             )}
             <Button onClick={getActiveGames} className="w-full bg-purple-600 hover:bg-purple-700">
