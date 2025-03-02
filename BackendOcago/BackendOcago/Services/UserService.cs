@@ -9,7 +9,8 @@ public class UserService
 {
     private readonly UnitOfWork _unitOfWork;
     private readonly UserMapper _mapper;
-    
+    //private readonly string _rootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
+
 
     public UserService(UnitOfWork unitOfWork, UserMapper mapper)
     {
@@ -99,11 +100,25 @@ public class UserService
     public async Task<UserDto> UpdateUserAsync(long userId, string newMail, string newNickname)
     {
         var userEntity = await _unitOfWork.UserRepository.GetByIdAsync(userId) ?? throw new Exception("El usuario especificado no existe");
+        
+        string oldNickname = userEntity.Nickname;
+        string newAvatarUrl = "images/" + newNickname + ".png";
 
         userEntity.Mail = newMail;
         userEntity.Nickname = newNickname;
-        userEntity.AvatarUrl = "images/" + newNickname + ".png";
+        //userEntity.AvatarUrl = newAvatarUrl;
 
+        //string oldImagePath = Path.Combine(_rootPath, oldNickname + ".png");
+        //string newImagePath = Path.Combine(_rootPath, newNickname +".png");
+
+        //if (File.Exists(oldImagePath))
+        //{
+        //    if (File.Exists(newImagePath))
+        //    {
+        //        File.Delete(newImagePath);
+        //    }
+        //    File.Move(oldImagePath, newImagePath);
+        //}
         _unitOfWork.UserRepository.Update(userEntity);
 
         await _unitOfWork.UserRepository.SaveAsync();

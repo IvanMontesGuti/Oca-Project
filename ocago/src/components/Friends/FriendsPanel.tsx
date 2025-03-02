@@ -6,7 +6,7 @@ import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { API_SEARCH_URL } from "@/lib/endpoints/config"
+import { API_SEARCH_URL, SEARCH_NONFRIENDS_URL} from "@/lib/endpoints/config"
 import { useAuth } from "@/context/AuthContext"
 import { useWebSocket } from "@/context/WebSocketContext"
 import FriendsList from "./FriendsList"
@@ -17,7 +17,7 @@ import { Users, UserPlus, Search } from "lucide-react"
 interface Friend {
   id: string
   nickname: string
-  avatarUrl?: string
+  avatarUrl: string
   status: number
 }
 
@@ -75,12 +75,12 @@ export default function FriendsPanel() {
     }
     setIsLoading(true)
     try {
-      const response = await fetch(API_SEARCH_URL(query))
+      const response = await fetch(SEARCH_NONFRIENDS_URL(query, userInfo?.id))
       if (!response.ok) throw new Error("Failed to search users")
       const data = await response.json()
       setSearchResults(data.filter((user: Friend) => user.id !== userInfo?.id))
     } catch (error) {
-      setError("Error al buscar usuarios.")
+      // setError("Error al buscar usuarios.")
     } finally {
       setIsLoading(false)
     }
@@ -140,7 +140,6 @@ export default function FriendsPanel() {
           <FriendsList friends={friends} />
         </DialogContent>
       </Dialog>
-
       <Dialog open={isRequestsModalOpen} onOpenChange={setRequestsModalOpen}>
         <DialogContent className="bg-gradient-to-br from-purple-900 to-indigo-900 text-white">
           <DialogHeader>

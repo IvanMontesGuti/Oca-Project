@@ -15,8 +15,7 @@ import { API_BASE_URL } from "@/lib/endpoints/config"
 
 export function Header2() {
   const { userInfo, logout } = useAuth()
-  const { family_name, unique_name } = userInfo
-
+  const { family_name, unique_name } = userInfo || {};
   const handleLogout = () => {
     logout()
     toast.success("Sesión cerrada correctamente")

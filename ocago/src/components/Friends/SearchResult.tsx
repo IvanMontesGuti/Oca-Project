@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { API_BASE_URL } from "@/lib/endpoints/config";
 import { useAuth } from "@/context/AuthContext";
 import { useWebSocket } from "@/context/WebSocketContext";
+import { useRouter } from "next/navigation";  // Importar useRouter
 
 interface SearchResult {
   id: string;
@@ -20,6 +21,7 @@ interface SearchResultsProps {
 export default function SearchResults({ results = [], sendFriendRequest }: SearchResultsProps) {
   const { userInfo } = useAuth();
   const { friends, friendRequests } = useWebSocket();
+  const router = useRouter();  // Inicializar useRouter
 
   if (!Array.isArray(results)) {
     console.error("SearchResults expected an array but received:", results);
@@ -40,10 +42,17 @@ export default function SearchResults({ results = [], sendFriendRequest }: Searc
           const hasPendingRequest = friendRequests.some(request => request.id === user.id);
 
           return (
-            <div key={user?.id || Math.random()} className="flex items-center justify-between group">
+            <div
+              key={user?.id || Math.random()}
+              className="flex items-center justify-between group cursor-pointer"
+              onClick={() => router.push(`/profile/${user.nickname}`)}
+            >
               <div className="flex items-center gap-3">
                 <Avatar>
-                  <AvatarImage src={user?.avatarUrl ? `${API_BASE_URL}/${user.avatarUrl}` : undefined} alt={user?.nickname || 'Usuario'} />
+                  <AvatarImage
+                    src={user?.avatarUrl ? `${API_BASE_URL}/${user.avatarUrl}` : undefined}
+                    alt={user?.nickname || 'Usuario'}
+                  />
                   <AvatarFallback>{user?.nickname ? user.nickname.slice(0, 2).toUpperCase() : "NA"}</AvatarFallback>
                 </Avatar>
                 <div className="font-medium leading-none text-white">{user?.nickname || "Desconocido"}</div>
@@ -51,7 +60,13 @@ export default function SearchResults({ results = [], sendFriendRequest }: Searc
               {hasPendingRequest ? (
                 <Button className="bg-gray-500 text-white" disabled>Solicitud enviada</Button>
               ) : (
-                <Button className="bg-blue-500 hover:bg-blue-600 text-white" onClick={() => sendFriendRequest(user.id)}>
+                <Button
+                  className="bg-blue-500 hover:bg-blue-600 text-white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    sendFriendRequest(user.id);
+                  }}
+                >
                   Enviar solicitud
                 </Button>
               )}

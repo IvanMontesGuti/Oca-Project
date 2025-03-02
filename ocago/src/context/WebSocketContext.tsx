@@ -4,12 +4,13 @@ import React, { createContext, ReactNode, useContext, useEffect, useState } from
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { API_BASE_SOCKET_URL } from "@/lib/endpoints/config";
 
 interface Friend {
   id: string;
   nickname: string;
   status: number;
-  avatarUrl?: string;
+  avatarUrl: string;
 }
 
 interface WebSocketContextType {
@@ -34,7 +35,7 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
 
   useEffect(() => {
     if (userId) {
-      const ws = new WebSocket(`wss://localhost:7107/socket/${userId}`);
+      const ws = new WebSocket(`${API_BASE_SOCKET_URL}/socket/${userId}`);
       setSocket(ws);
 
       ws.onopen = () => {
@@ -89,7 +90,7 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
                   onClick={() => {
                     sendMessage({
                       Type: "respondFriendRequest",
-                      SenderId: String(userInfo.id),
+                      SenderId: String(userId),
                       ReceiverId: String(message.SenderId),
                       Accepted: true, // Aceptar solicitud
                     });
@@ -103,7 +104,7 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
                   onClick={() => {
                     sendMessage({
                       Type: "respondFriendRequest",
-                      SenderId: String(userInfo.id),
+                      SenderId: String(userId),
                       ReceiverId: String(message.SenderId),
                       Accepted: false, // Rechazar solicitud
                     });
@@ -134,7 +135,7 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
             console.error("⚠️ No se recibió MatchRequestId en invitationSent");
           }
           break;
-          
+
         case "invitationReceived":
           console.log("📩 Invitación recibida:", message);
 
@@ -160,7 +161,7 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
                   onClick={() => {
                     sendMessage({
                       Type: "respondInvitation",
-                      SenderId: String(userInfo.id),
+                      SenderId: String(userId),
                       matchRequestId: message.MatchRequestId,
                       Accepted: true,
                     });
@@ -175,7 +176,7 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
                   onClick={() => {
                     sendMessage({
                       Type: "respondInvitation",
-                      SenderId: String(userInfo.id),
+                      SenderId: String(userId),
                       matchRequestId: message.MatchRequestId,
                       Accepted: false,
                     });
@@ -251,6 +252,7 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
       sendMessage({ type: "getFriends", senderId: String(userId) });
     }
   };
+
 
   return (
     <WebSocketContext.Provider value={{

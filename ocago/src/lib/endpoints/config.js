@@ -1,4 +1,7 @@
-export const API_BASE_URL = "https://localhost:7107";
+const API_BASE = "localhost:7107";
+
+export const API_BASE_URL = `https://${API_BASE}`;
+export const API_BASE_SOCKET_URL = `wss://${API_BASE}`;
 
 /* --- AUTHORIZATION CONTROLLER --- */
 const API_AUTH_URL = `${API_BASE_URL}/api/Auth`;
@@ -8,7 +11,10 @@ export const REGISTER_URL = `${API_AUTH_URL}/Register`;
 /* --- USER CONTROLLER --- */
 const API_USER_URL = `${API_BASE_URL}/api/User`;
 export const GET_USER_BY_ID_URL = (id) => `${API_USER_URL}/${id}`; 
-export const UPDATE_USER_URL = `${API_USER_URL}/Update`;
+export const GET_USER_BY_NICKNAME_URL = (nickname) => `${API_USER_URL}/Get/${nickname}`; 
+
+export const UPDATE_USER_URL = (userId, newMail, newNickname) => `${API_USER_URL}/Update?userId=${userId}&newMail=${encodeURIComponent(newMail)}&newNickname=${encodeURIComponent(newNickname)}`;
+export const CHANGE_PASSWORD_URL = `${API_USER_URL}/ChangePassword`;
 export const UPDATE_USER_STATE = (num, id) => `${API_USER_URL}/Status?userStatusRequest=${num}&userId=${id}`;
 export const GET_COUNT_STATUS = (num) => `${API_USER_URL}/CountStatus?estado=${num}`;
 

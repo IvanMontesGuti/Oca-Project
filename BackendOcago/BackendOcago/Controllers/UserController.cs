@@ -32,6 +32,13 @@ public class UserController : ControllerBase
         return Ok(user);
     }
 
+    [HttpGet("Get/{nickname}")]
+    public async Task<IActionResult> GetByNickname(string nickname)
+    {
+        var user = await _userService.GetByNickNameAsync(nickname);
+        return Ok(user);
+    }
+
     [HttpPut("Status")]
     public async Task<UserDto> ChangeStatus(UserStatus userStatusRequest, long userId)
     {

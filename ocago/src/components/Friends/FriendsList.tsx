@@ -4,11 +4,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { API_BASE_URL } from "@/lib/endpoints/config"
 import { useWebSocket } from "@/context/WebSocketContext"
+import { useRouter } from "next/navigation";  // Importar useRouter
 
 interface Friend {
   id: string
   nickname: string
-  avatarUrl?: string
+  avatarUrl: string
   status: number
 }
 
@@ -17,13 +18,13 @@ interface FriendsListProps {
 }
 
 export default function FriendsList({ friends = [] }: FriendsListProps) {
-  const { sendMessage, sendInvitation} = useWebSocket()
+  const { sendInvitation } = useWebSocket()
+  const router = useRouter();
 
   if (!Array.isArray(friends)) {
     console.error("FriendsList expected an array but received:", friends)
     return <div className="text-white text-center">Error cargando amigos</div>
   }
-
   const getStatusText = (status: number) => {
     switch (status) {
       case 0:
@@ -52,16 +53,13 @@ export default function FriendsList({ friends = [] }: FriendsListProps) {
 
           return (
             <div key={friend?.id || Math.random()} className="flex items-center justify-between group">
-              <div className="flex items-center gap-3">
+
+
+              <div className="flex items-center gap-3" onClick={() => router.push(`/profile/${friend.nickname}`)}>
                 <div className="relative">
                   <Avatar>
-                    <AvatarImage
-                      src={friend?.avatarUrl ? `${API_BASE_URL}/${friend.avatarUrl}` : undefined}
-                      alt={friend?.nickname || "Usuario"}
-                    />
-                    <AvatarFallback>
-                      {friend?.nickname ? friend.nickname.slice(0, 1).toUpperCase() : "NA"}
-                    </AvatarFallback>
+                    <AvatarImage src={friend?.avatarUrl ? `${API_BASE_URL}/${friend.avatarUrl}` : undefined} alt={friend?.nickname || 'Usuario'} />
+                    <AvatarFallback>{friend?.nickname ? friend.nickname.slice(0, 1).toUpperCase() : "NA"}</AvatarFallback>
                   </Avatar>
                   <span
                     className={`absolute bottom-0 right-0 h-3 w-3 rounded-full ${friend.status === 0 ? "bg-gray-500" : "bg-green-500"} ring-2 ring-white`}

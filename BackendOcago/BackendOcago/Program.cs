@@ -120,11 +120,13 @@ public class Program
 
         app.UseHttpsRedirection();
         app.UseRouting();
+        app.UseAuthentication();
+        app.UseAuthorization();
+        app.MapControllers();
         app.UseStaticFiles();
 
         // Habilitar autenticación y autorización
-        app.UseAuthentication();
-        app.UseAuthorization();
+
 
         // Configuración de archivos estáticos
         app.UseStaticFiles(new StaticFileOptions
@@ -134,7 +136,6 @@ public class Program
         );
 
         // Mapear controladores
-        app.MapControllers();
 
         // Llamada al método de creación de la base de datos (seed)
         await SeedDatabase(app.Services);
