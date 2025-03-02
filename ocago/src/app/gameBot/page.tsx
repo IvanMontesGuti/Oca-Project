@@ -53,6 +53,7 @@ const CELL_HEIGHT = 113
 
 // Mapeo de posiciones a coordenadas x,y en la cuadrícula de 12x9
 const POSITION_COORDINATES = {
+  0: { x: 2, y: 7 },
   1: { x: 3, y: 7 },
   2: { x: 4, y: 7 },
   3: { x: 5, y: 7 },

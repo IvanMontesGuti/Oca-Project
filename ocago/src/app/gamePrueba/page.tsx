@@ -53,6 +53,7 @@ const CELL_HEIGHT = 113
 
 // Mapeo de posiciones a coordenadas x,y en la cuadrícula de 12x9
 const POSITION_COORDINATES = {
+  0: { x: 2, y: 7 },
   1: { x: 3, y: 7 },
   2: { x: 4, y: 7 },
   3: { x: 5, y: 7 },
@@ -146,6 +147,7 @@ export default function WebSocketGame() {
   const [showWinnerModal, setShowWinnerModal] = useState<boolean>(false)
   const [inactivityTimer, setInactivityTimer] = useState<number>(30)
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false)
+  const [isRollingDice, setIsRollingDice] = useState<boolean>(false)
 
   const [gameState, setGameState] = useState<GameState>({
     gameData: null,
@@ -240,7 +242,12 @@ export default function WebSocketGame() {
       setInactivityTimer((prev) => {
         if (prev <= 1) {
           // Time's up, call surrender
-          console.log("Timer reached zero, surrendering...")
+          console.log("Timer reached zero, surrendering due to inactivity...")
+
+          // Show alert about inactivity loss
+          alert(`¡${username} ha perdido por inactividad!`)
+
+          // Call surrender
           surrender()
           stopInactivityTimer()
           return 0
@@ -406,6 +413,22 @@ export default function WebSocketGame() {
         <div className="text-center mb-2 text-yellow-400 font-mono">ID: {gameState.gameData.Id}</div>
       )}
 
+      {/* Players names display */}
+      {gameState.gameData && (
+        <div className="flex justify-center gap-8 mb-4">
+          <div className="bg-red-600 px-4 py-2 rounded-lg shadow-lg">
+            <span className="font-bold">Jugador 1: </span>
+            <span>{gameState.gameData.Player1Id}</span>
+          </div>
+          {gameState.gameData.Player2Id && (
+            <div className="bg-blue-600 px-4 py-2 rounded-lg shadow-lg">
+              <span className="font-bold">Jugador 2: </span>
+              <span>{gameState.gameData.Player2Id}</span>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">
           TURNO:{" "}
@@ -416,7 +439,7 @@ export default function WebSocketGame() {
           </span>
         </h1>
         <div className="flex space-x-4 items-center">
-          <div className="flex items-center">
+          <div className={`flex items-center ${inactivityTimer <= 10 ? "text-red-500 font-bold animate-pulse" : ""}`}>
             <Clock className="mr-1" size={16} />
             Tiempo restante: {formatTime(inactivityTimer)}
           </div>
@@ -456,16 +479,27 @@ export default function WebSocketGame() {
           </div>
 
           <div className="bg-blue-900 rounded-lg p-4 flex flex-col items-center">
-            <div className="w-24 h-24 bg-yellow-400 rounded-lg mb-4 flex items-center justify-center">
+            <div
+              className={`w-24 h-24 bg-yellow-400 rounded-lg mb-4 flex items-center justify-center ${
+                isRollingDice ? "animate-spin-slow" : ""
+              }`}
+            >
               <Dice5 size={64} className="text-white" />
             </div>
             <Button
-              onClick={makeMove}
+              onClick={() => {
+                setIsRollingDice(true)
+                setTimeout(() => {
+                  makeMove()
+                  setIsRollingDice(false)
+                }, 1000)
+              }}
               className="w-full bg-yellow-400 text-black hover:bg-yellow-500 font-bold text-xl"
               disabled={
                 (gameState.gameData?.IsPlayer1Turn && username !== gameState.gameData?.Player1Id) ||
                 (!gameState.gameData?.IsPlayer1Turn && username !== gameState.gameData?.Player2Id) ||
-                gameState.gameData?.Status !== 1
+                gameState.gameData?.Status !== 1 ||
+                isRollingDice
               }
             >
               TIRAR
@@ -547,6 +581,7 @@ export default function WebSocketGame() {
                     top: `${getTokenPosition(gameState.gameData.Player1Position).y}%`,
                     transform: "translate(-50%, -50%)",
                     zIndex: 10,
+                    transition: "left 1.5s ease-in-out, top 1.5s ease-in-out",
                   }}
                 >
                   <span className="text-white font-bold text-xs">P1</span>
@@ -561,6 +596,7 @@ export default function WebSocketGame() {
                       top: `${getTokenPosition(gameState.gameData.Player2Position).y}%`,
                       transform: "translate(-50%, -50%)",
                       zIndex: 10,
+                      transition: "left 1.5s ease-in-out, top 1.5s ease-in-out",
                     }}
                   >
                     <span className="text-white font-bold text-xs">P2</span>
