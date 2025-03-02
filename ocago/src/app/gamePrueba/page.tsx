@@ -160,101 +160,169 @@ export default function WebSocketGame() {
 
   // Connect to WebSocket
   const connectWebSocket = () => {
-    if (!username) return
-
-    const ws = new WebSocket(`wss://localhost:7107/ws/game/${username}/connect`)
-
+    if (!username) return;
+  
+    const ws = new WebSocket(`wss://localhost:7107/ws/game/${username}/connect`);
+  
     ws.onopen = () => {
-      console.log("WebSocket connected")
-      setGameState((prev) => ({ ...prev, isConnected: true }))
-    }
-
+      console.log("WebSocket connected");
+      setGameState((prev) => ({ ...prev, isConnected: true }));
+      
+      // When reconnected, immediately request current game state if we had a game
+      if (prev.gameData?.Id) {
+        console.log("Reconnected - requesting game state for:", prev.gameData.Id);
+        setTimeout(() => {
+          ws.send(JSON.stringify({ Action: "GetGame", GameId: prev.gameData.Id }));
+        }, 500);
+      }
+    };
+  
     ws.onmessage = (event) => {
-      const response = JSON.parse(event.data)
-      console.log("Received data:", response)
-
+      const response = JSON.parse(event.data);
+      console.log("Received data:", response);
+  
       if (response.action === "gameUpdate" && response.data) {
         // Reset inactivity timer when game updates
-        resetInactivityTimer()
-
+        resetInactivityTimer();
+  
+        // Store game ID in localStorage as backup
+        if (response.data.Id) {
+          localStorage.setItem('currentGameId', response.data.Id);
+        }
+  
         // Log positions for debugging
         console.log(
           "Player 1 position:",
           response.data.Player1Position,
           "Coordinates:",
           POSITION_COORDINATES[response.data.Player1Position],
-        )
+        );
         if (response.data.Player2Id) {
           console.log(
             "Player 2 position:",
             response.data.Player2Position,
             "Coordinates:",
             POSITION_COORDINATES[response.data.Player2Position],
-          )
+          );
         }
-
+  
         setGameState((prev) => ({
           ...prev,
           gameData: response.data,
-        }))
-
+        }));
+  
         // Check if game is finished and show winner modal
         if (response.data.Status === 2 && response.data.Winner) {
-          setShowWinnerModal(true)
-          stopInactivityTimer()
+          setShowWinnerModal(true);
+          stopInactivityTimer();
         }
-
+  
         // Start timer if game is in progress
         if (response.data.Status === 1 && !isTimerRunning) {
-          startInactivityTimer()
+          startInactivityTimer();
         }
       } else if (response.action === "activeGames" && response.data) {
-        setGameState((prev) => ({ ...prev, activeGames: response.data }))
+        setGameState((prev) => ({ ...prev, activeGames: response.data }));
       } else if (response.action === "chatMessage" && response.data) {
-        const chatData = response.data as ChatMessageData
+        const chatData = response.data;
         setGameState((prev) => ({
           ...prev,
           messages: [...prev.messages, { sender: chatData.SenderName, text: chatData.Message }],
-        }))
+        }));
       }
-    }
-
+    };
+  
     ws.onclose = () => {
-      console.log("WebSocket disconnected")
-      setGameState((prev) => ({ ...prev, isConnected: false }))
-      stopInactivityTimer()
-    }
-
+      console.log("WebSocket disconnected - attempting to reconnect in 3 seconds");
+      setGameState((prev) => ({ ...prev, isConnected: false }));
+      stopInactivityTimer();
+      
+      // Attempt to reconnect after 3 seconds
+      setTimeout(() => {
+        if (document.visibilityState !== 'hidden') {
+          console.log("Attempting to reconnect WebSocket...");
+          connectWebSocket();
+        }
+      }, 3000);
+    };
+  
     ws.onerror = (error) => {
-      console.error("WebSocket error:", error)
-    }
-
-    webSocketRef.current = ws
-    setIsLoggedIn(true)
-  }
+      console.error("WebSocket error:", error);
+    };
+  
+    webSocketRef.current = ws;
+    setIsLoggedIn(true);
+  };
 
   // Inactivity timer functions
   const startInactivityTimer = () => {
-    setIsTimerRunning(true)
-    setInactivityTimer(30) // Reset to 30 seconds
-
+    setIsTimerRunning(true);
+    setInactivityTimer(30); // Reset to 30 seconds
+  
     timerRef.current = setInterval(() => {
       setInactivityTimer((prev) => {
         if (prev <= 1) {
-          console.log("Timer reached zero, surrendering due to inactivity...");
+          console.log("Timer reached zero, preparing to surrender due to inactivity...");
           
-        
-          setTimeout(() => {
-            surrender();
-          }, 500); // Espera medio segundo antes de llamar a surrender
-        
+          // Get the game ID from state or localStorage backup
+          const gameId = gameState.gameData?.Id || localStorage.getItem('currentGameId');
           
+          // Debug the current state
+          console.log("Current game state:", JSON.stringify({
+            gameId: gameId,
+            stateGameId: gameState.gameData?.Id,
+            status: gameState.gameData?.Status,
+            wsState: webSocketRef.current ? webSocketRef.current.readyState : 'null'
+          }));
+          
+          if (!gameId) {
+            console.error("Cannot surrender: No game ID available in state or backup");
+            stopInactivityTimer();
+            return 0;
+          }
+          
+          if (!webSocketRef.current || webSocketRef.current.readyState !== WebSocket.OPEN) {
+            console.error("Cannot surrender: WebSocket not connected (state:", 
+              webSocketRef.current ? webSocketRef.current.readyState : "null)");
+            
+            // Try to reconnect
+            if (!webSocketRef.current || webSocketRef.current.readyState !== WebSocket.CONNECTING) {
+              console.log("Attempting to reconnect before surrendering...");
+              connectWebSocket();
+              
+              // Set a one-time timer to try surrender after reconnection
+              setTimeout(() => {
+                if (webSocketRef.current && webSocketRef.current.readyState === WebSocket.OPEN) {
+                  console.log("Reconnected - now attempting delayed surrender");
+                  webSocketRef.current.send(JSON.stringify({ Action: "Surrender", GameId: gameId }));
+                }
+              }, 2000);
+            }
+            
+            stopInactivityTimer();
+            return 0;
+          }
+          
+          // We have both game ID and active websocket - now surrender
+          console.log("Executing surrender for game:", gameId);
+          
+          try {
+            // Send surrender message immediately
+            const surrenderMsg = JSON.stringify({ Action: "Surrender", GameId: gameId });
+            console.log("Sending message:", surrenderMsg);
+            webSocketRef.current.send(surrenderMsg);
+            console.log("Surrender message sent successfully");
+          } catch (error) {
+            console.error("Error sending surrender message:", error);
+          }
+          
+          stopInactivityTimer();
           return 0;
         }        
-        return prev - 1
-      })
-    }, 1000)
-  }
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
   const stopInactivityTimer = useCallback(() => {
     if (timerRef.current) {
@@ -299,17 +367,56 @@ export default function WebSocketGame() {
   }
 
   const surrender = () => {
-    console.log("Attempting to surrender...");
-    if (!gameState.gameData?.Id) {
-      console.error("Cannot surrender: No active game");
+    console.log("Manually initiating surrender...");
+    
+    // Try to get game ID from state or backup
+    const gameId = gameState.gameData?.Id || localStorage.getItem('currentGameId');
+    
+    // Add debugging info
+    console.log("Current game state:", JSON.stringify({
+      gameId: gameId,
+      stateGameId: gameState.gameData?.Id,
+      status: gameState.gameData?.Status,
+      wsState: webSocketRef.current ? webSocketRef.current.readyState : 'null'
+    }));
+    
+    if (!gameId) {
+      console.error("Cannot surrender: No game ID available in state or backup");
       return;
     }
   
-    console.log("Executing surrender for game:", gameState.gameData.Id);
-    sendMessage({ Action: "Surrender", GameId: gameState.gameData.Id });
+    if (!webSocketRef.current || webSocketRef.current.readyState !== WebSocket.OPEN) {
+      console.error("Cannot surrender: WebSocket not connected");
+      return;
+    }
   
-    
+    try {
+      console.log("Executing surrender for game:", gameId);
+      const surrenderMsg = JSON.stringify({ Action: "Surrender", GameId: gameId });
+      console.log("Sending message:", surrenderMsg);
+      webSocketRef.current.send(surrenderMsg);
+      console.log("Surrender message sent successfully");
+    } catch (error) {
+      console.error("Error sending surrender message:", error);
+    }
   };
+  
+  // 4. Load any saved game ID on component mount
+  useEffect(() => {
+    const savedGameId = localStorage.getItem('currentGameId');
+    if (savedGameId && webSocketRef.current && webSocketRef.current.readyState === WebSocket.OPEN) {
+      console.log("Found saved game ID on mount:", savedGameId);
+      // Request game info for the saved ID
+      webSocketRef.current.send(JSON.stringify({ Action: "GetGame", GameId: savedGameId }));
+    }
+    
+    return () => {
+      if (webSocketRef.current) {
+        webSocketRef.current.close();
+      }
+      stopInactivityTimer();
+    };
+  }, [stopInactivityTimer]);
   
 
   const makeMove = () => {
