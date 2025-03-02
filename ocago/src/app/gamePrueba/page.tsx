@@ -241,17 +241,16 @@ export default function WebSocketGame() {
     timerRef.current = setInterval(() => {
       setInactivityTimer((prev) => {
         if (prev <= 1) {
-          // Time's up, call surrender
-          console.log("Timer reached zero, surrendering due to inactivity...")
-
-          // Show alert about inactivity loss
-          alert(`¡${username} ha perdido por inactividad!`)
-
-          // Call surrender
-          surrender()
-          stopInactivityTimer()
-          return 0
-        }
+          console.log("Timer reached zero, surrendering due to inactivity...");
+          
+        
+          setTimeout(() => {
+            surrender();
+          }, 500); // Espera medio segundo antes de llamar a surrender
+        
+          
+          return 0;
+        }        
         return prev - 1
       })
     }, 1000)
@@ -300,15 +299,18 @@ export default function WebSocketGame() {
   }
 
   const surrender = () => {
-    if (gameState.gameData?.Id) {
-      console.log("Executing surrender for game:", gameState.gameData.Id)
-      sendMessage({ Action: "Surrender", GameId: gameState.gameData.Id })
-      // Asegurar que el timer se detiene
-      stopInactivityTimer()
-    } else {
-      console.error("Cannot surrender: No active game")
+    console.log("Attempting to surrender...");
+    if (!gameState.gameData?.Id) {
+      console.error("Cannot surrender: No active game");
+      return;
     }
-  }
+  
+    console.log("Executing surrender for game:", gameState.gameData.Id);
+    sendMessage({ Action: "Surrender", GameId: gameState.gameData.Id });
+  
+    
+  };
+  
 
   const makeMove = () => {
     if (gameState.gameData?.Id) {
