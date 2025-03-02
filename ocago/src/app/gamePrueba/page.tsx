@@ -44,6 +44,13 @@ interface GameState {
   activeGames?: string[]
 }
 
+// Modificar la constante de dimensiones del tablero
+// Reemplazar cualquier referencia a dimensiones del tablero con estas constantes
+const BOARD_WIDTH = 12
+const BOARD_HEIGHT = 8
+const CELL_WIDTH = 99
+const CELL_HEIGHT = 113
+
 // Mapeo de posiciones a coordenadas x,y en la cuadrícula de 12x9
 const POSITION_COORDINATES = {
   1: { x: 3, y: 7 },
@@ -111,14 +118,23 @@ const POSITION_COORDINATES = {
   63: { x: 4, y: 5 },
 }
 
-// Función para depurar posiciones
-const debugPosition = (position: number) => {
+// Reemplazar la función debugPosition con esta versión mejorada
+const getTokenPosition = (position: number) => {
   const coords = POSITION_COORDINATES[position]
   if (!coords) {
     console.error(`No coordinates found for position ${position}`)
     return { x: 0, y: 0 }
   }
-  return coords
+
+  // Calcular la posición exacta en píxeles
+  const pixelX = coords.x * CELL_WIDTH + CELL_WIDTH / 2
+  const pixelY = coords.y * CELL_HEIGHT + CELL_HEIGHT / 2
+
+  // Convertir a porcentaje para el posicionamiento relativo
+  const percentX = (pixelX / (BOARD_WIDTH * CELL_WIDTH)) * 100
+  const percentY = (pixelY / (BOARD_HEIGHT * CELL_HEIGHT)) * 100
+
+  return { x: percentX, y: percentY }
 }
 
 export default function WebSocketGame() {
@@ -498,16 +514,37 @@ export default function WebSocketGame() {
 
         {/* Game board */}
         <div className="w-3/4 bg-gray-900 rounded-lg p-4">
-          <div className="relative w-full h-full" style={{ aspectRatio: "1478/1102" }}>
+          <div
+            className="relative w-full h-full"
+            style={{ aspectRatio: `${BOARD_WIDTH * CELL_WIDTH}/${BOARD_HEIGHT * CELL_HEIGHT}` }}
+          >
             <Image src="/images/tablero2.svg" alt="Tablero de OcaGo" layout="fill" objectFit="contain" />
+
+            {/* Grid de referencia (solo para depuración, puedes comentarlo en producción) */}
+            <div
+              className="absolute inset-0 grid"
+              style={{
+                gridTemplateColumns: `repeat(${BOARD_WIDTH}, ${CELL_WIDTH}px)`,
+                gridTemplateRows: `repeat(${BOARD_HEIGHT}, ${CELL_HEIGHT}px)`,
+                opacity: 0.2,
+                pointerEvents: "none",
+              }}
+            >
+              {Array.from({ length: BOARD_WIDTH * BOARD_HEIGHT }).map((_, index) => {
+                const x = index % BOARD_WIDTH
+                const y = Math.floor(index / BOARD_WIDTH)
+                return <div key={index} className="border border-red-500" />
+              })}
+            </div>
+
             {gameState.gameData && (
               <>
                 {/* Player 1 token */}
                 <div
                   className="absolute w-8 h-8 bg-red-600 rounded-full border-2 border-white shadow-lg flex items-center justify-center"
                   style={{
-                    left: `calc(${debugPosition(gameState.gameData.Player1Position).x * (100 / 12)}%)`,
-                    top: `calc(${debugPosition(gameState.gameData.Player1Position).y * (100 / 9)}%)`,
+                    left: `${getTokenPosition(gameState.gameData.Player1Position).x}%`,
+                    top: `${getTokenPosition(gameState.gameData.Player1Position).y}%`,
                     transform: "translate(-50%, -50%)",
                     zIndex: 10,
                   }}
@@ -520,8 +557,8 @@ export default function WebSocketGame() {
                   <div
                     className="absolute w-8 h-8 bg-blue-600 rounded-full border-2 border-white shadow-lg flex items-center justify-center"
                     style={{
-                      left: `calc(${debugPosition(gameState.gameData.Player2Position).x * (100 / 12)}%)`,
-                      top: `calc(${debugPosition(gameState.gameData.Player2Position).y * (100 / 9)}%)`,
+                      left: `${getTokenPosition(gameState.gameData.Player2Position).x}%`,
+                      top: `${getTokenPosition(gameState.gameData.Player2Position).y}%`,
                       transform: "translate(-50%, -50%)",
                       zIndex: 10,
                     }}
@@ -535,8 +572,8 @@ export default function WebSocketGame() {
                   <div
                     className="absolute w-12 h-12 rounded-full border-4 border-yellow-400 animate-pulse"
                     style={{
-                      left: `calc(${debugPosition(gameState.gameData.IsPlayer1Turn ? gameState.gameData.Player1Position : gameState.gameData.Player2Position).x * (100 / 12)}%)`,
-                      top: `calc(${debugPosition(gameState.gameData.IsPlayer1Turn ? gameState.gameData.Player1Position : gameState.gameData.Player2Position).y * (100 / 9)}%)`,
+                      left: `${getTokenPosition(gameState.gameData.IsPlayer1Turn ? gameState.gameData.Player1Position : gameState.gameData.Player2Position).x}%`,
+                      top: `${getTokenPosition(gameState.gameData.IsPlayer1Turn ? gameState.gameData.Player1Position : gameState.gameData.Player2Position).y}%`,
                       transform: "translate(-50%, -50%)",
                       zIndex: 5,
                     }}
