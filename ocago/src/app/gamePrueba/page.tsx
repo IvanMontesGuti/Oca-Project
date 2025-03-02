@@ -44,7 +44,7 @@ interface GameState {
   activeGames?: string[]
 }
 
-// Mapeo de posiciones a coordenadas x,y
+// Mapeo de posiciones a coordenadas x,y en la cuadrícula de 12x9
 const POSITION_COORDINATES = {
   1: { x: 3, y: 7 },
   2: { x: 4, y: 7 },
@@ -319,7 +319,6 @@ export default function WebSocketGame() {
 
   if (!isLoggedIn) {
     return (
-      
       <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-purple-800 text-white">
         <h1 className="text-3xl font-bold mb-6">OcaGo! Game</h1>
         <div className="w-full max-w-md space-y-4">
@@ -335,7 +334,6 @@ export default function WebSocketGame() {
           </Button>
         </div>
       </div>
-      
     )
   }
 
@@ -476,8 +474,8 @@ export default function WebSocketGame() {
                 <div
                   className="absolute w-6 h-6 bg-red-600 rounded-full border-2 border-white"
                   style={{
-                    left: `${(POSITION_COORDINATES[gameState.gameData.Player1Position]?.x || 0) * 8}%`,
-                    top: `${(POSITION_COORDINATES[gameState.gameData.Player1Position]?.y || 0) * 12}%`,
+                    left: `${(POSITION_COORDINATES[gameState.gameData.Player1Position]?.x || 0) * (100 / 12)}%`,
+                    top: `${(POSITION_COORDINATES[gameState.gameData.Player1Position]?.y || 0) * (100 / 9)}%`,
                     transform: "translate(-50%, -50%)",
                     zIndex: 10,
                   }}
@@ -487,8 +485,8 @@ export default function WebSocketGame() {
                   <div
                     className="absolute w-6 h-6 bg-blue-600 rounded-full border-2 border-white"
                     style={{
-                      left: `${(POSITION_COORDINATES[gameState.gameData.Player2Position]?.x || 0) * 8}%`,
-                      top: `${(POSITION_COORDINATES[gameState.gameData.Player2Position]?.y || 0) * 12}%`,
+                      left: `${(POSITION_COORDINATES[gameState.gameData.Player2Position]?.x || 0) * (100 / 12)}%`,
+                      top: `${(POSITION_COORDINATES[gameState.gameData.Player2Position]?.y || 0) * (100 / 9)}%`,
                       transform: "translate(-50%, -50%)",
                       zIndex: 10,
                     }}

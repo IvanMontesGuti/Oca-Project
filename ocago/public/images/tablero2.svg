@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg width="1478" height="1102" viewBox="0 0 1478 1102" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <!-- Background image or existing board elements would go here -->
+  
+  <!-- Invisible grid - 12 columns x 9 rows -->
+  <g id="grid" stroke="rgba(255,255,255,0.0)" stroke-width="1" fill="none">
+    <!-- Vertical lines for columns -->
+    <line x1="0" y1="0" x2="0" y2="900" />
+    <line x1="100" y1="0" x2="100" y2="900" />
+    <line x1="200" y1="0" x2="200" y2="900" />
+    <line x1="300" y1="0" x2="300" y2="900" />
+    <line x1="400" y1="0" x2="400" y2="900" />
+    <line x1="500" y1="0" x2="500" y2="900" />
+    <line x1="600" y1="0" x2="600" y2="900" />
+    <line x1="700" y1="0" x2="700" y2="900" />
+    <line x1="800" y1="0" x2="800" y2="900" />
+    <line x1="900" y1="0" x2="900" y2="900" />
+    <line x1="1000" y1="0" x2="1000" y2="900" />
+    <line x1="1100" y1="0" x2="1100" y2="900" />
+    <line x1="1200" y1="0" x2="1200" y2="900" />
+    
+    <!-- Horizontal lines for rows -->
+    <line x1="0" y1="0" x2="1200" y2="0" />
+    <line x1="0" y1="100" x2="1200" y2="100" />
+    <line x1="0" y1="200" x2="1200" y2="200" />
+    <line x1="0" y1="300" x2="1200" y2="300" />
+    <line x1="0" y1="400" x2="1200" y2="400" />
+    <line x1="0" y1="500" x2="1200" y2="500" />
+    <line x1="0" y1="600" x2="1200" y2="600" />
+    <line x1="0" y1="700" x2="1200" y2="700" />
+    <line x1="0" y1="800" x2="1200" y2="800" />
+    <line x1="0" y1="900" x2="1200" y2="900" />
+  </g>
+  
+  <!-- Cell coordinates (invisible text) -->
+  <g id="coordinates" fill="rgba(255,255,255,0.0)" font-size="10">
+    <!-- Row 0 (top) -->
+    <text x="50" y="50">0,0</text>
+    <text x="150" y="50">1,0</text>
+    <text x="250" y="50">2,0</text>
+    <text x="350" y="50">3,0</text>
+    <text x="450" y="50">4,0</text>
+    <text x="550" y="50">5,0</text>
+    <text x="650" y="50">6,0</text>
+    <text x="750" y="50">7,0</text>
+    <text x="850" y="50">8,0</text>
+    <text x="950" y="50">9,0</text>
+    <text x="1050" y="50">10,0</text>
+    <text x="1150" y="50">11,0</text>
+    
+    <!-- Row 1 -->
+    <text x="50" y="150">0,1</text>
+    <text x="150" y="150">1,1</text>
+    <text x="250" y="150">2,1</text>
+    <text x="350" y="150">3,1</text>
+    <text x="450" y="150">4,1</text>
+    <text x="550" y="150">5,1</text>
+    <text x="650" y="150">6,1</text>
+    <text x="750" y="150">7,1</text>
+    <text x="850" y="150">8,1</text>
+    <text x="950" y="150">9,1</text>
+    <text x="1050" y="150">10,1</text>
+    <text x="1150" y="150">11,1</text>
+    
+    <!-- Row 2 -->
+    <text x="50" y="250">0,2</text>
+    <text x="150" y="250">1,2</text>
+    <text x="250" y="250">2,2</text>
+    <text x="350" y="250">3,2</text>
+    <text x="450" y="250">4,2</text>
+    <text x="550" y="250">5,2</text>
+    <text x="650" y="250">6,2</text>
+    <text x="750" y="250">7,2</text>
+    <text x="850" y="250">8,2</text>
+    <text x="950" y="250">9,2</text>
+    <text x="1050" y="250">10,2</text>
+    <text x="1150" y="250">11,2</text>
+    
+    <!-- Row 3 -->
+    <text x="50" y="350">0,3</text>
+    <text x="150" y="350">1,3</text>
+    <text x="250" y="350">2,3</text>
+    <text x="350" y="350">3,3</text>
+    <text x="450" y="350">4,3</text>
+    <text x="550" y="350">5,3</text>
+    <text x="650" y="350">6,3</text>
+    <text x="750" y="350">7,3</text>
+    <text x="850" y="350">8,3</text>
+    <text x="950" y="350">9,3</text>
+    <text x="1050" y="350">10,3</text>
+    <text x="1150" y="350">11,3</text>
+    
+    <!-- Row 4 -->
+    <text x="50" y="450">0,4</text>
+    <text x="150" y="450">1,4</text>
+    <text x="250" y="450">2,4</text>
+    <text x="350" y="450">3,4</text>
+    <text x="450" y="450">4,4</text>
+    <text x="550" y="450">5,4</text>
+    <text x="650" y="450">6,4</text>
+    <text x="750" y="450">7,4</text>
+    <text x="850" y="450">8,4</text>
+    <text x="950" y="450">9,4</text>
+    <text x="1050" y="450">10,4</text>
+    <text x="1150" y="450">11,4</text>
+    
+    <!-- Row 5 -->
+    <text x="50" y="550">0,5</text>
+    <text x="150" y="550">1,5</text>
+    <text x="250" y="550">2,5</text>
+    <text x="350" y="550">3,5</text>
+    <text x="450" y="550">4,5</text>
+    <text x="550" y="550">5,5</text>
+    <text x="650" y="550">6,5</text>
+    <text x="750" y="550">7,5</text>
+    <text x="850" y="550">8,5</text>
+    <text x="950" y="550">9,5</text>
+    <text x="1050" y="550">10,5</text>
+    <text x="1150" y="550">11,5</text>
+    
+    <!-- Row 6 -->
+    <text x="50" y="650">0,6</text>
+    <text x="150" y="650">1,6</text>
+    <text x="250" y="650">2,6</text>
+    <text x="350" y="650">3,6</text>
+    <text x="450" y="650">4,6</text>
+    <text x="550" y="650">5,6</text>
+    <text x="650" y="650">6,6</text>
+    <text x="750" y="650">7,6</text>
+    <text x="850" y="650">8,6</text>
+    <text x="950" y="650">9,6</text>
+    <text x="1050" y="650">10,6</text>
+    <text x="1150" y="650">11,6</text>
+    
+    <!-- Row 7 -->
+    <text x="50" y="750">0,7</text>
+    <text x="150" y="750">1,7</text>
+    <text x="250" y="750">2,7</text>
+    <text x="350" y="750">3,7</text>
+    <text x="450" y="750">4,7</text>
+    <text x="550" y="750">5,7</text>
+    <text x="650" y="750">6,7</text>
+    <text x="750" y="750">7,7</text>
+    <text x="850" y="750">8,7</text>
+    <text x="950" y="750">9,7</text>
+    <text x="1050" y="750">10,7</text>
+    <text x="1150" y="750">11,7</text>
+    
+    <!-- Row 8 (bottom) -->
+    <text x="50" y="850">0,8</text>
+    <text x="150" y="850">1,8</text>
+    <text x="250" y="850">2,8</text>
+    <text x="350" y="850">3,8</text>
+    <text x="450" y="850">4,8</text>
+    <text x="550" y="850">5,8</text>
+    <text x="650" y="850">6,8</text>
+    <text x="750" y="850">7,8</text>
+    <text x="850" y="850">8,8</text>
+    <text x="950" y="850">9,8</text>
+    <text x="1050" y="850">10,8</text>
+    <text x="1150" y="850">11,8</text>
+  </g>
+</svg>
