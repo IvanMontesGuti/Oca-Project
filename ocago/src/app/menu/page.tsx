@@ -105,7 +105,7 @@ export default function OcaGame() {
                   Play Online
                 </Link>
                 <Link
-                  href="/gamePrueba"
+                  href="/gameBot"
                   className="bg-[#33FFE6] hover:bg-[#20E9D0] text-black px-8 rounded-lg font-fredoka"
 
                 >
