@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Send, Dice5, Trophy, Clock } from "lucide-react"
+import { Dice5, Trophy, Clock } from "lucide-react"
 
 // Define types for our WebSocket messages
 type WebSocketMessage = {
-  Action: "CreateBotGame" | "JoinGame" | "Surrender" | "MakeMove" | "GetGame" | "GetActiveGames" | "SendChat"
+  Action: "CreateBotGame" | "JoinGame" | "Surrender" | "MakeMove" | "GetGame" | "GetActiveGames"
   GameId?: string
   ChatMessage?: string
 }
@@ -116,7 +116,6 @@ export default function WebSocketGame() {
   const [username, setUsername] = useState<string>("")
   const [gameIdInput, setGameIdInput] = useState<string>("")
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false)
-  const [message, setMessage] = useState<string>("")
   const [showWinnerModal, setShowWinnerModal] = useState<boolean>(false)
   const [inactivityTimer, setInactivityTimer] = useState<number>(120)
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false)
@@ -272,16 +271,6 @@ export default function WebSocketGame() {
     sendMessage({ Action: "GetActiveGames" })
   }
 
-  const sendChatMessage = () => {
-    if (message.trim() && gameState.gameData?.Id) {
-      sendMessage({
-        Action: "SendChat",
-        GameId: gameState.gameData.Id,
-        ChatMessage: message,
-      })
-      setMessage("")
-    }
-  }
 
   // Clean up WebSocket and timer on component unmount
   useEffect(() => {
@@ -366,7 +355,7 @@ export default function WebSocketGame() {
           <span className="text-yellow-400">
             {gameState.gameData?.IsPlayer1Turn
               ? gameState.gameData.Player1Id
-              : gameState.gameData?.Player2Id || "Esperando oponente"}
+              : gameState.gameData?.Player2Id || "Esperando inicio de partida"}
           </span>
         </h1>
         <div className="flex space-x-4 items-center">
@@ -385,29 +374,7 @@ export default function WebSocketGame() {
       <div className="flex flex-1 gap-4">
         {/* Left sidebar */}
         <div className="w-1/4 flex flex-col gap-4">
-          <div className="bg-gray-900 rounded-lg p-4 flex-1">
-            <h2 className="text-2xl font-bold mb-2">Chat</h2>
-            <div className="bg-gray-700 rounded-lg p-2 h-[calc(100%-80px)] overflow-y-auto mb-2">
-              {gameState.messages.map((msg, index) => (
-                <div key={index} className="mb-2">
-                  <span className="font-bold">{msg.sender}: </span>
-                  <span>{msg.text}</span>
-                </div>
-              ))}
-            </div>
-            <div className="flex">
-              <Input
-                type="text"
-                placeholder="Escribe algo..."
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                className="flex-1 bg-gray-800"
-              />
-              <Button onClick={sendChatMessage} className="ml-2 bg-blue-600 hover:bg-blue-700" size="icon">
-                <Send size={16} />
-              </Button>
-            </div>
-          </div>
+          
 
           <div className="bg-blue-900 rounded-lg p-4 flex flex-col items-center">
             <div className="w-24 h-24 bg-yellow-400 rounded-lg mb-4 flex items-center justify-center">
