@@ -111,6 +111,16 @@ const POSITION_COORDINATES = {
   63: { x: 4, y: 5 },
 }
 
+// Función para depurar posiciones
+const debugPosition = (position: number) => {
+  const coords = POSITION_COORDINATES[position]
+  if (!coords) {
+    console.error(`No coordinates found for position ${position}`)
+    return { x: 0, y: 0 }
+  }
+  return coords
+}
+
 export default function WebSocketGame() {
   const router = useRouter()
   const [username, setUsername] = useState<string>("")
@@ -148,6 +158,22 @@ export default function WebSocketGame() {
       if (response.action === "gameUpdate" && response.data) {
         // Reset inactivity timer when game updates
         resetInactivityTimer()
+
+        // Log positions for debugging
+        console.log(
+          "Player 1 position:",
+          response.data.Player1Position,
+          "Coordinates:",
+          POSITION_COORDINATES[response.data.Player1Position],
+        )
+        if (response.data.Player2Id) {
+          console.log(
+            "Player 2 position:",
+            response.data.Player2Position,
+            "Coordinates:",
+            POSITION_COORDINATES[response.data.Player2Position],
+          )
+        }
 
         setGameState((prev) => ({
           ...prev,
@@ -478,23 +504,41 @@ export default function WebSocketGame() {
               <>
                 {/* Player 1 token */}
                 <div
-                  className="absolute w-6 h-6 bg-red-600 rounded-full border-2 border-white"
+                  className="absolute w-8 h-8 bg-red-600 rounded-full border-2 border-white shadow-lg flex items-center justify-center"
                   style={{
-                    left: `calc(${(POSITION_COORDINATES[gameState.gameData.Player1Position]?.x || 0) * (100 / 12)}%)`,
-                    top: `calc(${(POSITION_COORDINATES[gameState.gameData.Player1Position]?.y || 0) * (100 / 9)}%)`,
+                    left: `calc(${debugPosition(gameState.gameData.Player1Position).x * (100 / 12)}%)`,
+                    top: `calc(${debugPosition(gameState.gameData.Player1Position).y * (100 / 9)}%)`,
                     transform: "translate(-50%, -50%)",
                     zIndex: 10,
                   }}
-                />
+                >
+                  <span className="text-white font-bold text-xs">P1</span>
+                </div>
+
                 {/* Player 2 token */}
                 {gameState.gameData.Player2Id && (
                   <div
-                    className="absolute w-6 h-6 bg-blue-600 rounded-full border-2 border-white"
+                    className="absolute w-8 h-8 bg-blue-600 rounded-full border-2 border-white shadow-lg flex items-center justify-center"
                     style={{
-                      left: `calc(${(POSITION_COORDINATES[gameState.gameData.Player2Position]?.x || 0) * (100 / 12)}%)`,
-                      top: `calc(${(POSITION_COORDINATES[gameState.gameData.Player2Position]?.y || 0) * (100 / 9)}%)`,
+                      left: `calc(${debugPosition(gameState.gameData.Player2Position).x * (100 / 12)}%)`,
+                      top: `calc(${debugPosition(gameState.gameData.Player2Position).y * (100 / 9)}%)`,
                       transform: "translate(-50%, -50%)",
                       zIndex: 10,
+                    }}
+                  >
+                    <span className="text-white font-bold text-xs">P2</span>
+                  </div>
+                )}
+
+                {/* Indicador de turno */}
+                {gameState.gameData.Status === 1 && (
+                  <div
+                    className="absolute w-12 h-12 rounded-full border-4 border-yellow-400 animate-pulse"
+                    style={{
+                      left: `calc(${debugPosition(gameState.gameData.IsPlayer1Turn ? gameState.gameData.Player1Position : gameState.gameData.Player2Position).x * (100 / 12)}%)`,
+                      top: `calc(${debugPosition(gameState.gameData.IsPlayer1Turn ? gameState.gameData.Player1Position : gameState.gameData.Player2Position).y * (100 / 9)}%)`,
+                      transform: "translate(-50%, -50%)",
+                      zIndex: 5,
                     }}
                   />
                 )}
