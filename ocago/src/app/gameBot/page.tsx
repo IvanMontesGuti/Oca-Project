@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Send, Dice5, Trophy, Clock } from "lucide-react"
+import { Dice5, Trophy, Clock } from "lucide-react"
 
 // Define types for our WebSocket messages
 type WebSocketMessage = {
@@ -15,13 +15,7 @@ type WebSocketMessage = {
 }
 
 // Define a type for the chat message data
-type ChatMessageData = {
-  GameId: string
-  Message: string
-  SenderId: string
-  SenderName: string
-  Timestamp: string
-}
+
 
 // Game state interface based on the actual response structure
 interface GameData {
@@ -147,6 +141,7 @@ export default function WebSocketGame() {
   const [showWinnerModal, setShowWinnerModal] = useState<boolean>(false)
   const [inactivityTimer, setInactivityTimer] = useState<number>(30)
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false)
+  const [isRollingDice, setIsRollingDice] = useState<boolean>(false)
 
   const [gameState, setGameState] = useState<GameState>({
     gameData: null,
@@ -159,97 +154,169 @@ export default function WebSocketGame() {
 
   // Connect to WebSocket
   const connectWebSocket = () => {
-    if (!username) return
-
-    const ws = new WebSocket(`wss://localhost:7107/ws/game/${username}/connect`)
-
+    if (!username) return;
+  
+    const ws = new WebSocket(`wss://localhost:7107/ws/game/${username}/connect`);
+  
     ws.onopen = () => {
-      console.log("WebSocket connected")
-      setGameState((prev) => ({ ...prev, isConnected: true }))
-    }
-
+      console.log("WebSocket connected");
+      setGameState((prev) => ({ ...prev, isConnected: true }));
+      
+      // When reconnected, immediately request current game state if we had a game
+      if (prev.gameData?.Id) {
+        console.log("Reconnected - requesting game state for:", prev.gameData.Id);
+        setTimeout(() => {
+          ws.send(JSON.stringify({ Action: "GetGame", GameId: prev.gameData.Id }));
+        }, 500);
+      }
+    };
+  
     ws.onmessage = (event) => {
-      const response = JSON.parse(event.data)
-      console.log("Received data:", response)
-
+      const response = JSON.parse(event.data);
+      console.log("Received data:", response);
+  
       if (response.action === "gameUpdate" && response.data) {
         // Reset inactivity timer when game updates
-        resetInactivityTimer()
-
+        resetInactivityTimer();
+  
+        // Store game ID in localStorage as backup
+        if (response.data.Id) {
+          localStorage.setItem('currentGameId', response.data.Id);
+        }
+  
         // Log positions for debugging
         console.log(
           "Player 1 position:",
           response.data.Player1Position,
           "Coordinates:",
           POSITION_COORDINATES[response.data.Player1Position],
-        )
+        );
         if (response.data.Player2Id) {
           console.log(
             "Player 2 position:",
             response.data.Player2Position,
             "Coordinates:",
             POSITION_COORDINATES[response.data.Player2Position],
-          )
+          );
         }
-
+  
         setGameState((prev) => ({
           ...prev,
           gameData: response.data,
-        }))
-
+        }));
+  
         // Check if game is finished and show winner modal
         if (response.data.Status === 2 && response.data.Winner) {
-          setShowWinnerModal(true)
-          stopInactivityTimer()
+          setShowWinnerModal(true);
+          stopInactivityTimer();
         }
-
+  
         // Start timer if game is in progress
         if (response.data.Status === 1 && !isTimerRunning) {
-          startInactivityTimer()
+          startInactivityTimer();
         }
       } else if (response.action === "activeGames" && response.data) {
-        setGameState((prev) => ({ ...prev, activeGames: response.data }))
+        setGameState((prev) => ({ ...prev, activeGames: response.data }));
       } else if (response.action === "chatMessage" && response.data) {
-        const chatData = response.data as ChatMessageData
+        const chatData = response.data;
         setGameState((prev) => ({
           ...prev,
           messages: [...prev.messages, { sender: chatData.SenderName, text: chatData.Message }],
-        }))
+        }));
       }
-    }
-
+    };
+  
     ws.onclose = () => {
-      console.log("WebSocket disconnected")
-      setGameState((prev) => ({ ...prev, isConnected: false }))
-      stopInactivityTimer()
-    }
-
+      console.log("WebSocket disconnected - attempting to reconnect in 3 seconds");
+      setGameState((prev) => ({ ...prev, isConnected: false }));
+      stopInactivityTimer();
+      
+      // Attempt to reconnect after 3 seconds
+      setTimeout(() => {
+        if (document.visibilityState !== 'hidden') {
+          console.log("Attempting to reconnect WebSocket...");
+          connectWebSocket();
+        }
+      }, 3000);
+    };
+  
     ws.onerror = (error) => {
-      console.error("WebSocket error:", error)
-    }
-
-    webSocketRef.current = ws
-    setIsLoggedIn(true)
-  }
+      console.error("WebSocket error:", error);
+    };
+  
+    webSocketRef.current = ws;
+    setIsLoggedIn(true);
+  };
 
   // Inactivity timer functions
   const startInactivityTimer = () => {
-    setIsTimerRunning(true)
-    setInactivityTimer(30) // Reset to 30 seconds
-
+    setIsTimerRunning(true);
+    setInactivityTimer(30); // Reset to 30 seconds
+  
     timerRef.current = setInterval(() => {
       setInactivityTimer((prev) => {
         if (prev <= 1) {
-          // Time's up, call surrender
-          console.log("Timer reached zero, surrendering...")
-          surrender()
-          stopInactivityTimer()
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-  }
+          console.log("Timer reached zero, preparing to surrender due to inactivity...");
+          
+          // Get the game ID from state or localStorage backup
+          const gameId = gameState.gameData?.Id || localStorage.getItem('currentGameId');
+          
+          // Debug the current state
+          console.log("Current game state:", JSON.stringify({
+            gameId: gameId,
+            stateGameId: gameState.gameData?.Id,
+            status: gameState.gameData?.Status,
+            wsState: webSocketRef.current ? webSocketRef.current.readyState : 'null'
+          }));
+          
+          if (!gameId) {
+            console.error("Cannot surrender: No game ID available in state or backup");
+            stopInactivityTimer();
+            return 0;
+          }
+          
+          if (!webSocketRef.current || webSocketRef.current.readyState !== WebSocket.OPEN) {
+            console.error("Cannot surrender: WebSocket not connected (state:", 
+              webSocketRef.current ? webSocketRef.current.readyState : "null)");
+            
+            // Try to reconnect
+            if (!webSocketRef.current || webSocketRef.current.readyState !== WebSocket.CONNECTING) {
+              console.log("Attempting to reconnect before surrendering...");
+              connectWebSocket();
+              
+              // Set a one-time timer to try surrender after reconnection
+              setTimeout(() => {
+                if (webSocketRef.current && webSocketRef.current.readyState === WebSocket.OPEN) {
+                  console.log("Reconnected - now attempting delayed surrender");
+                  webSocketRef.current.send(JSON.stringify({ Action: "Surrender", GameId: gameId }));
+                }
+              }, 2000);
+            }
+            
+            stopInactivityTimer();
+            return 0;
+          }
+          
+          // We have both game ID and active websocket - now surrender
+          console.log("Executing surrender for game:", gameId);
+          
+          try {
+            // Send surrender message immediately
+            const surrenderMsg = JSON.stringify({ Action: "Surrender", GameId: gameId });
+            console.log("Sending message:", surrenderMsg);
+            webSocketRef.current.send(surrenderMsg);
+            console.log("Surrender message sent successfully");
+          } catch (error) {
+            console.error("Error sending surrender message:", error);
+          }
+          
+          stopInactivityTimer();
+          return 0;
+        }        
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
   const stopInactivityTimer = useCallback(() => {
     if (timerRef.current) {
@@ -283,7 +350,7 @@ export default function WebSocketGame() {
   }
 
   // Game actions
-  const createBotGame = () => {
+  const createGame = () => {
     sendMessage({ Action: "CreateBotGame" })
   }
 
@@ -294,15 +361,57 @@ export default function WebSocketGame() {
   }
 
   const surrender = () => {
-    if (gameState.gameData?.Id) {
-      console.log("Executing surrender for game:", gameState.gameData.Id)
-      sendMessage({ Action: "Surrender", GameId: gameState.gameData.Id })
-      // Asegurar que el timer se detiene
-      stopInactivityTimer()
-    } else {
-      console.error("Cannot surrender: No active game")
+    console.log("Manually initiating surrender...");
+    
+    // Try to get game ID from state or backup
+    const gameId = gameState.gameData?.Id || localStorage.getItem('currentGameId');
+    
+    // Add debugging info
+    console.log("Current game state:", JSON.stringify({
+      gameId: gameId,
+      stateGameId: gameState.gameData?.Id,
+      status: gameState.gameData?.Status,
+      wsState: webSocketRef.current ? webSocketRef.current.readyState : 'null'
+    }));
+    
+    if (!gameId) {
+      console.error("Cannot surrender: No game ID available in state or backup");
+      return;
     }
-  }
+  
+    if (!webSocketRef.current || webSocketRef.current.readyState !== WebSocket.OPEN) {
+      console.error("Cannot surrender: WebSocket not connected");
+      return;
+    }
+  
+    try {
+      console.log("Executing surrender for game:", gameId);
+      const surrenderMsg = JSON.stringify({ Action: "Surrender", GameId: gameId });
+      console.log("Sending message:", surrenderMsg);
+      webSocketRef.current.send(surrenderMsg);
+      console.log("Surrender message sent successfully");
+    } catch (error) {
+      console.error("Error sending surrender message:", error);
+    }
+  };
+  
+  // 4. Load any saved game ID on component mount
+  useEffect(() => {
+    const savedGameId = localStorage.getItem('currentGameId');
+    if (savedGameId && webSocketRef.current && webSocketRef.current.readyState === WebSocket.OPEN) {
+      console.log("Found saved game ID on mount:", savedGameId);
+      // Request game info for the saved ID
+      webSocketRef.current.send(JSON.stringify({ Action: "GetGame", GameId: savedGameId }));
+    }
+    
+    return () => {
+      if (webSocketRef.current) {
+        webSocketRef.current.close();
+      }
+      stopInactivityTimer();
+    };
+  }, [stopInactivityTimer]);
+  
 
   const makeMove = () => {
     if (gameState.gameData?.Id) {
@@ -321,16 +430,7 @@ export default function WebSocketGame() {
     sendMessage({ Action: "GetActiveGames" })
   }
 
-  const sendChatMessage = () => {
-    if (message.trim() && gameState.gameData?.Id) {
-      sendMessage({
-        Action: "SendChat",
-        GameId: gameState.gameData.Id,
-        ChatMessage: message,
-      })
-      setMessage("")
-    }
-  }
+  
 
   // Clean up WebSocket and timer on component unmount
   useEffect(() => {
@@ -407,6 +507,22 @@ export default function WebSocketGame() {
         <div className="text-center mb-2 text-yellow-400 font-mono">ID: {gameState.gameData.Id}</div>
       )}
 
+      {/* Players names display */}
+      {gameState.gameData && (
+        <div className="flex justify-center gap-8 mb-4">
+          <div className="bg-red-600 px-4 py-2 rounded-lg shadow-lg">
+            <span className="font-bold">Jugador 1: </span>
+            <span>{gameState.gameData.Player1Id}</span>
+          </div>
+          {gameState.gameData.Player2Id && (
+            <div className="bg-blue-600 px-4 py-2 rounded-lg shadow-lg">
+              <span className="font-bold">Jugador 2: </span>
+              <span>{gameState.gameData.Player2Id}</span>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">
           TURNO:{" "}
@@ -417,7 +533,7 @@ export default function WebSocketGame() {
           </span>
         </h1>
         <div className="flex space-x-4 items-center">
-          <div className="flex items-center">
+          <div className={`flex items-center ${inactivityTimer <= 10 ? "text-red-500 font-bold animate-pulse" : ""}`}>
             <Clock className="mr-1" size={16} />
             Tiempo restante: {formatTime(inactivityTimer)}
           </div>
@@ -432,41 +548,30 @@ export default function WebSocketGame() {
       <div className="flex flex-1 gap-4">
         {/* Left sidebar */}
         <div className="w-1/4 flex flex-col gap-4">
-          <div className="bg-gray-900 rounded-lg p-4 flex-1">
-            <h2 className="text-2xl font-bold mb-2">Chat</h2>
-            <div className="bg-gray-700 rounded-lg p-2 h-[calc(100%-80px)] overflow-y-auto mb-2">
-              {gameState.messages.map((msg, index) => (
-                <div key={index} className="mb-2">
-                  <span className="font-bold">{msg.sender}: </span>
-                  <span>{msg.text}</span>
-                </div>
-              ))}
-            </div>
-            <div className="flex">
-              <Input
-                type="text"
-                placeholder="Escribe algo..."
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                className="flex-1 bg-gray-800"
-              />
-              <Button onClick={sendChatMessage} className="ml-2 bg-blue-600 hover:bg-blue-700" size="icon">
-                <Send size={16} />
-              </Button>
-            </div>
-          </div>
+          
 
           <div className="bg-blue-900 rounded-lg p-4 flex flex-col items-center">
-            <div className="w-24 h-24 bg-yellow-400 rounded-lg mb-4 flex items-center justify-center">
+            <div
+              className={`w-24 h-24 bg-yellow-400 rounded-lg mb-4 flex items-center justify-center ${
+                isRollingDice ? "animate-spin-slow" : ""
+              }`}
+            >
               <Dice5 size={64} className="text-white" />
             </div>
             <Button
-              onClick={makeMove}
+              onClick={() => {
+                setIsRollingDice(true)
+                setTimeout(() => {
+                  makeMove()
+                  setIsRollingDice(false)
+                }, 1000)
+              }}
               className="w-full bg-yellow-400 text-black hover:bg-yellow-500 font-bold text-xl"
               disabled={
                 (gameState.gameData?.IsPlayer1Turn && username !== gameState.gameData?.Player1Id) ||
                 (!gameState.gameData?.IsPlayer1Turn && username !== gameState.gameData?.Player2Id) ||
-                gameState.gameData?.Status !== 1
+                gameState.gameData?.Status !== 1 ||
+                isRollingDice
               }
             >
               TIRAR
@@ -476,7 +581,7 @@ export default function WebSocketGame() {
           <div className="space-y-2">
             {!gameState.gameData?.Id ? (
               <>
-                <Button onClick={createBotGame} className="w-full bg-green-600 hover:bg-green-700">
+                <Button onClick={createGame} className="w-full bg-green-600 hover:bg-green-700">
                   Create New Game
                 </Button>
                 <div className="flex gap-2">
@@ -548,6 +653,7 @@ export default function WebSocketGame() {
                     top: `${getTokenPosition(gameState.gameData.Player1Position).y}%`,
                     transform: "translate(-50%, -50%)",
                     zIndex: 10,
+                    transition: "left 1.5s ease-in-out, top 1.5s ease-in-out",
                   }}
                 >
                   <span className="text-white font-bold text-xs">P1</span>
@@ -562,6 +668,7 @@ export default function WebSocketGame() {
                       top: `${getTokenPosition(gameState.gameData.Player2Position).y}%`,
                       transform: "translate(-50%, -50%)",
                       zIndex: 10,
+                      transition: "left 1.5s ease-in-out, top 1.5s ease-in-out",
                     }}
                   >
                     <span className="text-white font-bold text-xs">P2</span>
