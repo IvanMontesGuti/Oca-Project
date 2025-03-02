@@ -99,13 +99,13 @@ export default function OcaGame() {
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link
-                  href="/sala"
+                  href="/gamePrueba"
                   className="bg-[#E633FF] hover:bg-[#D020E9] text-white px-8 rounded-lg font-fredoka"
                 >
                   Play Online
                 </Link>
                 <Link
-                  href="/sala"
+                  href="/gamePrueba"
                   className="bg-[#33FFE6] hover:bg-[#20E9D0] text-black px-8 rounded-lg font-fredoka"
 
                 >
