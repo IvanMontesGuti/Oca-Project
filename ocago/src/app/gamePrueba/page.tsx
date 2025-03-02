@@ -77,11 +77,15 @@ export default function GameBoard() {
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 
   // Then update your WebSocket configuration
-  const { sendMessage, lastMessage } = useWebSocket(wsUrl, {
+  const { sendMessage, lastMessage, readyState } = useWebSocket(wsUrl, {
     onOpen: () => {
       console.log("WebSocket conectado")
       setWsConnected(true)
       setWsError(null)
+      // Request game state immediately after connection
+      if (gameId) {
+        sendMessage(JSON.stringify({ Action: "GetGame", GameId: gameId }))
+      }
     },
     onError: (error) => {
       console.error("Error de WebSocket:", error)
@@ -98,8 +102,8 @@ export default function GameBoard() {
         surrenderGame()
       }
     },
-    reconnectAttempts: 10, // Increase reconnect attempts
-    reconnectInterval: (attemptNumber) => Math.min(1000 * attemptNumber, 10000), // Exponential backoff
+    reconnectAttempts: Number.POSITIVE_INFINITY,
+    reconnectInterval: (attemptNumber) => Math.min(1000 * Math.pow(2, attemptNumber), 30000), // Exponential backoff with 30s max
     retryOnError: true,
     shouldReconnect: (closeEvent) => {
       // Don't reconnect if we're navigating away or if the game is over
@@ -169,11 +173,10 @@ export default function GameBoard() {
         const data = JSON.parse(lastMessage.data)
         console.log("📩 Mensaje WebSocket recibido:", data)
 
-        if (data.action === "gameUpdate") {
+        if (data.action === "gameUpdate" || data.action === "getGameResponse") {
           setGameId(data.data.Id)
           actualizarFichas(data.data)
 
-          // Fix: Use comparison (==) instead of assignment (=)
           if (data.data.IsPlayer1Turn === true) {
             setCurrentTurn(data.data.Player1Id)
           } else {
@@ -298,6 +301,16 @@ export default function GameBoard() {
       }
     }
   }, [wsConnected, sendMessage])
+
+  useEffect(() => {
+    if (gameId && isGameStarted && readyState === WebSocket.OPEN) {
+      const intervalId = setInterval(() => {
+        sendMessage(JSON.stringify({ Action: "GetGame", GameId: gameId }))
+      }, 5000) // Request updates every 5 seconds
+
+      return () => clearInterval(intervalId)
+    }
+  }, [gameId, isGameStarted, readyState, sendMessage])
 
   interface Casilla {
     casillaX: number

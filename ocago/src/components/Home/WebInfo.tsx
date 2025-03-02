@@ -164,12 +164,17 @@ export function WebInfo() {
     };
     
     // Set up interval (request every 30 seconds)
-    const interval = setInterval(requestActiveGames, 300000000);
+    const interval = setInterval(requestActiveGames, 30000);
     
     return () => {
       clearInterval(interval);
+
+      
     };
+     requestActiveGames();
   }, [gameSocket, wsConnected]);
+
+  
 
   // Still use the main socket for connected users if needed
   useEffect(() => {
