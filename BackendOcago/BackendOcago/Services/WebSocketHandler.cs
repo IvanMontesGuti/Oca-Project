@@ -17,6 +17,7 @@ public class WebSocketHandler
     private readonly IServiceScopeFactory _serviceScopeFactory;
     private readonly MatchMakingService _matchMakingService;
     private static readonly object _lock = new();
+
     private static readonly Dictionary<string, List<string>> _friendRequests = new Dictionary<string, List<string>>();
 
     public WebSocketHandler(IServiceScopeFactory serviceScopeFactory, MatchMakingService matchMakingService)

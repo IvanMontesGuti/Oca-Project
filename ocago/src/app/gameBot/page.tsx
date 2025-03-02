@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Send, Dice5, Trophy, Clock } from "lucide-react"
+import { Dice5, Trophy, Clock } from "lucide-react"
 
 // Define types for our WebSocket messages
 type WebSocketMessage = {
-  Action: "CreateGame" | "JoinGame" | "Surrender" | "MakeMove" | "GetGame" | "GetActiveGames" | "SendChat"
+  Action: "CreateBotGame" | "JoinGame" | "Surrender" | "MakeMove" | "GetGame" | "GetActiveGames"
   GameId?: string
   ChatMessage?: string
 }
@@ -44,7 +44,7 @@ interface GameState {
   activeGames?: string[]
 }
 
-// Mapeo de posiciones a coordenadas x,y en la cuadrícula de 12x9
+// Mapeo de posiciones a coordenadas x,y
 const POSITION_COORDINATES = {
   1: { x: 3, y: 7 },
   2: { x: 4, y: 7 },
@@ -111,24 +111,13 @@ const POSITION_COORDINATES = {
   63: { x: 4, y: 5 },
 }
 
-// Función para depurar posiciones
-const debugPosition = (position: number) => {
-  const coords = POSITION_COORDINATES[position]
-  if (!coords) {
-    console.error(`No coordinates found for position ${position}`)
-    return { x: 0, y: 0 }
-  }
-  return coords
-}
-
 export default function WebSocketGame() {
   const router = useRouter()
   const [username, setUsername] = useState<string>("")
   const [gameIdInput, setGameIdInput] = useState<string>("")
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false)
-  const [message, setMessage] = useState<string>("")
   const [showWinnerModal, setShowWinnerModal] = useState<boolean>(false)
-  const [inactivityTimer, setInactivityTimer] = useState<number>(30)
+  const [inactivityTimer, setInactivityTimer] = useState<number>(120)
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false)
 
   const [gameState, setGameState] = useState<GameState>({
@@ -158,22 +147,6 @@ export default function WebSocketGame() {
       if (response.action === "gameUpdate" && response.data) {
         // Reset inactivity timer when game updates
         resetInactivityTimer()
-
-        // Log positions for debugging
-        console.log(
-          "Player 1 position:",
-          response.data.Player1Position,
-          "Coordinates:",
-          POSITION_COORDINATES[response.data.Player1Position],
-        )
-        if (response.data.Player2Id) {
-          console.log(
-            "Player 2 position:",
-            response.data.Player2Position,
-            "Coordinates:",
-            POSITION_COORDINATES[response.data.Player2Position],
-          )
-        }
 
         setGameState((prev) => ({
           ...prev,
@@ -218,13 +191,12 @@ export default function WebSocketGame() {
   // Inactivity timer functions
   const startInactivityTimer = () => {
     setIsTimerRunning(true)
-    setInactivityTimer(30) // Reset to 30 seconds
+    setInactivityTimer(120) // Reset to 2 minutes
 
     timerRef.current = setInterval(() => {
       setInactivityTimer((prev) => {
         if (prev <= 1) {
           // Time's up, call surrender
-          console.log("Timer reached zero, surrendering...")
           surrender()
           stopInactivityTimer()
           return 0
@@ -266,8 +238,8 @@ export default function WebSocketGame() {
   }
 
   // Game actions
-  const createGame = () => {
-    sendMessage({ Action: "CreateGame" })
+  const createBotGame = () => {
+    sendMessage({ Action: "CreateBotGame" })
   }
 
   const joinGame = () => {
@@ -278,12 +250,7 @@ export default function WebSocketGame() {
 
   const surrender = () => {
     if (gameState.gameData?.Id) {
-      console.log("Executing surrender for game:", gameState.gameData.Id)
       sendMessage({ Action: "Surrender", GameId: gameState.gameData.Id })
-      // Asegurar que el timer se detiene
-      stopInactivityTimer()
-    } else {
-      console.error("Cannot surrender: No active game")
     }
   }
 
@@ -304,16 +271,6 @@ export default function WebSocketGame() {
     sendMessage({ Action: "GetActiveGames" })
   }
 
-  const sendChatMessage = () => {
-    if (message.trim() && gameState.gameData?.Id) {
-      sendMessage({
-        Action: "SendChat",
-        GameId: gameState.gameData.Id,
-        ChatMessage: message,
-      })
-      setMessage("")
-    }
-  }
 
   // Clean up WebSocket and timer on component unmount
   useEffect(() => {
@@ -351,6 +308,7 @@ export default function WebSocketGame() {
 
   if (!isLoggedIn) {
     return (
+      
       <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-purple-800 text-white">
         <h1 className="text-3xl font-bold mb-6">OcaGo! Game</h1>
         <div className="w-full max-w-md space-y-4">
@@ -366,6 +324,7 @@ export default function WebSocketGame() {
           </Button>
         </div>
       </div>
+      
     )
   }
 
@@ -396,7 +355,7 @@ export default function WebSocketGame() {
           <span className="text-yellow-400">
             {gameState.gameData?.IsPlayer1Turn
               ? gameState.gameData.Player1Id
-              : gameState.gameData?.Player2Id || "Esperando oponente"}
+              : gameState.gameData?.Player2Id || "Esperando inicio de partida"}
           </span>
         </h1>
         <div className="flex space-x-4 items-center">
@@ -415,29 +374,7 @@ export default function WebSocketGame() {
       <div className="flex flex-1 gap-4">
         {/* Left sidebar */}
         <div className="w-1/4 flex flex-col gap-4">
-          <div className="bg-gray-900 rounded-lg p-4 flex-1">
-            <h2 className="text-2xl font-bold mb-2">Chat</h2>
-            <div className="bg-gray-700 rounded-lg p-2 h-[calc(100%-80px)] overflow-y-auto mb-2">
-              {gameState.messages.map((msg, index) => (
-                <div key={index} className="mb-2">
-                  <span className="font-bold">{msg.sender}: </span>
-                  <span>{msg.text}</span>
-                </div>
-              ))}
-            </div>
-            <div className="flex">
-              <Input
-                type="text"
-                placeholder="Escribe algo..."
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                className="flex-1 bg-gray-800"
-              />
-              <Button onClick={sendChatMessage} className="ml-2 bg-blue-600 hover:bg-blue-700" size="icon">
-                <Send size={16} />
-              </Button>
-            </div>
-          </div>
+          
 
           <div className="bg-blue-900 rounded-lg p-4 flex flex-col items-center">
             <div className="w-24 h-24 bg-yellow-400 rounded-lg mb-4 flex items-center justify-center">
@@ -459,7 +396,7 @@ export default function WebSocketGame() {
           <div className="space-y-2">
             {!gameState.gameData?.Id ? (
               <>
-                <Button onClick={createGame} className="w-full bg-green-600 hover:bg-green-700">
+                <Button onClick={createBotGame} className="w-full bg-green-600 hover:bg-green-700">
                   Create New Game
                 </Button>
                 <div className="flex gap-2">
@@ -498,47 +435,29 @@ export default function WebSocketGame() {
 
         {/* Game board */}
         <div className="w-3/4 bg-gray-900 rounded-lg p-4">
-          <div className="relative w-full h-full" style={{ aspectRatio: "1478/1102" }}>
-            <Image src="/images/tablero2.svg" alt="Tablero de OcaGo" layout="fill" objectFit="contain" />
+          <div className="relative w-full h-full">
+            <Image src="/images/tablero.svg" alt="Tablero de OcaGo" layout="fill" objectFit="contain" />
             {gameState.gameData && (
               <>
                 {/* Player 1 token */}
                 <div
-                  className="absolute w-8 h-8 bg-red-600 rounded-full border-2 border-white shadow-lg flex items-center justify-center"
+                  className="absolute w-6 h-6 bg-red-600 rounded-full border-2 border-white"
                   style={{
-                    left: `calc(${debugPosition(gameState.gameData.Player1Position).x * (100 / 12)}%)`,
-                    top: `calc(${debugPosition(gameState.gameData.Player1Position).y * (100 / 9)}%)`,
+                    left: `${(POSITION_COORDINATES[gameState.gameData.Player1Position]?.x || 0) * 8}%`,
+                    top: `${(POSITION_COORDINATES[gameState.gameData.Player1Position]?.y || 0) * 12}%`,
                     transform: "translate(-50%, -50%)",
                     zIndex: 10,
                   }}
-                >
-                  <span className="text-white font-bold text-xs">P1</span>
-                </div>
-
+                />
                 {/* Player 2 token */}
                 {gameState.gameData.Player2Id && (
                   <div
-                    className="absolute w-8 h-8 bg-blue-600 rounded-full border-2 border-white shadow-lg flex items-center justify-center"
+                    className="absolute w-6 h-6 bg-blue-600 rounded-full border-2 border-white"
                     style={{
-                      left: `calc(${debugPosition(gameState.gameData.Player2Position).x * (100 / 12)}%)`,
-                      top: `calc(${debugPosition(gameState.gameData.Player2Position).y * (100 / 9)}%)`,
+                      left: `${(POSITION_COORDINATES[gameState.gameData.Player2Position]?.x || 0) * 8}%`,
+                      top: `${(POSITION_COORDINATES[gameState.gameData.Player2Position]?.y || 0) * 12}%`,
                       transform: "translate(-50%, -50%)",
                       zIndex: 10,
-                    }}
-                  >
-                    <span className="text-white font-bold text-xs">P2</span>
-                  </div>
-                )}
-
-                {/* Indicador de turno */}
-                {gameState.gameData.Status === 1 && (
-                  <div
-                    className="absolute w-12 h-12 rounded-full border-4 border-yellow-400 animate-pulse"
-                    style={{
-                      left: `calc(${debugPosition(gameState.gameData.IsPlayer1Turn ? gameState.gameData.Player1Position : gameState.gameData.Player2Position).x * (100 / 12)}%)`,
-                      top: `calc(${debugPosition(gameState.gameData.IsPlayer1Turn ? gameState.gameData.Player1Position : gameState.gameData.Player2Position).y * (100 / 9)}%)`,
-                      transform: "translate(-50%, -50%)",
-                      zIndex: 5,
                     }}
                   />
                 )}
@@ -574,4 +493,3 @@ export default function WebSocketGame() {
     </div>
   )
 }
-

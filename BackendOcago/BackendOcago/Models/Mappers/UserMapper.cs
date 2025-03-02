@@ -27,6 +27,7 @@ public class UserMapper
             AvatarUrl = user.AvatarUrl,
             Status = user.Status,
             Friends = user.Friends,
+            Games = user.Games,
             SentFriendships = user.SentFriendships,
             ReceivedFriendships = user.ReceivedFriendships,
         };
