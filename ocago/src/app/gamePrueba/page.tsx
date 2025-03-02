@@ -192,7 +192,10 @@ export default function WebSocketGame() {
   // Inactivity timer functions
   const startInactivityTimer = () => {
     setIsTimerRunning(true)
-    setInactivityTimer(120) // Reset to 2 minutes
+    setInactivityTimer(30) // Reset to 2 minutes
+    if(inactivityTimer <= 1){
+      surrender()
+    }
 
     timerRef.current = setInterval(() => {
       setInactivityTimer((prev) => {
