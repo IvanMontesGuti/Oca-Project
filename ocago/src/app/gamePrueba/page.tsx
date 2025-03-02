@@ -44,6 +44,73 @@ interface GameState {
   activeGames?: string[]
 }
 
+// Mapeo de posiciones a coordenadas x,y
+const POSITION_COORDINATES = {
+  1: { x: 3, y: 7 },
+  2: { x: 4, y: 7 },
+  3: { x: 5, y: 7 },
+  4: { x: 6, y: 7 },
+  5: { x: 7, y: 7 },
+  6: { x: 8, y: 7 },
+  7: { x: 9, y: 7 },
+  8: { x: 10, y: 7 },
+  9: { x: 11, y: 7 },
+  10: { x: 11, y: 6 },
+  11: { x: 11, y: 5 },
+  12: { x: 11, y: 4 },
+  13: { x: 11, y: 3 },
+  14: { x: 11, y: 2 },
+  15: { x: 11, y: 1 },
+  16: { x: 11, y: 0 },
+  17: { x: 10, y: 0 },
+  18: { x: 9, y: 0 },
+  19: { x: 8, y: 0 },
+  20: { x: 7, y: 0 },
+  21: { x: 6, y: 0 },
+  22: { x: 5, y: 0 },
+  23: { x: 4, y: 0 },
+  24: { x: 3, y: 0 },
+  25: { x: 2, y: 0 },
+  26: { x: 1, y: 0 },
+  27: { x: 0, y: 0 },
+  28: { x: 0, y: 1 },
+  29: { x: 0, y: 2 },
+  30: { x: 0, y: 3 },
+  31: { x: 0, y: 4 },
+  32: { x: 0, y: 5 },
+  33: { x: 0, y: 6 },
+  34: { x: 1, y: 6 },
+  35: { x: 2, y: 6 },
+  36: { x: 3, y: 6 },
+  37: { x: 4, y: 6 },
+  38: { x: 5, y: 6 },
+  39: { x: 6, y: 6 },
+  40: { x: 7, y: 6 },
+  41: { x: 8, y: 6 },
+  42: { x: 9, y: 6 },
+  43: { x: 10, y: 6 },
+  44: { x: 10, y: 5 },
+  45: { x: 10, y: 4 },
+  46: { x: 10, y: 3 },
+  47: { x: 10, y: 2 },
+  48: { x: 10, y: 1 },
+  49: { x: 9, y: 1 },
+  50: { x: 8, y: 1 },
+  51: { x: 7, y: 1 },
+  52: { x: 6, y: 1 },
+  53: { x: 5, y: 1 },
+  54: { x: 4, y: 1 },
+  55: { x: 3, y: 1 },
+  56: { x: 2, y: 1 },
+  57: { x: 1, y: 1 },
+  58: { x: 1, y: 2 },
+  59: { x: 1, y: 3 },
+  60: { x: 1, y: 4 },
+  61: { x: 1, y: 5 },
+  62: { x: 2, y: 5 },
+  63: { x: 4, y: 5 },
+}
+
 export default function WebSocketGame() {
   const router = useRouter()
   const [username, setUsername] = useState<string>("")
@@ -194,7 +261,7 @@ export default function WebSocketGame() {
       resetInactivityTimer()
     }
   }
-  
+
   const getGameInfo = () => {
     if (gameState.gameData?.Id) {
       sendMessage({ Action: "GetGame", GameId: gameState.gameData.Id })
@@ -252,6 +319,7 @@ export default function WebSocketGame() {
 
   if (!isLoggedIn) {
     return (
+      
       <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-purple-800 text-white">
         <h1 className="text-3xl font-bold mb-6">OcaGo! Game</h1>
         <div className="w-full max-w-md space-y-4">
@@ -267,11 +335,26 @@ export default function WebSocketGame() {
           </Button>
         </div>
       </div>
+      
     )
   }
 
   return (
     <div className="flex flex-col min-h-screen bg-purple-800 text-white p-4">
+      <header className="bg-purple-900 p-4 rounded-lg mb-4 shadow-lg">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Dice5 className="h-8 w-8 text-yellow-400" />
+            <h1 className="text-2xl font-bold text-yellow-400">OcaGo! - El juego de la oca</h1>
+          </div>
+          {username && (
+            <div className="bg-purple-700 px-3 py-1 rounded-full">
+              <span className="text-sm font-medium">Jugador: </span>
+              <span className="text-yellow-400 font-bold">{username}</span>
+            </div>
+          )}
+        </div>
+      </header>
       {/* Game ID display */}
       {gameState.gameData?.Id && (
         <div className="text-center mb-2 text-yellow-400 font-mono">ID: {gameState.gameData.Id}</div>
@@ -393,9 +476,10 @@ export default function WebSocketGame() {
                 <div
                   className="absolute w-6 h-6 bg-red-600 rounded-full border-2 border-white"
                   style={{
-                    left: `${(gameState.gameData.Player1Position % 8) * 12.5}%`,
-                    top: `${Math.floor(gameState.gameData.Player1Position / 8) * 12.5}%`,
+                    left: `${(POSITION_COORDINATES[gameState.gameData.Player1Position]?.x || 0) * 8}%`,
+                    top: `${(POSITION_COORDINATES[gameState.gameData.Player1Position]?.y || 0) * 12}%`,
                     transform: "translate(-50%, -50%)",
+                    zIndex: 10,
                   }}
                 />
                 {/* Player 2 token */}
@@ -403,9 +487,10 @@ export default function WebSocketGame() {
                   <div
                     className="absolute w-6 h-6 bg-blue-600 rounded-full border-2 border-white"
                     style={{
-                      left: `${(gameState.gameData.Player2Position % 8) * 12.5}%`,
-                      top: `${Math.floor(gameState.gameData.Player2Position / 8) * 12.5}%`,
+                      left: `${(POSITION_COORDINATES[gameState.gameData.Player2Position]?.x || 0) * 8}%`,
+                      top: `${(POSITION_COORDINATES[gameState.gameData.Player2Position]?.y || 0) * 12}%`,
                       transform: "translate(-50%, -50%)",
+                      zIndex: 10,
                     }}
                   />
                 )}
