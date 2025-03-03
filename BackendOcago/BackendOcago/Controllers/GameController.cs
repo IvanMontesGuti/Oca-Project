@@ -1,7 +1,9 @@
-﻿using BackendOcago.Models.Dtos;
+﻿using BackendOcago.Models.Database.Enum;
+using BackendOcago.Models.Dtos;
 using BackendOcago.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
@@ -13,11 +15,13 @@ namespace BackendOcago.Controllers
     public class GameWebSocketController : ControllerBase
     {
         private readonly GameService _gameService;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
         private static readonly Dictionary<string, WebSocket> _connections = new();
 
-        public GameWebSocketController(GameService gameService)
+        public GameWebSocketController(IServiceScopeFactory serviceScopeFactory, GameService gameService)
         {
             _gameService = gameService;
+            _serviceScopeFactory = serviceScopeFactory;
         }
 
         [HttpGet("connect")]
@@ -77,12 +81,36 @@ namespace BackendOcago.Controllers
                             action = "gameUpdate",
                             data = game
                         });
+                        using (var scope = _serviceScopeFactory.CreateScope())
+                        {
+                            var userService = scope.ServiceProvider.GetRequiredService<UserService>();
+                            if (!long.TryParse(userId, out long numericUserId))
+                            {
+                                Console.WriteLine("❌ Error al convertir userId a long.");
+                            }
+                            else
+                            {
+                                await userService.UpdateStatus(UserStatus.Jugando, numericUserId);
+                            }
+                        }
                         break;
                     case "JoinGame":
                         var joinedGame = await _gameService.JoinGameAsync(jsonMessage.GameId, userId);
                         if (joinedGame != null)
                         {
                             await NotifyPlayers(joinedGame, "gameUpdate");
+                        }
+                        using (var scope = _serviceScopeFactory.CreateScope())
+                        {
+                            var userService = scope.ServiceProvider.GetRequiredService<UserService>();
+                            if (!long.TryParse(userId, out long numericUserId))
+                            {
+                                Console.WriteLine("❌ Error al convertir userId a long.");
+                            }
+                            else
+                            {
+                                await userService.UpdateStatus(UserStatus.Jugando, numericUserId);
+                            }
                         }
                         break;
                     case "MakeMove":
@@ -102,6 +130,18 @@ namespace BackendOcago.Controllers
                             action = "gameUpdate",
                             data = botGame
                         });
+                        using (var scope = _serviceScopeFactory.CreateScope())
+                        {
+                            var userService = scope.ServiceProvider.GetRequiredService<UserService>();
+                            if (!long.TryParse(userId, out long numericUserId))
+                            {
+                                Console.WriteLine("❌ Error al convertir userId a long.");
+                            }
+                            else
+                            {
+                                await userService.UpdateStatus(UserStatus.Jugando, numericUserId);
+                            }
+                        }
                         break;
                     case "GetGame":
                         var gameInfo = await _gameService.GetGameAsync(jsonMessage.GameId);
@@ -122,6 +162,18 @@ namespace BackendOcago.Controllers
                     case "Surrender":
                         var surrenderResult = await _gameService.SurrenderGameAsync(jsonMessage.GameId, userId);
                         await NotifyPlayers(surrenderResult, "gameUpdate");
+                        using (var scope = _serviceScopeFactory.CreateScope())
+                        {
+                            var userService = scope.ServiceProvider.GetRequiredService<UserService>();
+                            if (!long.TryParse(userId, out long numericUserId))
+                            {
+                                Console.WriteLine("❌ Error al convertir userId a long.");
+                            }
+                            else
+                            {
+                                await userService.UpdateStatus(UserStatus.Conectado, numericUserId);
+                            }
+                        }
                         // Enviar mensaje adicional sobre la rendición
                         await NotifyPlayers(new
                         {
@@ -131,6 +183,8 @@ namespace BackendOcago.Controllers
                             GameStatus = surrenderResult.Status,
                             Winner = surrenderResult.Winner
                         }, "surrenderUpdate");
+
+                        
                         break;
                     case "SendChat":
                         // Procesar mensaje de chat

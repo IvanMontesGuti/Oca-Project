@@ -11,6 +11,8 @@ using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Text.Json;
+using BackendOcago.Models.Database.Enum;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BackendOcago.Services
 {
@@ -33,6 +35,7 @@ namespace BackendOcago.Services
 
             // Escucha mensajes entrantes (opcional)
             await ListenToWebSocket(userId, socket);
+
         }
 
         private async Task ListenToWebSocket(string userId, WebSocket socket)

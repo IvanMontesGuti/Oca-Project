@@ -17,6 +17,8 @@ export const CHANGE_PASSWORD_URL = `${API_USER_URL}/ChangePassword`;
 export const UPDATE_USER_STATE = (num, id) => `${API_USER_URL}/Status?userStatusRequest=${num}&userId=${id}`;
 export const GET_COUNT_STATUS = (num) => `${API_USER_URL}/CountStatus?estado=${num}`;
 export const GET_USER_HISTORY = (id) => `${API_USER_URL}/History?userId=${id}`;
+export const API_GAMES_URL = `${API_USER_URL}/allMatches/${userId}`;
+
 /* --- IMAGE CONTROLLER --- */
 const API_IMAGE_URL = `${API_BASE_URL}/api/Images`;
 export const IMAGE_GET_ALL_URL = `${API_IMAGE_URL}`; // GET /api/Images
@@ -37,9 +39,6 @@ export const FRIENDSHIP_DELETE_REQUEST_URL = (friendsipId) => `${API_FRIENDSHIP_
 
 /* --- SEARCH CONTROLLER --- */
 export const API_SEARCH_URL = (query) => `${API_BASE_URL}/api/Search/users?query=${query}`; // GET /api/Search/users?query={query}
-
-export const API_GAME_URL = `${API_BASE_URL}/api/Game`;
-
 
 /* --- GAME CONTROLLER --- */
 export const GAME_CREATE_URL = (userId) => `${API_GAME_URL}?userId=${userId}`; // POST /api/Game
