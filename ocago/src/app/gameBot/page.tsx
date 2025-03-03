@@ -9,19 +9,13 @@ import { Dice5, Trophy, Clock } from "lucide-react"
 
 // Define types for our WebSocket messages
 type WebSocketMessage = {
-  Action: "CreateBotGame" | "JoinGame" | "Surrender" | "MakeMove" | "GetGame" | "GetActiveGames"
+  Action: "CreateBotGame" | "JoinGame" | "Surrender" | "MakeMove" | "GetGame" | "GetActiveGames" | "SendChat"
   GameId?: string
   ChatMessage?: string
 }
 
 // Define a type for the chat message data
-type ChatMessageData = {
-  GameId: string
-  Message: string
-  SenderId: string
-  SenderName: string
-  Timestamp: string
-}
+
 
 // Game state interface based on the actual response structure
 interface GameData {
@@ -44,8 +38,16 @@ interface GameState {
   activeGames?: string[]
 }
 
-// Mapeo de posiciones a coordenadas x,y
+// Modificar la constante de dimensiones del tablero
+// Reemplazar cualquier referencia a dimensiones del tablero con estas constantes
+const BOARD_WIDTH = 12
+const BOARD_HEIGHT = 8
+const CELL_WIDTH = 99
+const CELL_HEIGHT = 113
+
+// Mapeo de posiciones a coordenadas x,y en la cuadrícula de 12x9
 const POSITION_COORDINATES = {
+  0: { x: 2, y: 7 },
   1: { x: 3, y: 7 },
   2: { x: 4, y: 7 },
   3: { x: 5, y: 7 },
@@ -111,14 +113,35 @@ const POSITION_COORDINATES = {
   63: { x: 4, y: 5 },
 }
 
+// Reemplazar la función debugPosition con esta versión mejorada
+const getTokenPosition = (position: number) => {
+  const coords = POSITION_COORDINATES[position]
+  if (!coords) {
+    console.error(`No coordinates found for position ${position}`)
+    return { x: 0, y: 0 }
+  }
+
+  // Calcular la posición exacta en píxeles
+  const pixelX = coords.x * CELL_WIDTH + CELL_WIDTH / 2
+  const pixelY = coords.y * CELL_HEIGHT + CELL_HEIGHT / 2
+
+  // Convertir a porcentaje para el posicionamiento relativo
+  const percentX = (pixelX / (BOARD_WIDTH * CELL_WIDTH)) * 100
+  const percentY = (pixelY / (BOARD_HEIGHT * CELL_HEIGHT)) * 100
+
+  return { x: percentX, y: percentY }
+}
+
 export default function WebSocketGame() {
   const router = useRouter()
   const [username, setUsername] = useState<string>("")
   const [gameIdInput, setGameIdInput] = useState<string>("")
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false)
+  const [message, setMessage] = useState<string>("")
   const [showWinnerModal, setShowWinnerModal] = useState<boolean>(false)
-  const [inactivityTimer, setInactivityTimer] = useState<number>(120)
+  const [inactivityTimer, setInactivityTimer] = useState<number>(30)
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false)
+  const [isRollingDice, setIsRollingDice] = useState<boolean>(false)
 
   const [gameState, setGameState] = useState<GameState>({
     gameData: null,
@@ -131,80 +154,169 @@ export default function WebSocketGame() {
 
   // Connect to WebSocket
   const connectWebSocket = () => {
-    if (!username) return
-
-    const ws = new WebSocket(`wss://localhost:7107/ws/game/${username}/connect`)
-
+    if (!username) return;
+  
+    const ws = new WebSocket(`wss://localhost:7107/ws/game/${username}/connect`);
+  
     ws.onopen = () => {
-      console.log("WebSocket connected")
-      setGameState((prev) => ({ ...prev, isConnected: true }))
-    }
-
+      console.log("WebSocket connected");
+      setGameState((prev) => ({ ...prev, isConnected: true }));
+      
+      // When reconnected, immediately request current game state if we had a game
+      if (prev.gameData?.Id) {
+        console.log("Reconnected - requesting game state for:", prev.gameData.Id);
+        setTimeout(() => {
+          ws.send(JSON.stringify({ Action: "GetGame", GameId: prev.gameData.Id }));
+        }, 500);
+      }
+    };
+  
     ws.onmessage = (event) => {
-      const response = JSON.parse(event.data)
-      console.log("Received data:", response)
-
+      const response = JSON.parse(event.data);
+      console.log("Received data:", response);
+  
       if (response.action === "gameUpdate" && response.data) {
         // Reset inactivity timer when game updates
-        resetInactivityTimer()
-
+        resetInactivityTimer();
+  
+        // Store game ID in localStorage as backup
+        if (response.data.Id) {
+          localStorage.setItem('currentGameId', response.data.Id);
+        }
+  
+        // Log positions for debugging
+        console.log(
+          "Player 1 position:",
+          response.data.Player1Position,
+          "Coordinates:",
+          POSITION_COORDINATES[response.data.Player1Position],
+        );
+        if (response.data.Player2Id) {
+          console.log(
+            "Player 2 position:",
+            response.data.Player2Position,
+            "Coordinates:",
+            POSITION_COORDINATES[response.data.Player2Position],
+          );
+        }
+  
         setGameState((prev) => ({
           ...prev,
           gameData: response.data,
-        }))
-
+        }));
+  
         // Check if game is finished and show winner modal
         if (response.data.Status === 2 && response.data.Winner) {
-          setShowWinnerModal(true)
-          stopInactivityTimer()
+          setShowWinnerModal(true);
+          stopInactivityTimer();
         }
-
+  
         // Start timer if game is in progress
         if (response.data.Status === 1 && !isTimerRunning) {
-          startInactivityTimer()
+          startInactivityTimer();
         }
       } else if (response.action === "activeGames" && response.data) {
-        setGameState((prev) => ({ ...prev, activeGames: response.data }))
+        setGameState((prev) => ({ ...prev, activeGames: response.data }));
       } else if (response.action === "chatMessage" && response.data) {
-        const chatData = response.data as ChatMessageData
+        const chatData = response.data;
         setGameState((prev) => ({
           ...prev,
           messages: [...prev.messages, { sender: chatData.SenderName, text: chatData.Message }],
-        }))
+        }));
       }
-    }
-
+    };
+  
     ws.onclose = () => {
-      console.log("WebSocket disconnected")
-      setGameState((prev) => ({ ...prev, isConnected: false }))
-      stopInactivityTimer()
-    }
-
+      console.log("WebSocket disconnected - attempting to reconnect in 3 seconds");
+      setGameState((prev) => ({ ...prev, isConnected: false }));
+      stopInactivityTimer();
+      
+      // Attempt to reconnect after 3 seconds
+      setTimeout(() => {
+        if (document.visibilityState !== 'hidden') {
+          console.log("Attempting to reconnect WebSocket...");
+          connectWebSocket();
+        }
+      }, 3000);
+    };
+  
     ws.onerror = (error) => {
-      console.error("WebSocket error:", error)
-    }
-
-    webSocketRef.current = ws
-    setIsLoggedIn(true)
-  }
+      console.error("WebSocket error:", error);
+    };
+  
+    webSocketRef.current = ws;
+    setIsLoggedIn(true);
+  };
 
   // Inactivity timer functions
   const startInactivityTimer = () => {
-    setIsTimerRunning(true)
-    setInactivityTimer(120) // Reset to 2 minutes
-
+    setIsTimerRunning(true);
+    setInactivityTimer(30); // Reset to 30 seconds
+  
     timerRef.current = setInterval(() => {
       setInactivityTimer((prev) => {
         if (prev <= 1) {
-          // Time's up, call surrender
-          surrender()
-          stopInactivityTimer()
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-  }
+          console.log("Timer reached zero, preparing to surrender due to inactivity...");
+          
+          // Get the game ID from state or localStorage backup
+          const gameId = gameState.gameData?.Id || localStorage.getItem('currentGameId');
+          
+          // Debug the current state
+          console.log("Current game state:", JSON.stringify({
+            gameId: gameId,
+            stateGameId: gameState.gameData?.Id,
+            status: gameState.gameData?.Status,
+            wsState: webSocketRef.current ? webSocketRef.current.readyState : 'null'
+          }));
+          
+          if (!gameId) {
+            console.error("Cannot surrender: No game ID available in state or backup");
+            stopInactivityTimer();
+            return 0;
+          }
+          
+          if (!webSocketRef.current || webSocketRef.current.readyState !== WebSocket.OPEN) {
+            console.error("Cannot surrender: WebSocket not connected (state:", 
+              webSocketRef.current ? webSocketRef.current.readyState : "null)");
+            
+            // Try to reconnect
+            if (!webSocketRef.current || webSocketRef.current.readyState !== WebSocket.CONNECTING) {
+              console.log("Attempting to reconnect before surrendering...");
+              connectWebSocket();
+              
+              // Set a one-time timer to try surrender after reconnection
+              setTimeout(() => {
+                if (webSocketRef.current && webSocketRef.current.readyState === WebSocket.OPEN) {
+                  console.log("Reconnected - now attempting delayed surrender");
+                  webSocketRef.current.send(JSON.stringify({ Action: "Surrender", GameId: gameId }));
+                }
+              }, 2000);
+            }
+            
+            stopInactivityTimer();
+            return 0;
+          }
+          
+          // We have both game ID and active websocket - now surrender
+          console.log("Executing surrender for game:", gameId);
+          
+          try {
+            // Send surrender message immediately
+            const surrenderMsg = JSON.stringify({ Action: "Surrender", GameId: gameId });
+            console.log("Sending message:", surrenderMsg);
+            webSocketRef.current.send(surrenderMsg);
+            console.log("Surrender message sent successfully");
+          } catch (error) {
+            console.error("Error sending surrender message:", error);
+          }
+          
+          stopInactivityTimer();
+          return 0;
+        }        
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
   const stopInactivityTimer = useCallback(() => {
     if (timerRef.current) {
@@ -238,7 +350,7 @@ export default function WebSocketGame() {
   }
 
   // Game actions
-  const createBotGame = () => {
+  const createGame = () => {
     sendMessage({ Action: "CreateBotGame" })
   }
 
@@ -249,10 +361,57 @@ export default function WebSocketGame() {
   }
 
   const surrender = () => {
-    if (gameState.gameData?.Id) {
-      sendMessage({ Action: "Surrender", GameId: gameState.gameData.Id })
+    console.log("Manually initiating surrender...");
+    
+    // Try to get game ID from state or backup
+    const gameId = gameState.gameData?.Id || localStorage.getItem('currentGameId');
+    
+    // Add debugging info
+    console.log("Current game state:", JSON.stringify({
+      gameId: gameId,
+      stateGameId: gameState.gameData?.Id,
+      status: gameState.gameData?.Status,
+      wsState: webSocketRef.current ? webSocketRef.current.readyState : 'null'
+    }));
+    
+    if (!gameId) {
+      console.error("Cannot surrender: No game ID available in state or backup");
+      return;
     }
-  }
+  
+    if (!webSocketRef.current || webSocketRef.current.readyState !== WebSocket.OPEN) {
+      console.error("Cannot surrender: WebSocket not connected");
+      return;
+    }
+  
+    try {
+      console.log("Executing surrender for game:", gameId);
+      const surrenderMsg = JSON.stringify({ Action: "Surrender", GameId: gameId });
+      console.log("Sending message:", surrenderMsg);
+      webSocketRef.current.send(surrenderMsg);
+      console.log("Surrender message sent successfully");
+    } catch (error) {
+      console.error("Error sending surrender message:", error);
+    }
+  };
+  
+  // 4. Load any saved game ID on component mount
+  useEffect(() => {
+    const savedGameId = localStorage.getItem('currentGameId');
+    if (savedGameId && webSocketRef.current && webSocketRef.current.readyState === WebSocket.OPEN) {
+      console.log("Found saved game ID on mount:", savedGameId);
+      // Request game info for the saved ID
+      webSocketRef.current.send(JSON.stringify({ Action: "GetGame", GameId: savedGameId }));
+    }
+    
+    return () => {
+      if (webSocketRef.current) {
+        webSocketRef.current.close();
+      }
+      stopInactivityTimer();
+    };
+  }, [stopInactivityTimer]);
+  
 
   const makeMove = () => {
     if (gameState.gameData?.Id) {
@@ -271,6 +430,7 @@ export default function WebSocketGame() {
     sendMessage({ Action: "GetActiveGames" })
   }
 
+  
 
   // Clean up WebSocket and timer on component unmount
   useEffect(() => {
@@ -308,7 +468,6 @@ export default function WebSocketGame() {
 
   if (!isLoggedIn) {
     return (
-      
       <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-purple-800 text-white">
         <h1 className="text-3xl font-bold mb-6">OcaGo! Game</h1>
         <div className="w-full max-w-md space-y-4">
@@ -324,7 +483,6 @@ export default function WebSocketGame() {
           </Button>
         </div>
       </div>
-      
     )
   }
 
@@ -349,17 +507,33 @@ export default function WebSocketGame() {
         <div className="text-center mb-2 text-yellow-400 font-mono">ID: {gameState.gameData.Id}</div>
       )}
 
+      {/* Players names display */}
+      {gameState.gameData && (
+        <div className="flex justify-center gap-8 mb-4">
+          <div className="bg-red-600 px-4 py-2 rounded-lg shadow-lg">
+            <span className="font-bold">Jugador 1: </span>
+            <span>{gameState.gameData.Player1Id}</span>
+          </div>
+          {gameState.gameData.Player2Id && (
+            <div className="bg-blue-600 px-4 py-2 rounded-lg shadow-lg">
+              <span className="font-bold">Jugador 2: </span>
+              <span>{gameState.gameData.Player2Id}</span>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">
           TURNO:{" "}
           <span className="text-yellow-400">
             {gameState.gameData?.IsPlayer1Turn
               ? gameState.gameData.Player1Id
-              : gameState.gameData?.Player2Id || "Esperando inicio de partida"}
+              : gameState.gameData?.Player2Id || "Esperando oponente"}
           </span>
         </h1>
         <div className="flex space-x-4 items-center">
-          <div className="flex items-center">
+          <div className={`flex items-center ${inactivityTimer <= 10 ? "text-red-500 font-bold animate-pulse" : ""}`}>
             <Clock className="mr-1" size={16} />
             Tiempo restante: {formatTime(inactivityTimer)}
           </div>
@@ -377,16 +551,27 @@ export default function WebSocketGame() {
           
 
           <div className="bg-blue-900 rounded-lg p-4 flex flex-col items-center">
-            <div className="w-24 h-24 bg-yellow-400 rounded-lg mb-4 flex items-center justify-center">
+            <div
+              className={`w-24 h-24 bg-yellow-400 rounded-lg mb-4 flex items-center justify-center ${
+                isRollingDice ? "animate-spin-slow" : ""
+              }`}
+            >
               <Dice5 size={64} className="text-white" />
             </div>
             <Button
-              onClick={makeMove}
+              onClick={() => {
+                setIsRollingDice(true)
+                setTimeout(() => {
+                  makeMove()
+                  setIsRollingDice(false)
+                }, 1000)
+              }}
               className="w-full bg-yellow-400 text-black hover:bg-yellow-500 font-bold text-xl"
               disabled={
                 (gameState.gameData?.IsPlayer1Turn && username !== gameState.gameData?.Player1Id) ||
                 (!gameState.gameData?.IsPlayer1Turn && username !== gameState.gameData?.Player2Id) ||
-                gameState.gameData?.Status !== 1
+                gameState.gameData?.Status !== 1 ||
+                isRollingDice
               }
             >
               TIRAR
@@ -396,7 +581,7 @@ export default function WebSocketGame() {
           <div className="space-y-2">
             {!gameState.gameData?.Id ? (
               <>
-                <Button onClick={createBotGame} className="w-full bg-green-600 hover:bg-green-700">
+                <Button onClick={createGame} className="w-full bg-green-600 hover:bg-green-700">
                   Create New Game
                 </Button>
                 <div className="flex gap-2">
@@ -435,29 +620,70 @@ export default function WebSocketGame() {
 
         {/* Game board */}
         <div className="w-3/4 bg-gray-900 rounded-lg p-4">
-          <div className="relative w-full h-full">
-            <Image src="/images/tablero.svg" alt="Tablero de OcaGo" layout="fill" objectFit="contain" />
+          <div
+            className="relative w-full h-full"
+            style={{ aspectRatio: `${BOARD_WIDTH * CELL_WIDTH}/${BOARD_HEIGHT * CELL_HEIGHT}` }}
+          >
+            <Image src="/images/tablero2.svg" alt="Tablero de OcaGo" layout="fill" objectFit="contain" />
+
+            {/* Grid de referencia (solo para depuración, puedes comentarlo en producción) */}
+            <div
+              className="absolute inset-0 grid"
+              style={{
+                gridTemplateColumns: `repeat(${BOARD_WIDTH}, ${CELL_WIDTH}px)`,
+                gridTemplateRows: `repeat(${BOARD_HEIGHT}, ${CELL_HEIGHT}px)`,
+                opacity: 0.2,
+                pointerEvents: "none",
+              }}
+            >
+              {Array.from({ length: BOARD_WIDTH * BOARD_HEIGHT }).map((_, index) => {
+                const x = index % BOARD_WIDTH
+                const y = Math.floor(index / BOARD_WIDTH)
+                return <div key={index} className="border border-red-500" />
+              })}
+            </div>
+
             {gameState.gameData && (
               <>
                 {/* Player 1 token */}
                 <div
-                  className="absolute w-6 h-6 bg-red-600 rounded-full border-2 border-white"
+                  className="absolute w-8 h-8 bg-red-600 rounded-full border-2 border-white shadow-lg flex items-center justify-center"
                   style={{
-                    left: `${(POSITION_COORDINATES[gameState.gameData.Player1Position]?.x || 0) * 8}%`,
-                    top: `${(POSITION_COORDINATES[gameState.gameData.Player1Position]?.y || 0) * 12}%`,
+                    left: `${getTokenPosition(gameState.gameData.Player1Position).x}%`,
+                    top: `${getTokenPosition(gameState.gameData.Player1Position).y}%`,
                     transform: "translate(-50%, -50%)",
                     zIndex: 10,
+                    transition: "left 1.5s ease-in-out, top 1.5s ease-in-out",
                   }}
-                />
+                >
+                  <span className="text-white font-bold text-xs">P1</span>
+                </div>
+
                 {/* Player 2 token */}
                 {gameState.gameData.Player2Id && (
                   <div
-                    className="absolute w-6 h-6 bg-blue-600 rounded-full border-2 border-white"
+                    className="absolute w-8 h-8 bg-blue-600 rounded-full border-2 border-white shadow-lg flex items-center justify-center"
                     style={{
-                      left: `${(POSITION_COORDINATES[gameState.gameData.Player2Position]?.x || 0) * 8}%`,
-                      top: `${(POSITION_COORDINATES[gameState.gameData.Player2Position]?.y || 0) * 12}%`,
+                      left: `${getTokenPosition(gameState.gameData.Player2Position).x}%`,
+                      top: `${getTokenPosition(gameState.gameData.Player2Position).y}%`,
                       transform: "translate(-50%, -50%)",
                       zIndex: 10,
+                      transition: "left 1.5s ease-in-out, top 1.5s ease-in-out",
+                    }}
+                  >
+                    <span className="text-white font-bold text-xs">P2</span>
+                  </div>
+                )}
+
+                {/* Indicador de turno */}
+                {gameState.gameData.Status === 1 && (
+                  <div
+                    className="absolute w-12 h-12 rounded-full border-4 border-yellow-400 animate-pulse"
+                    style={{
+                      left: `${getTokenPosition(gameState.gameData.IsPlayer1Turn ? gameState.gameData.Player1Position : gameState.gameData.Player2Position).x}%`,
+                      top: `${getTokenPosition(gameState.gameData.IsPlayer1Turn ? gameState.gameData.Player1Position : gameState.gameData.Player2Position).y}%`,
+                      transform: "translate(-50%, -50%)",
+                      zIndex: 5,
                     }}
                   />
                 )}
@@ -493,3 +719,4 @@ export default function WebSocketGame() {
     </div>
   )
 }
+
