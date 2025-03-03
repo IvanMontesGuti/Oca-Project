@@ -1,4 +1,5 @@
 ﻿using BackendOcago.Models.Database.Entities;
+using BackendOcago.Models.Database.Enum;
 using Microsoft.EntityFrameworkCore;
 
 namespace BackendOcago.Models.Database.Repositories
@@ -16,7 +17,6 @@ namespace BackendOcago.Models.Database.Repositories
         {
             try
             {
-                // Siempre usar AsNoTracking para evitar problemas de tracking
                 var game = await _context.Games
                     .AsNoTracking()
                     .FirstOrDefaultAsync(g => g.Id == id);
@@ -43,7 +43,6 @@ namespace BackendOcago.Models.Database.Repositories
         {
             try
             {
-                // Limpiar el tracking de la entidad si existe
                 var existingEntry = _context.ChangeTracker
                     .Entries<Game>()
                     .FirstOrDefault(e => e.Entity.Id == game.Id);
@@ -53,14 +52,12 @@ namespace BackendOcago.Models.Database.Repositories
                     existingEntry.State = EntityState.Detached;
                 }
 
-                // Obtener una nueva instancia del juego
                 var existingGame = await _context.Games.FindAsync(game.Id);
                 if (existingGame == null)
                 {
                     throw new Exception($"Game {game.Id} not found");
                 }
 
-                // Actualizar todas las propiedades
                 existingGame.Player2Id = game.Player2Id;
                 existingGame.Status = game.Status;
                 existingGame.LastUpdated = game.LastUpdated;
@@ -69,10 +66,8 @@ namespace BackendOcago.Models.Database.Repositories
                 existingGame.IsPlayer1Turn = game.IsPlayer1Turn;
                 existingGame.Winner = game.Winner;
 
-                // Guardar cambios
                 await _context.SaveChangesAsync();
 
-                // Actualizar el objeto original con los datos actualizados
                 game.Player2Id = existingGame.Player2Id;
                 game.Status = existingGame.Status;
                 game.Player1Position = existingGame.Player1Position;

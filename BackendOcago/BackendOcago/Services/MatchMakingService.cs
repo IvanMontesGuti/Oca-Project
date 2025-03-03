@@ -19,17 +19,14 @@ public class MatchMakingService
         using var scope = _serviceScopeFactory.CreateScope();
         using var _context = scope.ServiceProvider.GetRequiredService<DataContext>();
 
-        // 1. Buscamos una fila "Pending" sin Guest asignado
         var availableMatch = await _context.MatchRequests
             .FirstOrDefaultAsync(m => m.GuestId == null
                                       && !m.IsBotGame
                                       && m.Status == "Pending"
                                       && m.HostId != hostId);
-        // Nota: la última condición evita que se "autempareje" si es la misma persona
 
         if (availableMatch != null)
         {
-            // 2. Asignamos al nuevo usuario como guest
             availableMatch.GuestId = hostId;
             availableMatch.Status = "Matched";
             availableMatch.GameId = Guid.NewGuid().ToString();
@@ -39,7 +36,6 @@ public class MatchMakingService
             return availableMatch;
         }
 
-        // 3. Si no hay nadie pendiente, creamos una nueva fila
         var newMatch = new MatchRequest
         {
             HostId = hostId,
@@ -134,12 +130,10 @@ public class MatchMakingService
         if (match == null)
             return null;
 
-        // Si el usuario es el host
         if (match.HostId == userId)
         {
             match.HostReady = true;
         }
-        // Si el usuario es el guest
         else if (match.GuestId.HasValue && match.GuestId.Value == userId)
         {
             match.GuestReady = true;
