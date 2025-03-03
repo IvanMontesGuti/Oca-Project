@@ -20,8 +20,8 @@ namespace BackendOcago.Models.Mappers
             return new FriendshipDto
             {
                 Id = friendship.Id,
-                Sender = _userMapper.ToDto(friendship.Sender),
-                Receiver = _userMapper.ToDto(friendship.Receiver),
+                Sender = friendship.Sender != null ? _userMapper.ToDto(friendship.Sender) : null,
+                Receiver = friendship.Receiver != null ? _userMapper.ToDto(friendship.Receiver) : null,
                 SentAt = friendship.SentAt,
                 Status = friendship.Status
             };
@@ -32,22 +32,11 @@ namespace BackendOcago.Models.Mappers
             if (friendships == null)
                 throw new ArgumentNullException(nameof(friendships));
 
-            return friendships.Select(ToDto);
+            return friendships
+                .Where(f => f != null) 
+                .Select(ToDto)
+                .Where(dto => dto.Sender != null && dto.Receiver != null); 
         }
 
-        public Friendship ToEntity(FriendshipDto dto)
-        {
-            if (dto == null)
-                throw new ArgumentNullException(nameof(dto));
-
-            return new Friendship
-            {
-                Id = dto.Id,
-                SenderId = dto.Sender.Id,
-                ReceiverId = dto.Receiver.Id,
-                SentAt = dto.SentAt,
-                Status = dto.Status
-            };
-        }
     }
 }

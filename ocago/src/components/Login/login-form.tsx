@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation'; // Importa useRouter de Next.js
+import { useRouter } from 'next/navigation'; 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,7 +31,7 @@ export function LoginForm({
     try {
       await login(emailOrNickname, password, rememberMe);
       //onClose();
-      router.push("/dashboard");
+      router.push("/menu");
     } catch (error) {
       console.error("Error:", error);
       setError("Error al iniciar sesión. Por favor, verifica tus credenciales.");

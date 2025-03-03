@@ -19,58 +19,59 @@ export function RegisterForm({
   const { register } = useAuth();
   const [avatar, setAvatar] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [passwordError, setPasswordError] = useState<string | null>(null); // Para el mensaje de error
+  const [passwordError, setPasswordError] = useState<string | null>(null); 
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
-
+  
     const nickname = form.nickname.value.trim();
     const mail = form.email.value.trim();
     const password = form.password.value;
     const confirmPassword = form.confirmPassword.value;
-
+  
     if (!nickname || !mail || !password || !confirmPassword) {
       console.error("Todos los campos son obligatorios.");
       return;
     }
-
+  
     if (password !== confirmPassword) {
       setPasswordError("Las contraseñas no coinciden.");
       return;
     }
-
+  
     setPasswordError(null);
-
+  
     try {
-      const avatarPath = avatar ? `images/${nickname}.png` : `images/default.png`;
-
-      // Registro del usuario
+      const avatarPath = `images/${nickname}.png`;  // 📌 Corrigiendo el formato
+  
+      // 📦 Enviar el rol junto con los datos
       await register(nickname, mail, password, avatarPath);
-
+  
       // Subir avatar si existe
       if (avatar) {
         const formData = new FormData();
         formData.append("name", `${nickname}.png`);
         formData.append("file", avatar, `${nickname}.png`);
-
+  
         const response = await fetch(IMAGE_POST_URL, {
           method: "POST",
           body: formData,
         });
         if (!response.ok) {
+          console.error("❌ Error al subir la imagen:", await response.text());
           throw new Error("Error subiendo la imagen.");
         }
       }
-
-      router.push("/menu")
+  
+      router.push("/menu");
       
     } catch (error) {
       console.error("Error durante el registro o la subida de imagen:", error);
     }
   };
-
+  
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {

@@ -14,6 +14,10 @@ public class UserMapper
     //TO DTO
     public UserDto ToDto(User user)
     {
+        if (user == null)
+        {
+            throw new ArgumentNullException(nameof(user), "El usuario no puede ser nulo.");
+        }
         return new UserDto()
         {
             Id = user.Id,
@@ -22,6 +26,8 @@ public class UserMapper
             Role = user.Role,
             AvatarUrl = user.AvatarUrl,
             Status = user.Status,
+            Friends = user.Friends,
+            Games = user.Games,
             SentFriendships = user.SentFriendships,
             ReceivedFriendships = user.ReceivedFriendships,
         };
@@ -44,6 +50,7 @@ public class UserMapper
             Role = user.Role,
             AvatarUrl = user.AvatarUrl,
             Status = user.Status,
+            Friends = user.Friends,
             SentFriendships = user.SentFriendships,
             ReceivedFriendships = user.ReceivedFriendships,
         };

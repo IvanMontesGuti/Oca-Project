@@ -1,4 +1,3 @@
-
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.Extensions.FileProviders;
@@ -11,6 +10,7 @@ using BackendOcago.Models.Database;
 using BackendOcago.Models.Database.Repositories;
 using BackendOcago.Services;
 using BackendOcago.Models.Mappers;
+using Microsoft.AspNetCore.Http;
 
 namespace BackendOcago;
 
@@ -18,56 +18,55 @@ public class Program
 {
     public static async Task Main(string[] args)
     {
-        //Especificamos el directorio de trabajo
+        // Especificamos el directorio de trabajo
         Directory.SetCurrentDirectory(AppContext.BaseDirectory);
 
-        //Constructor
+        // Constructor
         var builder = WebApplication.CreateBuilder(args);
 
-        //Añadir la configuración guardada en appsettings
+        // Añadir la configuración guardada en appsettings
         builder.Services.Configure<Settings>(builder.Configuration.GetSection(Settings.SECTION_NAME));
 
-        builder.Services.AddControllers(
-        options => options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true);
+        // Añadir controladores con configuración para la serialización de JSON
+        builder.Services.AddControllers(options =>
+            options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true)
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+            });
 
-        //Controladores
-        builder.Services.AddControllers();
-
-        builder.Services.AddControllers().AddJsonOptions(options => {
-            options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-        });
-
-        //Contextos
+        // Añadir contexto y repositorios
         builder.Services.AddScoped<DataContext>();
         builder.Services.AddScoped<UnitOfWork>();
         builder.Services.AddScoped<UserRepository>();
         builder.Services.AddScoped<ImageRepository>();
         builder.Services.AddScoped<FriendshipRepository>();
+        builder.Services.AddScoped<GameRepository>();
 
-        //builder.Services.AddTransient<ExampleMiddleware>();
+        // Servicios
         builder.Services.AddTransient<ImageService>();
-
-
-
-        //Servicios
-        // builder.Services.AddScoped<TextComparer>();
+        
+        builder.Services.AddScoped<GameService>();
         builder.Services.AddScoped<AuthService>();
         builder.Services.AddScoped<UserService>();
         builder.Services.AddScoped<FriendshipService>();
+        builder.Services.AddScoped<SmartSearchService>();
+        builder.Services.AddScoped<MatchMakingService>();
 
-        //Los servicios websocket son singleton siempre
-        builder.Services.AddSingleton<ProcessWebSocket>();
+        builder.Services.AddScoped<WebSocketHandler>();
 
 
-        //Mappers
+        // Mappers
         builder.Services.AddTransient<UserMapper>();
         builder.Services.AddTransient<ImageMapper>();
         builder.Services.AddScoped<FriendshipMapper>();
+        
+
+        builder.Services.AddScoped<Middleware>();
 
 
-        //Swagger/OpenApi
+        // Swagger/OpenAPI configuración
         builder.Services.AddEndpointsApiExplorer();
-        builder.Services.AddSwaggerGen();
         builder.Services.AddSwaggerGen(options =>
         {
             options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, new OpenApiSecurityScheme
@@ -80,119 +79,86 @@ public class Program
                 Scheme = JwtBearerDefaults.AuthenticationScheme
             });
             options.OperationFilter<SecurityRequirementsOperationFilter>(true, JwtBearerDefaults.AuthenticationScheme);
-        
         });
 
-        //Configuramos program para que use el servicio de autenticacion
+        // Configuración de autenticación con JWT
         builder.Services.AddAuthentication()
-        .AddJwtBearer(options =>
-        {
-            //Accedemos a la clase settings donde esta el get de JwtKey (Donde se encuentra nuestra clave)
-            Settings settings = builder.Configuration.GetSection(Settings.SECTION_NAME).Get<Settings>()!;
-            //nuestra clave se guarda en la variable key
-            string key = Environment.GetEnvironmentVariable("JWT_KEY");
-
-            options.TokenValidationParameters = new TokenValidationParameters
+            .AddJwtBearer(options =>
             {
-                //la unica validacion va a ser la clave
-                ValidateIssuer = false,
-                ValidateAudience = false,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
-            };
-        });
+                var settings = builder.Configuration.GetSection(Settings.SECTION_NAME).Get<Settings>()!;
+                string key = Environment.GetEnvironmentVariable("JWT_KEY") ?? throw new InvalidOperationException("JWT_KEY no está configurada.");
 
-        //por defecto el navegador bloqueará las peticiones debido a la política de CORS.
-        //por eso hay que habilitar Cors
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = false,
+                    ValidateAudience = false,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
+                };
+            });
 
-
+        // Configuración de CORS
         builder.Services.AddCors(options =>
         {
-            options.AddDefaultPolicy(builder =>
+            options.AddDefaultPolicy(policy =>
             {
-                builder.AllowAnyOrigin()
-                .AllowAnyHeader()
-                .AllowAnyMethod();
+                policy.AllowAnyOrigin()
+                      .AllowAnyHeader()
+                      .AllowAnyMethod();
             });
         });
 
-
-        /*if (builder.Environment.IsDevelopment())
-        {
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy("AllowFrontend", policy =>
-                {
-                    policy.WithOrigins("https://localhost:5173").AllowAnyHeader().AllowAnyMethod();
-                });
-            });
-        }*/
         var app = builder.Build();
 
-        // Configure the HTTP request pipeline.
+        // Configurar la canalización de solicitudes HTTP
         if (app.Environment.IsDevelopment())
         {
             app.UseSwagger();
             app.UseSwaggerUI();
         }
 
-        //Configuración de Cors para aceptar cualquier petición
         app.UseCors();
 
-        //app.UseMiddleware<ExampleMiddleware>();
-        /*Ejemplo de middleware
-        app.Use(async (context, next) =>
-        {
-            string method = context.Request.Method;
-
-            if (method == "POST"){
-                // Devuelvo error HTTP 418: I'm a teapot
-                context.Response.StatusCode = 418;
-            }
-            else
-            {
-                //voy al siguiente middleware
-                await next();
-            }
-        });
-        */
-
-        //Indicamos que queremos usar webSockets
+        // Configuración para WebSockets
         app.UseWebSockets();
+        app.UseMiddleware<Middleware>();
 
         app.UseHttpsRedirection();
+        app.UseRouting();
+        app.UseAuthentication();
+        app.UseAuthorization();
+        app.MapControllers();
         app.UseStaticFiles();
 
-        //Habilita la autenticación
-        app.UseAuthentication();
-        //Habilita la autorización
-        app.UseAuthorization();
+        // Habilitar autenticación y autorización
 
-        //Permite transmitir archivos estáticos
-       
+
+        // Configuración de archivos estáticos
         app.UseStaticFiles(new StaticFileOptions
         {
             FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"))
-        });
-        
-        app.MapControllers();
+        }
+        );
 
-        //Llamamos al método de creación de base de datos de respaldo (seed)
+        // Mapear controladores
+
+        // Llamada al método de creación de la base de datos (seed)
         await SeedDatabase(app.Services);
 
+        // Ejecutar la aplicación
         await app.RunAsync();
+
     }
 
+    // Método para realizar la creación (seed) de la base de datos
     static async Task SeedDatabase(IServiceProvider serviceProvider)
     {
-        using IServiceScope scope = serviceProvider.CreateScope();
-        using DataContext dbContext = scope.ServiceProvider.GetService<DataContext>()!;
+        using var scope = serviceProvider.CreateScope();
+        var dbContext = scope.ServiceProvider.GetRequiredService<DataContext>();
 
         if (dbContext.Database.EnsureCreated())
         {
-            Seeder seeder = new Seeder(dbContext);
+            var seeder = new Seeder(dbContext);
             await seeder.SeedAsync();
         }
-
     }
-
 }
