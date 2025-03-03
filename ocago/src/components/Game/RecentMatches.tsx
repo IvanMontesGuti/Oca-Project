@@ -16,7 +16,7 @@ interface Match {
   isPlayer1Turn: boolean
   player1RemainingTurns: number
   player2RemainingTurns: number
-  status: number // 0: pending, 1: in progress, 2: completed
+  status: number 
   lastUpdated: string
   winner: string | null
 }
@@ -27,8 +27,7 @@ export default function RecentMatches() {
   const [error, setError] = useState<string | null>(null)
   const { userInfo } = useAuth()
 
-  // Get userId from auth context or use a default
-  const userId = userInfo?.id  // Fallback to "2" if user ID is not available
+  const userId = userInfo?.id  
 
   useEffect(() => {
     const fetchMatches = async () => {
@@ -42,7 +41,7 @@ export default function RecentMatches() {
 
         const data: Match[] = await response.json()
 
-        // Filter completed matches (status = 2)
+        
         const completedMatches = data.filter((match) => match.status === 2)
 
         setMatches(completedMatches)
@@ -57,19 +56,18 @@ export default function RecentMatches() {
     fetchMatches()
   }, [userId])
 
-  // Helper function to display player ID or "Bot" if null
+  
   const getPlayerName = (playerId: string | null): string => {
     if (!playerId) return "Bot"
     if (playerId === "{user}") return "Tú"
     return `Jugador ${playerId}`
   }
 
-  // Helper function to display winner
   const getWinnerName = (match: Match): string => {
     if (!match.winner) return "Empate"
     if (match.winner === "{user}") return "Tú"
 
-    // Check if winner is player1 or player2
+    
     if (match.winner === match.player1Id) {
       return getPlayerName(match.player1Id)
     } else if (match.winner === match.player2Id) {
