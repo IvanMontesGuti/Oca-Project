@@ -61,7 +61,6 @@ public class AuthController : ControllerBase
         }
         catch (Exception ex)
         {
-            // Registrar el error para depuración
             Console.WriteLine($"Error en el registro: {ex.Message}");
             return StatusCode(500, new { message = "Ocurrió un error inesperado durante el registro." });
         }

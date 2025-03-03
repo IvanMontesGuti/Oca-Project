@@ -35,7 +35,6 @@ public class WebSocketHandler
                 _connections[userId] = webSocket;
             }
 
-            // Actualiza el status del usuario a "Conectado" (status = 1)
             using (var scope = _serviceScopeFactory.CreateScope())
             {
                 var userService = scope.ServiceProvider.GetRequiredService<UserService>();
@@ -49,7 +48,6 @@ public class WebSocketHandler
                 }
             }
 
-            // Notifica a todos el número de usuarios conectados en tiempo real
             int connectedCount = _connections.Count;
             await BroadcastMessage(new { Type = "connectedCount", Count = connectedCount });
             await SendMessage(userId, new { Message = $"Bienvenido, hay {connectedCount} usuarios conectados." });
@@ -84,8 +82,7 @@ public class WebSocketHandler
                 _connections.TryRemove(userId, out _);
             }
 
-            // Actualiza el status del usuario a "Desconectado" (status = 0)
-            // Actualiza el status del usuario a "Conectado" (status = 1)
+
             using (var scope = _serviceScopeFactory.CreateScope())
             {
                 var userService = scope.ServiceProvider.GetRequiredService<UserService>();
@@ -296,7 +293,6 @@ public class WebSocketHandler
                         int hostId = int.Parse(message.SenderId);
                         var match = await _matchMakingService.CreateRandomMatchAsync(hostId);
 
-                        // Solo si está "Matched" y hay Guest asignado
                         if (match.Status == "Matched" && match.GuestId.HasValue)
                         {
                             int finalHost = match.HostId;
@@ -335,17 +331,13 @@ public class WebSocketHandler
                         using var scope = _serviceScopeFactory.CreateScope();
                         var userService = scope.ServiceProvider.GetRequiredService<UserService>();
 
-                        // Obtenemos el nickname del usuario que envía la invitación (host)
                         var hostUser = await userService.GetByIdAsync(hostId);
                         string hostNickname = hostUser?.Nickname ?? "Desconocido";
 
-                        // Creamos la invitación
                         var invitation = await _matchMakingService.SendInvitationAsync(hostId, receiverId);
 
-                        // Notificamos al host que la invitación se envió correctamente
                         await SendMessage(message.SenderId, new { Message = "Invitación enviada.", MatchRequestId = invitation.MatchRequestId });
 
-                        // Notificamos al receptor, enviando además el nickname del host
                         await SendMessage(message.ReceiverId, new { Type = "invitationReceived", HostId = hostId, HostNickname = hostNickname, MatchRequestId = invitation.MatchRequestId });
                         break;
                     }
@@ -439,7 +431,6 @@ public class WebSocketHandler
                     }
                 case "roomInfo":
                     {
-                        // Verificamos que se haya enviado un MatchRequestId
                         if (string.IsNullOrWhiteSpace(message.MatchRequestId))
                         {
                             await SendMessage(message.SenderId, new { Message = "No se proporcionó MatchRequestId." });
@@ -450,11 +441,9 @@ public class WebSocketHandler
                         var context = scope.ServiceProvider.GetRequiredService<DataContext>();
                         var userService = scope.ServiceProvider.GetRequiredService<UserService>();
 
-                        // Usamos directamente el MatchRequestId enviado (ya es string)
                         string matchRequestId = message.MatchRequestId;
                         Console.WriteLine($"[roomInfo] Buscando MatchRequest con ID: {matchRequestId}");
 
-                        // Buscamos la solicitud de partida en la base de datos
                         var matchRequest = await context.MatchRequests
                             .FirstOrDefaultAsync(m => m.MatchRequestId == matchRequestId);
 
@@ -465,16 +454,13 @@ public class WebSocketHandler
                             break;
                         }
 
-                        // Obtenemos la información del host
                         var host = await userService.GetByIdAsync(matchRequest.HostId);
-                        // Obtenemos la información del guest, si existe
                         UserDto guest = null;
                         if (matchRequest.GuestId.HasValue)
                         {
                             guest = await userService.GetByIdAsync((long)matchRequest.GuestId.Value);
                         }
 
-                        // Construimos la lista de jugadores con la información completa
                         var players = new List<object>();
                         if (host != null)
                         {
@@ -482,7 +468,7 @@ public class WebSocketHandler
                             {
                                 Id = host.Id,
                                 Nickname = host.Nickname,
-                                AvatarUrl = host.AvatarUrl, // Asegúrate de que esta propiedad exista en tu entidad User
+                                AvatarUrl = host.AvatarUrl, 
                                 IsReady = matchRequest.HostReady,
                                 IsHost = true
                             });

@@ -19,19 +19,16 @@ public abstract class Repository<TEntity> : IRepository<TEntity> where TEntity :
     return await _dbContext.Set<TEntity>().FirstOrDefaultAsync(condition);
     }
 
-//Llamada única a la base de datos con todas las consultas
-public async Task<ICollection<TEntity>> GetAllAsync()
+    public async Task<ICollection<TEntity>> GetAllAsync()
     {
         return await _dbContext.Set<TEntity>().ToArrayAsync();
     }
-    //Obtiene una consulta
     public IQueryable<TEntity> GetQueryable(bool asNoTracking = true)
     {
         DbSet<TEntity> entities = _dbContext.Set<TEntity>();
         return asNoTracking ? entities.AsNoTracking() : entities;
     }
 
-    //Funciones de Obtención, Inserción, Actualización y Eliminación de Datos
     public async Task<TEntity> GetByIdAsync(object id)
     {
         return await _dbContext.Set<TEntity>().FindAsync(id);
@@ -68,7 +65,6 @@ public async Task<ICollection<TEntity>> GetAllAsync()
     {
         try
         {
-            // First detach any existing entity with the same key
             var keyValues = _dbContext.Model.FindEntityType(typeof(TEntity)).FindPrimaryKey().Properties
                 .Select(p => p.PropertyInfo.GetValue(entity)).ToArray();
 
@@ -78,7 +74,6 @@ public async Task<ICollection<TEntity>> GetAllAsync()
                 _dbContext.Entry(existingEntity).State = EntityState.Detached;
             }
 
-            // Now attach and mark as modified
             _dbContext.Set<TEntity>().Attach(entity);
             _dbContext.Entry(entity).State = EntityState.Modified;
 
@@ -91,7 +86,6 @@ public async Task<ICollection<TEntity>> GetAllAsync()
             throw;
         }
     }
-
 
     public Task DeleteAsync(TEntity entity)
     {

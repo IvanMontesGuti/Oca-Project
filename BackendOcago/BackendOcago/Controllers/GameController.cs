@@ -33,12 +33,10 @@ namespace BackendOcago.Controllers
 
                 if (_connections.ContainsKey(userId))
                 {
-                    Console.WriteLine($"🔄 Usuario {userId} ya estaba conectado. Cerrando conexión anterior.");
                     _connections[userId].Abort();
                 }
 
                 _connections[userId] = webSocket;
-                Console.WriteLine($"✅ Usuario {userId} conectado. Total conexiones activas: {_connections.Count}");
 
                 await HandleWebSocketConnection(userId, webSocket);
             }
@@ -187,19 +185,13 @@ namespace BackendOcago.Controllers
                         
                         break;
                     case "SendChat":
-                        // Procesar mensaje de chat
                         if (string.IsNullOrEmpty(jsonMessage.ChatMessage))
                         {
-                            Console.WriteLine("❌ Mensaje de chat vacío, ignorando");
                             break;
                         }
 
-                        Console.WriteLine($"💬 Mensaje de chat recibido de {userId} para partida {jsonMessage.GameId}: {jsonMessage.ChatMessage}");
-
-                        // Obtener información del juego para verificar que el usuario está en la partida
                         var chatGameInfo = await _gameService.GetGameAsync(jsonMessage.GameId);
 
-                        // Verificar que el usuario sea parte de la partida
                         if (chatGameInfo.Player1Id != userId && chatGameInfo.Player2Id != userId)
                         {
                             await SendMessageToClient(userId, new
@@ -210,12 +202,11 @@ namespace BackendOcago.Controllers
                             break;
                         }
 
-                        // Crear objeto de mensaje de chat
                         var chatMessage = new
                         {
                             GameId = jsonMessage.GameId,
                             SenderId = userId,
-                            SenderName = userId, // Podrías obtener el nombre real del usuario si lo tienes
+                            SenderName = userId, 
                             Message = jsonMessage.ChatMessage,
                             Timestamp = DateTime.UtcNow
                         };
@@ -278,7 +269,6 @@ namespace BackendOcago.Controllers
             }
             else
             {
-                // Para mensajes genéricos como la notificación de rendición
                 var messageObject = new
                 {
                     action = action,
@@ -317,6 +307,6 @@ namespace BackendOcago.Controllers
     {
         public string Action { get; set; }
         public Guid GameId { get; set; }
-        public string ChatMessage { get; set; } // Nuevo campo para mensajes de chat
+        public string ChatMessage { get; set; } 
     }
 }

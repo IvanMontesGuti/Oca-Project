@@ -33,7 +33,6 @@ namespace BackendOcago.Services
             _connectedPlayers[userId] = socket;
             Console.WriteLine($"✅ WebSocket registrado para {userId}");
 
-            // Escucha mensajes entrantes (opcional)
             await ListenToWebSocket(userId, socket);
 
         }
@@ -78,7 +77,6 @@ namespace BackendOcago.Services
 
             _activeGames[game.Id] = (userId, null);
 
-            // Actualizar la lista de juegos del usuario
             await UpdateUserGamesAsync(game);
 
             return MapToGameDTO(game);
@@ -103,16 +101,14 @@ namespace BackendOcago.Services
                 _activeGames[game.Id] = (game.Player1Id, userId);
                 Console.WriteLine($"Game updated successfully. Player2Id: {userId}, Status: {game.Status}");
 
-                // Actualizar la lista de juegos del usuario
                 await UpdateUserGamesAsync(game);
 
                 var gameDto = MapToGameDTO(game);
 
-                // 🚀 Si el jugador 2 es "bot" y es su turno, hacer que mueva automáticamente
                 if (userId == "bot" && !game.IsPlayer1Turn)
                 {
                     Console.WriteLine("🤖 Bot detectado. Ejecutando turno automático...");
-                    await Task.Delay(1000); // Pequeña pausa para simular respuesta humana
+                    await Task.Delay(1000);
                     await MakeMoveAsync(game.Id, userId);
                 }
 
@@ -127,14 +123,13 @@ namespace BackendOcago.Services
 
         public async Task<GameDTO> CreateBotGameAsync(string userId)
         {
-            // Create a new game where the user is Player1 and bot is Player2
             var game = new Game
             {
                 Id = Guid.NewGuid(),
                 Player1Id = userId,
-                Player2Id = "bot", // The bot always has the ID "bot"
+                Player2Id = "bot", 
                 Status = GameStatus.InProgress,
-                IsPlayer1Turn = true, // User goes first
+                IsPlayer1Turn = true, 
                 Player1Position = 0,
                 Player2Position = 0,
                 Player1RemainingTurns = 0,
@@ -147,12 +142,10 @@ namespace BackendOcago.Services
             await _unitOfWork.GameRepository.SaveAsync();
             _activeGames[game.Id] = (userId, "bot");
 
-            // Actualizar la lista de juegos del usuario
             await UpdateUserGamesAsync(game);
 
             Console.WriteLine($"🤖 Partida contra bot creada para {userId}. ID: {game.Id}");
 
-            // Notify player about the new game
             await NotifyPlayersAsync(game);
 
             return MapToGameDTO(game);
@@ -166,20 +159,16 @@ namespace BackendOcago.Services
             if (game.Status != GameStatus.InProgress)
                 throw new InvalidOperationException("Game is not in progress");
 
-            // Verificar que el usuario está en la partida
             if (game.Player1Id != userId && game.Player2Id != userId)
                 throw new InvalidOperationException("You are not part of this game");
 
-            // Determinar quién es el ganador (el otro jugador)
             game.Winner = game.Player1Id == userId ? game.Player2Id : game.Player1Id;
             game.Status = GameStatus.Finished;
             game.LastUpdated = DateTime.UtcNow;
 
-            Console.WriteLine($"🏳️ Jugador {userId} se ha rendido. Ganador: {game.Winner}");
 
             await _unitOfWork.GameRepository.UpdateAsync(game);
 
-            // Actualizar las listas de juegos de los usuarios
             await UpdateUserGamesAsync(game);
 
             return MapToGameDTO(game);
@@ -223,13 +212,6 @@ namespace BackendOcago.Services
             } 
         }
 
-
-
-
-        // In GameService.cs, update the MakeMoveAsync method to correctly handle the bot's turn after a player loses a turn
-
-        // Update the MakeMoveAsync method to fix both issues
-
         public async Task<GameMoveDTO> MakeMoveAsync(Guid gameId, string userId)
         {
             try
@@ -242,24 +224,15 @@ namespace BackendOcago.Services
 
                 var isPlayer1 = userId == game.Player1Id;
                 int currentPosition = isPlayer1 ? game.Player1Position : game.Player2Position;
-
-                // Special case: if playing against a bot
                 bool playingAgainstBot = game.Player2Id == "bot" && userId != "bot";
                 bool botTrappedInWell = game.Player2Id == "bot" && game.Player2RemainingTurns == int.MaxValue;
-
-                // Verificar que sea el turno del jugador o caso especial para juegos contra bot
                 if (!playingAgainstBot && ((isPlayer1 && !game.IsPlayer1Turn) || (!isPlayer1 && game.IsPlayer1Turn)))
                     throw new InvalidOperationException("Not your turn");
-
-                // Verificar si hay turnos pendientes por perder
-                // Un valor positivo de PlayerRemainingTurns significa turnos que el jugador debe saltar
                 if ((isPlayer1 && game.Player1RemainingTurns > 0) || (!isPlayer1 && game.Player2RemainingTurns > 0))
                 {
-                    // Don't process lost turns for the bot if it's trapped in the well
                     if (userId == "bot" && game.Player2RemainingTurns == int.MaxValue)
                     {
-                        // Bot is trapped in the well, skip turn processing
-                        game.IsPlayer1Turn = true; // Give turn back to player
+                        game.IsPlayer1Turn = true; 
                         await _unitOfWork.GameRepository.UpdateAsync(game);
 
                         var skipMoveDto = new GameMoveDTO
@@ -284,7 +257,6 @@ namespace BackendOcago.Services
                     else
                         game.Player2RemainingTurns--;
 
-                    // Cambiar el turno al otro jugador
                     game.IsPlayer1Turn = !game.IsPlayer1Turn;
 
                     await _unitOfWork.GameRepository.UpdateAsync(game);
@@ -306,28 +278,21 @@ namespace BackendOcago.Services
 
                     await NotifyPlayersAsync(game);
 
-                    // Si el siguiente jugador es el bot, hacer que juegue automáticamente
-                    if (nextTurnPlayerIdturn == "bot")
+                   if (nextTurnPlayerIdturn == "bot")
                     {
                         Console.WriteLine("🤖 Turno del bot después de turno perdido. Ejecutando movimiento automático...");
-
-                        // Process bot move immediately for better responsiveness
                         try
                         {
-                            // Small delay to give the appearance of the bot "thinking"
                             await Task.Delay(1000);
 
-                            // Check if bot is trapped before moving
                             if (game.Player2RemainingTurns == int.MaxValue)
                             {
-                                // Bot is trapped, give turn back to player
                                 game.IsPlayer1Turn = true;
                                 await _unitOfWork.GameRepository.UpdateAsync(game);
                                 await NotifyPlayersAsync(game);
                             }
                             else
                             {
-                                // Bot can move normally
                                 await MakeMoveAsync(gameId, "bot");
                             }
                         }
@@ -339,38 +304,27 @@ namespace BackendOcago.Services
 
                     return newMoveDto;
                 }
-
-                // Si llegamos aquí, el jugador puede mover normalmente
-
-                // Tirar el dado y calcular nueva posición
                 int diceRoll = _random.Next(1, 7);
                 int newPosition = currentPosition + diceRoll;
                 string message = $"Jugador {userId} lanzó {diceRoll} y avanzó a la casilla {newPosition}.";
 
-                // Manejar casilla 63 y rebote si supera 63
                 if (newPosition > 63)
                 {
                     int excess = newPosition - 63;
                     newPosition = 63 - excess;
                     message = $"Jugador {userId} lanzó {diceRoll} y rebotó a la casilla {newPosition}.";
                 }
-
-                // Si llega exactamente a 63, gana
                 if (newPosition == 63)
                 {
                     game.Status = GameStatus.Finished;
                     game.Winner = userId;
                     message = $"🏆 ¡Jugador {userId} ha ganado!";
-                    game.IsPlayer1Turn = false; // Finaliza el juego
-
-                    // Actualizar la lista de juegos de los usuarios cuando termina la partida
+                    game.IsPlayer1Turn = false; 
                     await UpdateUserGamesAsync(game);
                 }
 
-                // Aplicar reglas especiales
                 bool extraTurn = false;
 
-                // Verificar si el otro jugador está en el pozo y liberarlo
                 if (newPosition == 31)
                 {
                     if (isPlayer1 && game.Player2RemainingTurns == int.MaxValue)
@@ -385,7 +339,6 @@ namespace BackendOcago.Services
                     }
                 }
 
-                // Aplicar reglas según la nueva posición
                 switch (newPosition)
                 {
                     case 6:
@@ -433,12 +386,9 @@ namespace BackendOcago.Services
                         message = $"💀 ¡Calavera! Jugador {userId} vuelve a la casilla 1.";
                         break;
                 }
-
-                // Manejo de Oca a Oca
                 int[] casillasOca = { 5, 9, 14, 18, 23, 27, 32, 36, 41, 45, 50, 54, 59 };
                 if (casillasOca.Contains(newPosition))
                 {
-                    // Buscar la siguiente oca en la lista
                     int nextOcaIndex = Array.IndexOf(casillasOca, newPosition) + 1;
                     if (nextOcaIndex < casillasOca.Length)
                     {
@@ -449,44 +399,34 @@ namespace BackendOcago.Services
                     }
                     else
                     {
-                        // Si es la última oca
                         extraTurn = true;
                         message = $"🦆 ¡Oca! Jugador {userId} vuelve a tirar.";
                     }
                 }
-
-                // Actualizar la posición del jugador
                 if (isPlayer1)
                     game.Player1Position = newPosition;
                 else
                     game.Player2Position = newPosition;
 
-                // Cambiar el turno solo si no hay turno extra
-                // Special case for bot games: always give control back to player when:
-                // 1. It's a bot game AND
-                // 2. The current player is the bot AND
-                // 3. The bot doesn't get an extra turn
                 bool forcePlayerTurn = game.Player2Id == "bot" && userId == "bot" && !extraTurn;
 
                 if (!extraTurn)
                 {
                     if (forcePlayerTurn)
                     {
-                        game.IsPlayer1Turn = true; // Force player's turn
+                        game.IsPlayer1Turn = true; 
                     }
                     else
                     {
                         game.IsPlayer1Turn = !game.IsPlayer1Turn;
                     }
                 }
-
-                // Si un jugador llega a 63, gana
                 if (newPosition == 63)
                 {
                     game.Status = GameStatus.Finished;
                     game.Winner = userId;
                     message = $"🏆 ¡Jugador {userId} ha ganado!";
-                    game.IsPlayer1Turn = false; // Finaliza el juego
+                    game.IsPlayer1Turn = false; 
                 }
 
                 game.LastUpdated = DateTime.UtcNow;
@@ -494,7 +434,6 @@ namespace BackendOcago.Services
 
                 string nextTurnPlayerId = game.IsPlayer1Turn ? game.Player1Id : game.Player2Id;
 
-                // Mensaje adicional si el siguiente jugador tiene turnos por perder
                 if ((game.IsPlayer1Turn && game.Player1RemainingTurns > 0) ||
                     (!game.IsPlayer1Turn && game.Player2RemainingTurns > 0))
                 {
@@ -516,29 +455,23 @@ namespace BackendOcago.Services
 
                 await NotifyPlayersAsync(game);
 
-                // Si el siguiente turno es del bot y no tiene turno extra, hacer que el bot juegue automáticamente
                 if (game.Status == GameStatus.InProgress && nextTurnPlayerId == "bot" && !extraTurn)
                 {
                     Console.WriteLine("🤖 Turno del bot. Ejecutando movimiento automático...");
 
-                    // Process bot move immediately for better responsiveness
                     try
                     {
-                        // Small delay to give the appearance of the bot "thinking"
                         await Task.Delay(1000);
 
-                        // Check if bot is trapped before moving
                         var updatedGame = await _unitOfWork.GameRepository.GetByIdAsync(gameId);
                         if (updatedGame.Player2RemainingTurns == int.MaxValue)
                         {
-                            // Bot is trapped, give turn back to player
                             updatedGame.IsPlayer1Turn = true;
                             await _unitOfWork.GameRepository.UpdateAsync(updatedGame);
                             await NotifyPlayersAsync(updatedGame);
                         }
                         else
                         {
-                            // Bot can move normally
                             await MakeMoveAsync(gameId, "bot");
                         }
                     }
@@ -557,13 +490,10 @@ namespace BackendOcago.Services
             }
         }
 
-        // Add this helper method to check and fix bot trapped state
         private async Task CheckAndFixBotTrappedState(Game game)
         {
-            // If the bot is trapped in the well and it's supposed to be its turn
             if (game.Player2Id == "bot" && game.Player2RemainingTurns == int.MaxValue && !game.IsPlayer1Turn)
             {
-                // Force switch turn to player1
                 game.IsPlayer1Turn = true;
                 await _unitOfWork.GameRepository.UpdateAsync(game);
                 await NotifyPlayersAsync(game);
@@ -572,11 +502,10 @@ namespace BackendOcago.Services
 
         public async Task<GameDTO> GetGameAsync(Guid gameId)
         {
-            var game = await _unitOfWork.GameRepository.GetByIdAsync(gameId); // ⬅ ¡Aquí!
+            var game = await _unitOfWork.GameRepository.GetByIdAsync(gameId);
             if (game == null) throw new Exception("Game not found");
 
             
-            // Agregamos logging para debug
             Console.WriteLine($"Retrieved game {gameId}: Player1={game.Player1Id}, Player2={game.Player2Id}, Status={game.Status}");
 
             return MapToGameDTO(game);
@@ -616,10 +545,8 @@ namespace BackendOcago.Services
         }
 
 
-        // Nueva clase para gestionar las conexiones WebSocket
         public static class WebSocketConnectionManager
         {
-            // Diccionario estático para almacenar las conexiones activas
             private static readonly ConcurrentDictionary<string, WebSocket> _connections = new();
 
             public static void AddConnection(string userId, WebSocket webSocket)
