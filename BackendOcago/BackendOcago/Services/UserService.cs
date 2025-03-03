@@ -125,19 +125,17 @@ public class UserService
         return true;
        
     }
-    /*
-    public async Task<UserDto> UpdateRole(HandleRole handleRole)
+
+    public async Task<List<Game>> GetAllMatchesAsync(long receiverId)
     {
-        User userEntity = await _unitOfWork.UserRepository.GetByIdAsync(handleRole.UserId) ?? throw new Exception("El usuario no existe");
-        userEntity.Role = handleRole.Role;
+        var allGames = await _unitOfWork.GameRepository.GetAllAsync();
+        string receiverIdString = receiverId.ToString();
 
-        _unitOfWork.UserRepository.Update(userEntity);
-
-        await _unitOfWork.UserRepository.SaveAsync();
-
-        return _mapper.ToDto(userEntity);
+        return allGames
+            .Where(f => f.Player1Id == receiverIdString || f.Player2Id == receiverIdString)
+            .ToList();
     }
-    */
+
     public async Task<int> GetStatusCount (UserStatus status)
     {
         return await _unitOfWork.UserRepository.CountStatusAsync(status);
