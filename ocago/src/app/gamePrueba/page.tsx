@@ -661,7 +661,7 @@ export default function WebSocketGame() {
             className="relative w-full h-full"
             style={{ aspectRatio: `${BOARD_WIDTH * CELL_WIDTH}/${BOARD_HEIGHT * CELL_HEIGHT}` }}
           >
-            <Image src="/images/tablero2.svg" alt="Tablero de OcaGo" layout="fill" objectFit="contain" />
+            <Image src="/images/tablero.svg" alt="Tablero de OcaGo" layout="fill" objectFit="contain" />
 
             {/* Grid de referencia (solo para depuración, puedes comentarlo en producción) */}
             <div
@@ -669,7 +669,7 @@ export default function WebSocketGame() {
               style={{
                 gridTemplateColumns: `repeat(${BOARD_WIDTH}, ${CELL_WIDTH}px)`,
                 gridTemplateRows: `repeat(${BOARD_HEIGHT}, ${CELL_HEIGHT}px)`,
-                opacity: 0.2,
+                opacity: 0,
                 pointerEvents: "none",
               }}
             >
