@@ -16,41 +16,9 @@ export function WebInfo() {
   const [usersInGame, setUsersInGame] = useState<number | null>(null);
   const [activeGames, setActiveGames] = useState<number | null>(null);
   
-  const countStatus = async (num: number): Promise<number> => {
-    const url = GET_COUNT_STATUS(num);
 
-    try {
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
 
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
 
-      const data = await response.json();
-      return data || 0;
-    } catch (error) {
-      console.error("Error al realizar la solicitud:", error);
-      return 0;
-    }
-  };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const connected = await countStatus(1);
-      const inGame = await countStatus(2);
-      setConnectedUsers(connected + inGame);
-      setUsersInGame(inGame);
-    };
-
-    fetchData();
-  }, []);
-
-  // Still use the main socket for connected users if needed
   useEffect(() => {
     if (!socket) return;
 
