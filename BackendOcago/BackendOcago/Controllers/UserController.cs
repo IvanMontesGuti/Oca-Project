@@ -63,6 +63,16 @@ public class UserController : ControllerBase
         return Ok(updatedUser);
     }
 
+    [HttpGet("allMatches/{userId}")]
+    public async Task<IActionResult> GetAllMatches(long userId)
+    {
+        var matches = await _userService.GetAllMatchesAsync(userId);
+        if (matches == null || !matches.Any())
+            return NotFound("No se encontraron partidas para este usuario.");
+
+        return Ok(matches);
+    }
+
     [HttpPut("ChangePassword")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePassword changePassword)
     {
