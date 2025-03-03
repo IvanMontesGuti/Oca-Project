@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using BackendOcago.Services;
 using BackendOcago.Models.Dtos;
 using BackendOcago.Models.Database.Enum;
+using BackendOcago.Models.Database;
+using Microsoft.EntityFrameworkCore;
 
 namespace BackendOcago.Controllers;
 
@@ -11,13 +13,16 @@ namespace BackendOcago.Controllers;
 public class UserController : ControllerBase
 {
     private readonly UserService _userService;
-
-    public UserController(UserService userService)
+    private readonly UnitOfWork _unitOfWork;
+    private readonly DataContext _dataContext;
+    public UserController(UserService userService, UnitOfWork unitOfWork, DataContext dataContext)
     {
+        _unitOfWork = unitOfWork;
         _userService = userService;
+        _dataContext = dataContext;
     }
 
-    // Endpoint para obtener todos los usuarios registrados
+
     [HttpGet("all")]
     public async Task<IActionResult> GetAllUsers()
     {
@@ -80,7 +85,10 @@ public class UserController : ControllerBase
     [HttpGet("History")]
     public async Task<IActionResult> GetGameHistory(long userId)
     {
-        var user = await _userService.GetByIdAsync(userId);
+        var user = await _dataContext.Users
+            .Include(u => u.Games)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+        if (user == null) return NotFound("Usuario no encontrado!");
         return Ok(user.Games);
     }
 

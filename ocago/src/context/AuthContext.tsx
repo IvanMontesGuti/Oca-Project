@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { jwtDecode } from "jwt-decode";
 import { LOGIN_URL, REGISTER_URL } from "@/lib/endpoints/config";
+import { useRouter } from "next/navigation";
 
 
 interface JwtPayload {
@@ -37,6 +38,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [userId, setUserId] = useState<string | null>(null);
   const [userInfo, setUserInfo] = useState<DecodedToken | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const router = useRouter()
 
   const extractUserId = (accessToken: string): string | null => {
     try {
@@ -87,7 +89,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   
       const decodedToken = jwtDecode<DecodedToken>(data.accessToken);
       setUserInfo(decodedToken);
-  
       setToken(data.accessToken);
       setUserId(extractedUserId);
       setIsAuthenticated(true);
@@ -107,39 +108,53 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const register = async (nickname: string, mail: string, password: string, avatarUrl: string) => {
     try {
+      const body = {
+        mail: mail,
+        nickname: nickname,
+        password: password,
+        role: "User",  // 🚨 Asegúrate de incluir el rol aquí
+        avatarUrl: avatarUrl
+      };
+  
+      console.log("📦 Cuerpo enviado:", body);  // 📌 LOG para verificar el cuerpo enviado
+  
       const response = await fetch(REGISTER_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nickname, mail, password, avatarUrl }),
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
       });
-
+  
       if (!response.ok) {
         const errorData = await response.json();
+        console.error("❌ Respuesta del servidor:", errorData);  // 📌 LOG para respuesta del servidor
         throw new Error(errorData.message || "⚠️ Error en el registro");
       }
-
+  
       const data = await response.json();
       if (!data?.accessToken) throw new Error("⚠️ Token de acceso inválido");
-
+  
       const extractedUserId = extractUserId(data.accessToken);
       if (!extractedUserId) throw new Error("⚠️ No se pudo extraer el userId");
-
+  
       const decodedToken = jwtDecode<DecodedToken>(data.accessToken);
       setUserInfo(decodedToken);
-
+  
       setToken(data.accessToken);
       setUserId(extractedUserId);
       setIsAuthenticated(true);
-
+  
       if (typeof window !== "undefined") {
         localStorage.setItem("accessToken", data.accessToken);
-        setIsAuthenticated(true);
       }
     } catch (error) {
       console.error("❌ Error en registro:", error);
       throw error;
     }
   };
+  
+  
 
   const logout = () => {
     setToken(null);
@@ -151,6 +166,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       localStorage.removeItem("accessToken");
       sessionStorage.removeItem("accessToken");
     }
+    router.push("/")
   };
   const updateUserInfo = (newInfo: any) => {
     setUserInfo((prevInfo) => ({ ...prevInfo, ...newInfo }))

@@ -34,7 +34,7 @@ export default function FriendRequests({ requests = [], respondFriendRequest }: 
                 <AvatarFallback>{request?.nickname ? request.nickname.slice(0, 2).toUpperCase() : "NA"}</AvatarFallback>
               </Avatar>
               <div>
-                <div className="font-medium leading-none text-black">{request?.nickname || "Desconocido"}</div>
+                <div className="font-medium leading-none text-white">{request?.nickname || "Desconocido"}</div>
               </div>
             </div>
             <div className="flex gap-2">

@@ -198,7 +198,6 @@ export default function UserProfile() {
             <div className="text-center text-gray-400">No hay juegos registrados.</div>
           )}
         </div>
-        );
       </div>
     </div>
   )

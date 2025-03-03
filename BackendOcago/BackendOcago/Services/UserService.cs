@@ -64,17 +64,20 @@ public class UserService
             throw new Exception("El nickname ya está en uso");
         }
 
+        string defaultRole = string.IsNullOrEmpty(userRequest.Role) ? "User" : userRequest.Role;
+
         // Creación del nuevo usuario.
         User newUser = new User
         {
             Mail = normalizedMail,
             Password = AuthService.HashPassword(userRequest.Password),
-            Nickname = userRequest.Nickname, // Almacenamos el nickname tal como lo ingresó el usuario.
-            Role = null,
+            Nickname = userRequest.Nickname, 
+            Role = defaultRole,
             AvatarUrl = userRequest.AvatarUrl
         };
 
-        return _mapper.ToDto(await InsertAsync(newUser));
+        var insertedUser = await InsertAsync(newUser);
+        return _mapper.ToDto(insertedUser);
     }
 
 

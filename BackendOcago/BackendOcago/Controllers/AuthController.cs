@@ -46,7 +46,6 @@ public class AuthController : ControllerBase
 
         try
         {
-            // Verificar si ya existe un usuario con el mismo correo o nombre de usuario
             var existingUserByMail = await _userService.GetByMailAsync(userRequest.Mail);
             var existingUserByNickname = await _userService.GetByNickNameAsync(userRequest.Nickname);
 
@@ -55,7 +54,6 @@ public class AuthController : ControllerBase
                 return BadRequest(new { message = "El usuario con ese correo o nombre de usuario ya existe." });
             }
 
-            // Registrar al nuevo usuario
             string stringToken = await _authService.Register(userRequest);
 
             return Ok(new LoginResult { AccessToken = stringToken });

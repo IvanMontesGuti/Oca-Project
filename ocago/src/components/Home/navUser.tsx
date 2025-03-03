@@ -1,25 +1,27 @@
-import Image from "next/image"
-import Link from "next/link"
-import { ArrowRight, User, LogOut } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight, User, LogOut, Edit } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { toast } from "sonner"
-import { useAuth } from "@/context/AuthContext"
-import { API_BASE_URL } from "@/lib/endpoints/config"
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
+import { API_BASE_URL } from "@/lib/endpoints/config";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 export function Header2() {
-  const { userInfo, logout } = useAuth()
+  const { userInfo, logout } = useAuth();
   const { family_name, unique_name } = userInfo || {};
+
   const handleLogout = () => {
-    logout()
-    toast.success("Sesión cerrada correctamente")
-  }
+    logout();
+    toast.success("Sesión cerrada correctamente");
+  };
 
   return (
     <nav className="container mx-auto px-4 py-6 flex justify-between items-center">
@@ -35,18 +37,31 @@ export function Header2() {
           <Button variant="ghost" className="p-0 h-auto hover:bg-transparent">
             <div className="flex flex-col lg:flex-row gap-4 items-center justify-center">
               <p className="text-white text-center">{unique_name}</p>
-              <div className="w-14 h-14 rounded-full overflow-hidden border border-gray-300 hover:border-white transition-colors">
-                <img src={`${API_BASE_URL}/${family_name}`} alt="Avatar" className="w-full h-full object-cover" />
-              </div>
+              <Avatar className="w-14 h-14 border border-gray-300 hover:border-white transition-colors">
+                <AvatarImage
+                  src={family_name ? `${API_BASE_URL}/${family_name}` : undefined}
+                  alt="Avatar"
+                />
+                <AvatarFallback className="bg-gray-500 text-white">
+                  {unique_name?.slice(0, 1).toUpperCase() || "NA"}
+                </AvatarFallback>
+              </Avatar>
             </div>
           </Button>
         </DropdownMenuTrigger>
 
         <DropdownMenuContent align="end" className="w-56 mt-2">
           <DropdownMenuItem asChild>
-            <Link href="/profile" className="cursor-pointer flex items-center gap-2">
+            <Link href={`/profile/${unique_name}`} className="cursor-pointer flex items-center gap-2">
               <User className="h-4 w-4" />
               <span>Mi Perfil</span>
+            </Link>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem asChild>
+            <Link href={`/profile/`} className="cursor-pointer flex items-center gap-2">
+              <Edit className="h-4 w-4" />
+              <span>Editar Perfil</span>
             </Link>
           </DropdownMenuItem>
 
@@ -69,6 +84,5 @@ export function Header2() {
         </DropdownMenuContent>
       </DropdownMenu>
     </nav>
-  )
+  );
 }
-

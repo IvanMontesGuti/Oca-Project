@@ -142,7 +142,6 @@ namespace BackendOcago.Services
             await _unitOfWork.GameRepository.InsertAsync(game);
             await _unitOfWork.GameRepository.CreateAsync(game);
             await _unitOfWork.GameRepository.SaveAsync();
-
             _activeGames[game.Id] = (userId, "bot");
 
             // Actualizar la lista de juegos del usuario
@@ -187,14 +186,11 @@ namespace BackendOcago.Services
         {
             try
             {
-                // Obtener los usuarios
                 var player1 = await _unitOfWork.UserRepository.GetByIdAsync(game.Player1Id);
                 if (player1 != null)
                 {
-                    if (player1.Games == null)
-                        player1.Games = new List<Game>();
+                    if (player1.Games == null) player1.Games = new List<Game>();
 
-                    // Verificar si el juego ya existe en la lista
                     if (!player1.Games.Any(g => g.Id == game.Id))
                     {
                         player1.Games.Add(game);
@@ -210,7 +206,6 @@ namespace BackendOcago.Services
                         if (player2.Games == null)
                             player2.Games = new List<Game>();
 
-                        // Verificar si el juego ya existe en la lista
                         if (!player2.Games.Any(g => g.Id == game.Id))
                         {
                             player2.Games.Add(game);
@@ -222,8 +217,7 @@ namespace BackendOcago.Services
             catch (Exception ex)
             {
                 Console.WriteLine($"Error updating user games: {ex.Message}");
-                // No lanzamos la excepción para no interrumpir el flujo principal
-            }
+            } 
         }
 
 
