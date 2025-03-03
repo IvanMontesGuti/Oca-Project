@@ -7,15 +7,12 @@ import { useAuth } from "@/context/AuthContext";
 
 export function WebInfo() {
   const { userInfo } = useAuth();
-  
-  // Fix userId extraction - make sure it's properly cast to string
   const userId = userInfo?.id ? String(userInfo.id) : userInfo?.unique_name;
-  
-  const { socket } = useWebSocket();
+  const { socket, sendMessage} = useWebSocket();
   const [connectedUsers, setConnectedUsers] = useState<number | null>(null);
   const [usersInGame, setUsersInGame] = useState<number | null>(null);
   const [activeGames, setActiveGames] = useState<number | null>(null);
-  
+
 
 
 
@@ -25,7 +22,7 @@ export function WebInfo() {
     const handleMessage = (event: MessageEvent) => {
       try {
         const message = JSON.parse(event.data);
-        
+
         if (message.Type === "connectedCount") {
           setConnectedUsers(message.Count);
           console.log("Connected users:", message.Count);

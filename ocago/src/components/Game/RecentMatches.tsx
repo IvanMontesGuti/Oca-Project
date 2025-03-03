@@ -27,8 +27,7 @@ export default function RecentMatches() {
   const [error, setError] = useState<string | null>(null)
   const { userInfo } = useAuth()
 
-  // Get userId from auth context or use a default
-  const userId = userInfo?.id  // Fallback to "2" if user ID is not available
+  const userId = userInfo?.id  
 
   useEffect(() => {
     const fetchMatches = async () => {
