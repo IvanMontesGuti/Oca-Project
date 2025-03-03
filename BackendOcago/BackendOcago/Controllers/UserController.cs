@@ -77,5 +77,11 @@ public class UserController : ControllerBase
             return BadRequest(ex.Message);
         }
     }
+    [HttpGet("History")]
+    public async Task<IActionResult> GetGameHistory(long userId)
+    {
+        var user = await _userService.GetByIdAsync(userId);
+        return Ok(user.Games);
+    }
 
 }

@@ -12,12 +12,11 @@ export const REGISTER_URL = `${API_AUTH_URL}/Register`;
 const API_USER_URL = `${API_BASE_URL}/api/User`;
 export const GET_USER_BY_ID_URL = (id) => `${API_USER_URL}/${id}`; 
 export const GET_USER_BY_NICKNAME_URL = (nickname) => `${API_USER_URL}/Get/${nickname}`; 
-
 export const UPDATE_USER_URL = (userId, newMail, newNickname) => `${API_USER_URL}/Update?userId=${userId}&newMail=${encodeURIComponent(newMail)}&newNickname=${encodeURIComponent(newNickname)}`;
 export const CHANGE_PASSWORD_URL = `${API_USER_URL}/ChangePassword`;
 export const UPDATE_USER_STATE = (num, id) => `${API_USER_URL}/Status?userStatusRequest=${num}&userId=${id}`;
 export const GET_COUNT_STATUS = (num) => `${API_USER_URL}/CountStatus?estado=${num}`;
-
+export const GET_USER_HISTORY = (id) => `${API_USER_URL}/History?userId=${id}`;
 /* --- IMAGE CONTROLLER --- */
 const API_IMAGE_URL = `${API_BASE_URL}/api/Images`;
 export const IMAGE_GET_ALL_URL = `${API_IMAGE_URL}`; // GET /api/Images
