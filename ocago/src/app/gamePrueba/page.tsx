@@ -597,7 +597,7 @@ export default function WebSocketGame() {
         <div className="w-1/4 flex flex-col gap-4">
           <div className="bg-gray-900 rounded-lg p-4 flex-1">
             <h2 className="text-2xl font-bold mb-2">Chat</h2>
-            <div className="bg-gray-700 rounded-lg p-2 h-[calc(100%-80px)] overflow-y-auto mb-2">
+            <div className="bg-gray-700 rounded-lg p-2 max-h-80 overflow-y-auto mb-2">
               {gameState.messages.map((msg, index) => (
                 <div key={index} className="mb-2">
                   <span className="font-bold">{msg.sender}: </span>
