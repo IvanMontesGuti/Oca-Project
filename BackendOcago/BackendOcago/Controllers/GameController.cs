@@ -73,12 +73,6 @@ namespace BackendOcago.Controllers
                 switch (jsonMessage.Action)
                 {
                     case "CreateGame":
-                        var game = await _gameService.CreateGameAsync(userId);
-                        await SendMessageToClient(userId, new
-                        {
-                            action = "gameUpdate",
-                            data = game
-                        });
                         using (var scope = _serviceScopeFactory.CreateScope())
                         {
                             var userService = scope.ServiceProvider.GetRequiredService<UserService>();
@@ -95,6 +89,13 @@ namespace BackendOcago.Controllers
                                 }
                             }
                         }
+                        var game = await _gameService.CreateGameAsync(userId);
+                        await SendMessageToClient(userId, new
+                        {
+                            action = "gameUpdate",
+                            data = game
+                        });
+                        
                         using (var scope = _serviceScopeFactory.CreateScope())
                         {
                             var userService = scope.ServiceProvider.GetRequiredService<UserService>();
