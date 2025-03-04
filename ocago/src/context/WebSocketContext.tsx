@@ -69,7 +69,7 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
       switch (message.Type) {
 
         case "pendingFriendRequests":
-          setFriendRequests(message.Requests.map((req: any) => ({ id: String(req.Id), nickname: req.Nickname })));
+          setFriendRequests(message.Requests.map((req: { Id: string; Nickname: string }) => ({ id: String(req.Id), nickname: req.Nickname })));
           break;
         case "sendFriendRequest":
           console.log("📩 Solicitud de amistad recibida:", message);
@@ -119,7 +119,7 @@ export const WebSocketProvider: React.FC<{ children: ReactNode }> = ({ children 
 
           break;
         case "friendsList":
-          setFriends(message.Friends.map((friend: any) => ({
+          setFriends(message.Friends.map((friend: { Id: string; Nickname: string; Status: number; avatarUrl: string }) => ({
             id: String(friend.Id),
             nickname: friend.Nickname,
             status: friend.Status,

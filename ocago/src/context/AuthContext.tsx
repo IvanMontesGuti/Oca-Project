@@ -29,7 +29,7 @@ interface AuthContextType {
   register: (nickname: string, email: string, password: string, avatarUrl: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
-  updateUserInfo: (newInfo: any) => void;
+  updateUserInfo: (newInfo: Partial<DecodedToken>) => void;
   getUserRole: () => Promise<string | null>;
 }
 
@@ -207,6 +207,8 @@ const updateUserRole = async () => {
     }
     router.push("/")
   };
+  
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const updateUserInfo = (newInfo: any) => {
     setUserInfo((prevInfo) => ({ ...prevInfo, ...newInfo }))
   }

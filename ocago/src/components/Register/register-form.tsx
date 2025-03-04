@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/context/AuthContext";
-import { FETCH_POST } from "@/lib/endpoints/useFetch";
+
 import { IMAGE_POST_URL } from "@/lib/endpoints/config";
 import { useRouter } from "next/navigation";
 
@@ -19,7 +19,6 @@ export function RegisterForm({
   const { register } = useAuth();
   const [avatar, setAvatar] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
-  const [passwordError, setPasswordError] = useState<string | null>(null); 
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -36,12 +35,7 @@ export function RegisterForm({
       return;
     }
   
-    if (password !== confirmPassword) {
-      setPasswordError("Las contraseñas no coinciden.");
-      return;
-    }
-  
-    setPasswordError(null);
+    
   
     try {
       const avatarPath = `images/${nickname}.png`;  // 📌 Corrigiendo el formato

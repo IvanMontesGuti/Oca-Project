@@ -6,7 +6,7 @@ import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { API_SEARCH_URL, SEARCH_NONFRIENDS_URL, FRIENDSHIP_DELETE } from "@/lib/endpoints/config"
+import { SEARCH_NONFRIENDS_URL, FRIENDSHIP_DELETE } from "@/lib/endpoints/config"
 import { useAuth } from "@/context/AuthContext"
 import { useWebSocket } from "@/context/WebSocketContext"
 import FriendsList from "./FriendsList"
@@ -106,7 +106,7 @@ export default function FriendsPanel() {
       if (!response.ok) throw new Error("Failed to search users")
       const data = await response.json()
       setSearchResults(data.filter((user: Friend) => user.id !== userInfo?.id))
-    } catch (error) {
+    } catch  {
       // setError("Error al buscar usuarios.")
     } finally {
       setIsLoading(false)

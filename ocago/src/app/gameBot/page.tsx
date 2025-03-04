@@ -16,6 +16,10 @@ type WebSocketMessage = {
 }
 
 // Define a type for the chat message data
+interface ChatMessageData {
+  SenderName: string
+  Message: string
+}
 
 
 // Game state interface based on the actual response structure
@@ -47,7 +51,7 @@ const CELL_WIDTH = 99
 const CELL_HEIGHT = 113
 
 // Mapeo de posiciones a coordenadas x,y en la cuadrícula de 12x9
-const POSITION_COORDINATES = {
+const POSITION_COORDINATES: { [key: number]: { x: number; y: number } } = {
   0: { x: 2, y: 7 },
   1: { x: 3, y: 7 },
   2: { x: 4, y: 7 },
@@ -139,7 +143,6 @@ export default function WebSocketGame() {
   const [username, setUsername] = useState<string>("")
   const [gameIdInput, setGameIdInput] = useState<string>("")
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false)
-  const [message, setMessage] = useState<string>("")
   const [showWinnerModal, setShowWinnerModal] = useState<boolean>(false)
   const [inactivityTimer, setInactivityTimer] = useState<number>(30)
   const [isTimerRunning, setIsTimerRunning] = useState<boolean>(false)
@@ -162,19 +165,25 @@ export default function WebSocketGame() {
   
     ws.onopen = () => {
       console.log("WebSocket connected");
-      setGameState((prev) => ({ ...prev, isConnected: true }));
-      
-      // When reconnected, immediately request current game state if we had a game
-      if (prev.gameData?.Id) {
-        console.log("Reconnected - requesting game state for:", prev.gameData.Id);
-        setTimeout(() => {
-          ws.send(JSON.stringify({ Action: "GetGame", GameId: prev.gameData.Id }));
-        }, 500);
-      }
+      setGameState((prev) => {
+        const newState = { ...prev, isConnected: true };
+        
+        // When reconnected, immediately request current game state if we had a game
+        if (prev.gameData?.Id) {
+          console.log("Reconnected - requesting game state for:", prev.gameData.Id);
+          setTimeout(() => {
+            if (prev.gameData) {
+              ws.send(JSON.stringify({ Action: "GetGame", GameId: prev.gameData.Id }));
+            }
+          }, 500);
+        }
+        
+        return newState;
+      });
     };
   
     ws.onmessage = (event) => {
-      const response = JSON.parse(event.data);
+      const response: { action: "gameUpdate" | "activeGames" | "chatMessage"; data: GameData | string[] | ChatMessageData } = JSON.parse(event.data);
       console.log("Received data:", response);
   
       if (response.action === "gameUpdate" && response.data) {
@@ -182,18 +191,20 @@ export default function WebSocketGame() {
         resetInactivityTimer();
   
         // Store game ID in localStorage as backup
-        if (response.data.Id) {
-          localStorage.setItem('currentGameId', response.data.Id);
+        if ('Id' in response.data) {
+          localStorage.setItem('currentGameId', (response.data as GameData).Id);
         }
   
         // Log positions for debugging
-        console.log(
-          "Player 1 position:",
-          response.data.Player1Position,
-          "Coordinates:",
-          POSITION_COORDINATES[response.data.Player1Position],
-        );
-        if (response.data.Player2Id) {
+        if ('Player1Position' in response.data) {
+          console.log(
+            "Player 1 position:",
+            response.data.Player1Position,
+            "Coordinates:",
+            POSITION_COORDINATES[response.data.Player1Position],
+          );
+        }
+        if ('Player2Id' in response.data) {
           console.log(
             "Player 2 position:",
             response.data.Player2Position,
@@ -202,28 +213,44 @@ export default function WebSocketGame() {
           );
         }
   
+        if (response.action === "gameUpdate" && response.data) {
+          setGameState((prev) => ({
+            ...prev,
+            gameData: response.data as GameData,
+          }));
+        } 
+
         setGameState((prev) => ({
-          ...prev,
-          gameData: response.data,
-        }));
+            ...prev,
+            activeGames: response.data as string[],
+          }));
+        } 
+
+        if (response.action === "chatMessage" && response.data) {
+          
+          setGameState((prev) => ({
+            ...prev,
+            messages: [...prev.messages, { sender: (response.data as ChatMessageData).SenderName, text: (response.data as ChatMessageData).Message }],
+          }));
+        }
   
         // Check if game is finished and show winner modal
-        if (response.data.Status === 2 && response.data.Winner) {
+        if ('Status' in response.data && response.data.Status === 2 && response.data.Winner) {
           setShowWinnerModal(true);
           stopInactivityTimer();
         }
   
         // Start timer if game is in progress
-        if (response.data.Status === 1 && !isTimerRunning) {
+        if ('Status' in response.data && response.data.Status === 1 && !isTimerRunning) {
           startInactivityTimer();
-        }
+        
       } else if (response.action === "activeGames" && response.data) {
-        setGameState((prev) => ({ ...prev, activeGames: response.data }));
+        setGameState((prev) => ({ ...prev, activeGames: response.data as unknown as string[] }));
       } else if (response.action === "chatMessage" && response.data) {
         const chatData = response.data;
         setGameState((prev) => ({
           ...prev,
-          messages: [...prev.messages, { sender: chatData.SenderName, text: chatData.Message }],
+          messages: [...prev.messages, { sender: (chatData as ChatMessageData).SenderName, text: (chatData as ChatMessageData).Message }],
         }));
       }
     };
@@ -628,8 +655,7 @@ export default function WebSocketGame() {
               }}
             >
               {Array.from({ length: BOARD_WIDTH * BOARD_HEIGHT }).map((_, index) => {
-                const x = index % BOARD_WIDTH
-                const y = Math.floor(index / BOARD_WIDTH)
+            
                 return <div key={index} className="border border-red-500" />
               })}
             </div>

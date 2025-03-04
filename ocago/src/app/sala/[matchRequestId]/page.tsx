@@ -64,15 +64,7 @@ export default function GameRoom() {
 
         switch (message.Type) {
           case "roomInfo":
-            setPlayers(
-              message.Players.map((player: any) => ({
-                id: String(player.Id),
-                nickname: player.Nickname,
-                avatarUrl: player.AvatarUrl,
-                isReady: player.IsReady || false,
-                isHost: player.IsHost || false,
-              })),
-            )
+            
             setGameId(message.GameId)
             setIsLoading(false)
             break
@@ -140,20 +132,7 @@ export default function GameRoom() {
     }
   }, [countdown])
 
-  const handleReadyConfirmation = (accepted: boolean) => {
-    if (!userInfo?.id) return
-
-    sendMessage({
-      type: "confirmReady",
-      senderId: String(userInfo.id),
-      matchRequestId: String(matchRequestId),
-      Accepted: accepted,
-    })
-
-    if (!accepted) {
-      router.push("/")
-    }
-  }
+  
 
   const handleLeaveRoom = () => {
     if (!userInfo?.id) return
@@ -167,10 +146,7 @@ export default function GameRoom() {
     router.push("/")
   }
 
-  const currentPlayer = players.find((player) => player.id === String(userInfo?.id))
-  const isCurrentPlayerReady = currentPlayer?.isReady || false
-  const areAllPlayersReady = players.length === 2 && players.every((player) => player.isReady)
-
+  
   return (
     <ProtectedRoute>
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-purple-900 flex flex-col items-center justify-center p-4">

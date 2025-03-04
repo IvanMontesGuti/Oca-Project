@@ -93,7 +93,7 @@ export default function ProfilePage() {
         toast.success("Contraseña actualizada correctamente");
       }
 
-      updateUserInfo({ ...userInfo, mail: formData.mail, nickname: formData.nickname });
+      updateUserInfo({ ...userInfo, email: formData.mail, nickname: formData.nickname });
       toast.success("Perfil actualizado correctamente");
     } catch (error) {
       console.error("❌ Error al actualizar perfil:", error);
@@ -125,7 +125,14 @@ export default function ProfilePage() {
       );
 }
 
-      const InputFields = ({formData, handleInputChange}) => (
+      interface FormData {
+        mail: string;
+        nickname: string;
+        oldPassword: string;
+        newPassword: string;
+      }
+      
+      const InputFields = ({formData, handleInputChange}: {formData: FormData, handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void}) => (
       <>
         <div>
           <Label htmlFor="nickname">Nombre</Label>

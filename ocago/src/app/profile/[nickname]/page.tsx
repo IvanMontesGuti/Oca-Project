@@ -37,7 +37,8 @@ export default function UserProfile() {
 
   useEffect(() => {
     if (nickname) {
-      fetchUserProfile(nickname);
+      const nicknameStr = Array.isArray(nickname) ? nickname[0] : nickname;
+      fetchUserProfile(nicknameStr);
     }
   }, [nickname]);
 
@@ -62,7 +63,7 @@ export default function UserProfile() {
       if (!response.ok) throw new Error("Error al obtener la lista de amigos");
       const friendshipsData = await response.json();
 
-      const extractedFriends = friendshipsData.flatMap((friendship: any) => {
+      const extractedFriends: Friend[] = friendshipsData.flatMap((friendship: { sender: Friend; receiver: Friend }) => {
         const { sender, receiver } = friendship;
         const friends = [];
         if (sender.id !== userId) friends.push(sender);

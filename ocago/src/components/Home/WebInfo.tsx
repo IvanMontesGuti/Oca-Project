@@ -2,11 +2,10 @@
 
 import { GET_COUNT_STATUS } from "@/lib/endpoints/config";
 import React, { useState, useEffect } from "react";
-import { useAuth } from "@/context/AuthContext";
+
 
 export function WebInfo() {
-  const { userInfo } = useAuth();
-  const userId = userInfo?.id ? String(userInfo.id) : userInfo?.unique_name;
+  
   const [connectedUsers, setConnectedUsers] = useState<number | null>(null);
   const [usersInGame, setUsersInGame] = useState<number | null>(null);
   const [disconnectedUsers, setDisconnectedUsers] = useState<number | null>(null);
