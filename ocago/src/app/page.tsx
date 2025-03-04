@@ -15,6 +15,8 @@ const {isAuthenticated} = useAuth();
     <div className="bg-svg bg-cover bg-no-repeat h-full min-h-screen w-full flex flex-col">
       {isAuthenticated ? <Header2 /> : <Header />}
       <InfoPage />
+      
+
       <Preguntas />
     </div>
   )

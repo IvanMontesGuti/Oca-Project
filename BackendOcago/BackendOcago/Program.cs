@@ -36,10 +36,10 @@ public class Program
 
 
 
-        // Añadir la configuración guardada en appsettings
+        // Aï¿½adir la configuraciï¿½n guardada en appsettings
         builder.Services.Configure<Settings>(builder.Configuration.GetSection(Settings.SECTION_NAME));
 
-        // Añadir controladores con configuración para la serialización de JSON
+        // Aï¿½adir controladores con configuraciï¿½n para la serializaciï¿½n de JSON
         builder.Services.AddControllers(options =>
             options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true)
             .AddJsonOptions(options =>
@@ -47,7 +47,7 @@ public class Program
                 options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
             });
 
-        // Añadir contexto y repositorios
+        // Aï¿½adir contexto y repositorios
         builder.Services.AddScoped<DataContext>();
         builder.Services.AddScoped<UnitOfWork>();
         builder.Services.AddScoped<UserRepository>();
@@ -77,7 +77,7 @@ public class Program
         builder.Services.AddScoped<Middleware>();
 
 
-        // Swagger/OpenAPI configuración
+        // Swagger/OpenAPI configuraciï¿½n
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(options =>
         {
@@ -93,12 +93,12 @@ public class Program
             options.OperationFilter<SecurityRequirementsOperationFilter>(true, JwtBearerDefaults.AuthenticationScheme);
         });
 
-        // Configuración de autenticación con JWT
+        // Configuraciï¿½n de autenticaciï¿½n con JWT
         builder.Services.AddAuthentication()
             .AddJwtBearer(options =>
             {
                 var settings = builder.Configuration.GetSection(Settings.SECTION_NAME).Get<Settings>()!;
-                string key = Environment.GetEnvironmentVariable("JWT_KEY") ?? throw new InvalidOperationException("JWT_KEY no está configurada.");
+                string key = Environment.GetEnvironmentVariable("JWT_KEY") ?? throw new InvalidOperationException("JWT_KEY no estï¿½ configurada.");
 
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
@@ -108,30 +108,34 @@ public class Program
                 };
             });
 
-        // Configuración de CORS
+        // Configuraciï¿½n de CORS
         builder.Services.AddCors(options =>
         {
-            options.AddDefaultPolicy(policy =>
-            {
-                policy.AllowAnyOrigin()
-                      .AllowAnyHeader()
-                      .AllowAnyMethod();
-            });
+            options.AddPolicy("AllowVercel",
+                policy =>
+                {
+                    policy.WithOrigins("https://oca-go-project.vercel.app/") // Reemplaza con la URL de tu frontend en Vercel
+                        .AllowAnyMethod()
+                        .AllowAnyHeader();
+                });
         });
+
+        
+
 
         var app = builder.Build();
         app.UseDeveloperExceptionPage();
 
-        // Configurar la canalización de solicitudes HTTP
+        // Configurar la canalizaciï¿½n de solicitudes HTTP
         if (app.Environment.IsDevelopment())
         {
             app.UseSwagger();
             app.UseSwaggerUI();
         }
 
-        app.UseCors();
+        app.UseCors("AllowVercel");
 
-        // Configuración para WebSockets
+        // Configuraciï¿½n para WebSockets
         app.UseWebSockets();
         app.UseMiddleware<Middleware>();
 
@@ -142,10 +146,10 @@ public class Program
         app.MapControllers();
         app.UseStaticFiles();
 
-        // Habilitar autenticación y autorización
+        // Habilitar autenticaciï¿½n y autorizaciï¿½n
 
 
-        // Configuración de archivos estáticos
+        // Configuraciï¿½n de archivos estï¿½ticos
         app.UseStaticFiles(new StaticFileOptions
         {
             FileProvider = new PhysicalFileProvider(Path.Combine(Directory.GetCurrentDirectory(), "wwwroot"))
@@ -154,15 +158,15 @@ public class Program
 
         // Mapear controladores
 
-        // Llamada al método de creación de la base de datos (seed)
+        // Llamada al mï¿½todo de creaciï¿½n de la base de datos (seed)
         await SeedDatabase(app.Services);
 
-        // Ejecutar la aplicación
+        // Ejecutar la aplicaciï¿½n
         await app.RunAsync();
 
     }
 
-    // Método para realizar la creación (seed) de la base de datos
+    // Mï¿½todo para realizar la creaciï¿½n (seed) de la base de datos
     static async Task SeedDatabase(IServiceProvider serviceProvider)
     {
         using var scope = serviceProvider.CreateScope();
