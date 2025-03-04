@@ -18,7 +18,7 @@ export default function ProtectedRoute({children, requiredRole}: ProtectedRouteP
     useEffect(() =>{
         if(!isAuthenticated){
             toast.error("No puedes acceder a esta vista porque no estas logueado!", { duration: 3000, icon: "❌" });
-            router.push("/login");
+            //router.push("/login");
         }
     }) 
     useEffect(() => {
@@ -26,7 +26,7 @@ export default function ProtectedRoute({children, requiredRole}: ProtectedRouteP
 
         toast.error("No puedes acceder a esta vista!", { duration: 3000, icon: "❌" });
 
-        router.push("/");
+        //router.push("/");
         }
     }, [isAuthenticated, userInfo, requiredRole, router])
 

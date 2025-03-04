@@ -4,7 +4,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import { API_BASE_URL } from "@/lib/endpoints/config"
 import { useWebSocket } from "@/context/WebSocketContext"
-import { useRouter } from "next/navigation";  // Importar useRouter
+import { useRouter } from "next/navigation"
+import { UserMinus } from "lucide-react"
 
 interface Friend {
   id: string
@@ -15,16 +16,18 @@ interface Friend {
 
 interface FriendsListProps {
   friends: Friend[]
+  onDeleteFriend?: (friendId: string) => void
 }
 
-export default function FriendsList({ friends = [] }: FriendsListProps) {
+export default function FriendsList({ friends = [], onDeleteFriend }: FriendsListProps) {
   const { sendInvitation } = useWebSocket()
-  const router = useRouter();
+  const router = useRouter()
 
   if (!Array.isArray(friends)) {
     console.error("FriendsList expected an array but received:", friends)
     return <div className="text-white text-center">Error cargando amigos</div>
   }
+  
   const getStatusText = (status: number) => {
     switch (status) {
       case 0:
@@ -39,9 +42,11 @@ export default function FriendsList({ friends = [] }: FriendsListProps) {
         return { text: "Desconocido", color: "text-gray-400" }
     }
   }
+  
   const handleInviteToGame = (friendId: string) => {
     sendInvitation(friendId)
   }
+  
   return (
     <div className="space-y-4">
       {friends.length === 0 ? (
@@ -53,8 +58,6 @@ export default function FriendsList({ friends = [] }: FriendsListProps) {
 
           return (
             <div key={friend?.id || Math.random()} className="flex items-center justify-between group">
-
-
               <div className="flex items-center gap-3" onClick={() => router.push(`/profile/${friend.nickname}`)}>
                 <div className="relative">
                   <Avatar>
@@ -70,15 +73,36 @@ export default function FriendsList({ friends = [] }: FriendsListProps) {
                   <div className={`text-sm ${status.color}`}>{status.text}</div>
                 </div>
               </div>
-              <Button
-                size="sm"
-                variant="default"
-                disabled={!canInvite || friend.status > 1}
-                onClick={() => handleInviteToGame(friend.id)}
-                className={!canInvite || friend.status > 1 ? "opacity-50 cursor-not-allowed" : ""}
-              >
-                {friend.status === 2 ? "Buscando partida..." : friend.status === 3 ? "En partida" : "Invitar a partida"}
-              </Button>
+              
+              <div className="flex items-center gap-2">
+                {onDeleteFriend && (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteFriend(friend.id);
+                    }}
+                    className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                    title="Eliminar amigo"
+                  >
+                    <UserMinus className="h-5 w-5" />
+                  </Button>
+                )}
+                
+                <Button
+                  size="sm"
+                  variant="default"
+                  disabled={!canInvite || friend.status > 1}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleInviteToGame(friend.id);
+                  }}
+                  className={!canInvite || friend.status > 1 ? "opacity-50 cursor-not-allowed" : ""}
+                >
+                  {friend.status === 2 ? "Buscando partida..." : friend.status === 3 ? "En partida" : "Invitar a partida"}
+                </Button>
+              </div>
             </div>
           )
         })
@@ -86,4 +110,3 @@ export default function FriendsList({ friends = [] }: FriendsListProps) {
     </div>
   )
 }
-

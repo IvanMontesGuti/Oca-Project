@@ -32,6 +32,7 @@ export const IMAGE_DELETE_BY_NAME_URL = (name) => `${API_IMAGE_URL}/${name}`; //
 
 /* --- FRIENDSHIP CONTROLLER --- */
 const API_FRIENDSHIP_URL = `${API_BASE_URL}/api/Friendship`;
+export const FRIENDSHIP_DELETE = (userId, friendId) => `${API_BASE_URL}/api/Friendship/remove/${userId}/${friendId}`; // DELETE /api/Friendship/remove/{gameId}/{userId}
 export const FRIENDSHIP_SEND_REQUEST_URL = `${API_FRIENDSHIP_URL}/send`; // POST /api/Friendship/send
 export const FRIENDSHIP_RECEIVED_REQUEST_URL = (userId) => `${API_FRIENDSHIP_URL}/received/${userId}`; // POST /api/Friendship/received/{userId}
 export const FRIENDSHIP_ACCEPT_REQUEST_URL = (friendsipId) => `${API_FRIENDSHIP_URL}/accept/${friendsipId}`; // POST /api/Friendship/accept/{friendsipId}

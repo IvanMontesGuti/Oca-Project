@@ -6,7 +6,7 @@ import { useState, useEffect } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { API_SEARCH_URL, SEARCH_NONFRIENDS_URL} from "@/lib/endpoints/config"
+import { API_SEARCH_URL, SEARCH_NONFRIENDS_URL, FRIENDSHIP_DELETE } from "@/lib/endpoints/config"
 import { useAuth } from "@/context/AuthContext"
 import { useWebSocket } from "@/context/WebSocketContext"
 import FriendsList from "./FriendsList"
@@ -64,6 +64,33 @@ export default function FriendsPanel() {
       receiverId: String(senderId),
       accepted: accepted,
     })
+  }
+
+  const handleDeleteFriend = async (friendId: string) => {
+    if (!userInfo?.id) return
+    
+    try {
+      const response = await fetch(FRIENDSHIP_DELETE(userInfo.id, friendId), {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Error al eliminar amigo');
+      }
+      
+      // After successful deletion, refresh the friends list
+      sendMessage({
+        type: "getFriends",
+        senderId: String(userInfo.id),
+      });
+      
+    } catch (error) {
+      setError("Error al eliminar amigo. Inténtalo de nuevo.");
+      console.error("Error deleting friend:", error);
+    }
   }
 
   const handleSearch = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -137,7 +164,10 @@ export default function FriendsPanel() {
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold">Amigos</DialogTitle>
           </DialogHeader>
-          <FriendsList friends={friends} />
+          <FriendsList 
+            friends={friends} 
+            onDeleteFriend={handleDeleteFriend} 
+          />
         </DialogContent>
       </Dialog>
       <Dialog open={isRequestsModalOpen} onOpenChange={setRequestsModalOpen}>
@@ -151,4 +181,3 @@ export default function FriendsPanel() {
     </div>
   )
 }
-
