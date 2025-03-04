@@ -1,7 +1,7 @@
-const API_BASE = process.env.NEXT_PUBLIC_BACKEND_KEY; 
+const API_BASE = process.env.BACKEND_KEY; 
 
 export const API_BASE_URL = `${API_BASE}`;
-export const API_BASE_SOCKET_URL = API_BASE.replace("https", "wss"); // Para WebSockets
+export const API_BASE_SOCKET_URL = `${API_BASE}`; // Para WebSockets
 
 /* --- AUTHORIZATION CONTROLLER --- */
 const API_AUTH_URL = `${API_BASE_URL}/api/Auth`;
