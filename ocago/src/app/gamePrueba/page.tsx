@@ -180,17 +180,15 @@ export default function WebSocketGame() {
     ws.onmessage = (event) => {
       const response = JSON.parse(event.data);
       console.log("Received data:", response);
-  
+    
       if (response.action === "gameUpdate" && response.data) {
-        // Resetear el temporizador de inactividad cuando el juego se actualiza
+        // Manejo existente para actualizaciones completas del juego
         resetInactivityTimer();
-  
-        // Guardar el ID del juego en localStorage como respaldo
+    
         if (response.data.Id) {
           localStorage.setItem('currentGameId', response.data.Id);
         }
-  
-        // Actualizar el estado del juego automáticamente
+    
         console.log(
           "Player 1 position:",
           response.data.Player1Position,
@@ -205,20 +203,57 @@ export default function WebSocketGame() {
             POSITION_COORDINATES[response.data.Player2Position],
           );
         }
-  
+    
         setGameState((prev) => ({
           ...prev,
           gameData: response.data,
         }));
-  
-        // Verificar si el juego terminó y mostrar el modal del ganador
+    
         if (response.data.Status === 2 && response.data.Winner) {
           setShowWinnerModal(true);
           stopInactivityTimer();
         }
-  
-        // Iniciar el temporizador si el juego está en progreso
+    
         if (response.data.Status === 1 && !isTimerRunning) {
+          startInactivityTimer();
+        }
+      } else if (response.action === "moveUpdate" && response.data) {
+        // Nuevo manejo para actualizaciones parciales después de un movimiento
+        resetInactivityTimer();
+    
+        setGameState((prev) => {
+          if (!prev.gameData) return prev; // Si no hay gameData previo, no hacemos nada
+    
+          const updatedGameData = {
+            ...prev.gameData,
+            // Actualizar campos específicos del mensaje moveUpdate
+            Player1Position: prev.gameData.Player1Id === response.data.PlayerId ? response.data.NewPosition : prev.gameData.Player1Position,
+            Player2Position: prev.gameData.Player2Id === response.data.PlayerId ? response.data.NewPosition : prev.gameData.Player2Position,
+            Player1RemainingTurns: response.data.Player1RemainingTurns,
+            Player2RemainingTurns: response.data.Player2RemainingTurns,
+            Status: response.data.GameStatus,
+            // Determinar de quién es el turno basándonos en NextTurnPlayerId
+            IsPlayer1Turn: response.data.NextTurnPlayerId === prev.gameData.Player1Id,
+          };
+    
+          console.log("Updated game state after moveUpdate:", updatedGameData);
+    
+          return {
+            ...prev,
+            gameData: updatedGameData,
+          };
+        });
+    
+        // Mostrar mensaje del movimiento en el chat (opcional)
+        if (response.data.Message) {
+          setGameState((prev) => ({
+            ...prev,
+            messages: [...prev.messages, { sender: "Sistema", text: response.data.Message }],
+          }));
+        }
+    
+        // Iniciar el temporizador si el juego está en progreso y no está corriendo
+        if (response.data.GameStatus === 1 && !isTimerRunning) {
           startInactivityTimer();
         }
       } else if (response.action === "activeGames" && response.data) {
