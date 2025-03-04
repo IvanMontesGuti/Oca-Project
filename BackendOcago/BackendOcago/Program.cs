@@ -24,6 +24,18 @@ public class Program
         // Constructor
         var builder = WebApplication.CreateBuilder(args);
 
+        // Habilitar logs detallados
+        builder.Logging.ClearProviders();
+        builder.Logging.AddConsole();
+        builder.Logging.AddDebug();
+
+        
+
+        
+        
+
+
+
         // Añadir la configuración guardada en appsettings
         builder.Services.Configure<Settings>(builder.Configuration.GetSection(Settings.SECTION_NAME));
 
@@ -108,6 +120,7 @@ public class Program
         });
 
         var app = builder.Build();
+        app.UseDeveloperExceptionPage();
 
         // Configurar la canalización de solicitudes HTTP
         if (app.Environment.IsDevelopment())

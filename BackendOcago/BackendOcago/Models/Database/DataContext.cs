@@ -17,13 +17,19 @@ namespace BackendOcago.Models.Database
         public DbSet<MatchRequest> MatchRequests { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            optionsBuilder
-                .UseSqlite($"DataSource={baseDir}{DATABASE_PATH}")
-                .EnableSensitiveDataLogging() // Ayuda a debuggear problemas de actualización
-                .LogTo(Console.WriteLine); // Muestra las consultas SQL en la consola
-        }
+    {
+        optionsBuilder.LogTo(Console.WriteLine);
+        optionsBuilder.EnableSensitiveDataLogging();
+
+        string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+        string connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING");
+
+        #if DEBUG
+        optionsBuilder.UseSqlite($"DataSource={baseDir}{DATABASE_PATH}");
+        #else
+        optionsBuilder.UseMySql(connectionString,ServerVersion.AutoDetect(connectionString));
+        #endif
+    }
 
         public override int SaveChanges()
         {
