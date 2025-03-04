@@ -79,7 +79,18 @@ public class UserService
 
 
     /* ----- UPDATE ----- */
+    public async Task<UserDto> UpdateRoleAsync(long userId,  string roleChanged)
+    {
+        var userEntity = await _unitOfWork.UserRepository.GetByIdAsync(userId) ?? throw new Exception("El usuario especificado no existe");
 
+        userEntity.Role = roleChanged;
+
+        _unitOfWork.UserRepository.Update(userEntity);
+
+        await _unitOfWork.UserRepository.SaveAsync();
+
+        return _mapper.ToDto(userEntity);
+    }
     public async Task<UserDto> UpdateAsync(UserDto userDto)
     {
         var userEntity = await _unitOfWork.UserRepository.GetByIdAsync(userDto.Id) ?? throw new Exception("El usuario especificado no existe");

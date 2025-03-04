@@ -102,4 +102,13 @@ public class UserController : ControllerBase
         return Ok(user.Games);
     }
 
+    [HttpPut("ChangeRole")]
+
+    public async Task<IActionResult> ChangeRole(long userId, string roleChanged)
+    {
+        var user = _userService.UpdateRoleAsync(userId, roleChanged);
+        
+        return Ok(user);
+    }
+
 }

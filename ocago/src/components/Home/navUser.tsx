@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, User, LogOut, Edit } from "lucide-react";
+import { ArrowRight, User, LogOut, Edit, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -50,6 +50,8 @@ export function Header2() {
           </Button>
         </DropdownMenuTrigger>
 
+
+
         <DropdownMenuContent align="end" className="w-56 mt-2">
           <DropdownMenuItem asChild>
             <Link href={`/profile/${unique_name}`} className="cursor-pointer flex items-center gap-2">
@@ -72,6 +74,17 @@ export function Header2() {
             </Link>
           </DropdownMenuItem>
 
+          {userInfo?.role === "admin" && (
+          <DropdownMenuItem asChild>
+            <Link
+              href="/admin"
+              className="cursor-pointer flex items-center gap-2 text-yellow-500"
+            >
+              <Settings className="h-4 w-4" />
+              <span>Panel de Administrador</span>
+            </Link>
+          </DropdownMenuItem>
+        )}
           <DropdownMenuSeparator />
 
           <DropdownMenuItem
@@ -81,6 +94,8 @@ export function Header2() {
             <LogOut className="h-4 w-4" />
             <span>Cerrar Sesión</span>
           </DropdownMenuItem>
+
+
         </DropdownMenuContent>
       </DropdownMenu>
     </nav>
