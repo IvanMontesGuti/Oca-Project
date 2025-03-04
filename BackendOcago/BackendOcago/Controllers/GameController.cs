@@ -88,6 +88,22 @@ namespace BackendOcago.Controllers
                             }
                             else
                             {
+                                UserDto user = await userService.GetByIdAsync(numericUserId);
+                                if (user.Role == "bloqueado")
+                                {
+                                    break;
+                                }
+                            }
+                        }
+                        using (var scope = _serviceScopeFactory.CreateScope())
+                        {
+                            var userService = scope.ServiceProvider.GetRequiredService<UserService>();
+                            if (!long.TryParse(userId, out long numericUserId))
+                            {
+                                Console.WriteLine("❌ Error al convertir userId a long.");
+                            }
+                            else
+                            {
                                 await userService.UpdateStatus(UserStatus.Jugando, numericUserId);
                             }
                         }
