@@ -6,6 +6,7 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Send, Dice5, Trophy, Clock } from "lucide-react"
+import { useAuth } from "@/context/AuthContext";
 
 // Define types for our WebSocket messages
 type WebSocketMessage = {
@@ -139,6 +140,7 @@ const getTokenPosition = (position: number) => {
 }
 
 export default function WebSocketGame() {
+  const { userInfo } = useAuth();
   const router = useRouter()
   const [username, setUsername] = useState<string>("")
   const [gameIdInput, setGameIdInput] = useState<string>("")
@@ -162,7 +164,7 @@ export default function WebSocketGame() {
   const connectWebSocket = () => {
     if (!username) return;
   
-    const ws = new WebSocket(`wss://localhost:7107/ws/game/${username}/connect`);
+    const ws = new WebSocket(`wss://localhost:7107/ws/game/${userInfo?.id}/connect`);
   
     ws.onopen = () => {
       console.log("WebSocket connected");

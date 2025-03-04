@@ -67,7 +67,7 @@ public class UserController : ControllerBase
     public async Task<IActionResult> GetAllMatches(long userId)
     {
         var matches = await _userService.GetAllMatchesAsync(userId);
-        if (matches == null || !matches.Any())
+        if (matches == null || matches.Count == 0)
             return NotFound("No se encontraron partidas para este usuario.");
 
         return Ok(matches);

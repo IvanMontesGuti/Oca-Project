@@ -28,7 +28,7 @@ export default function RecentMatches() {
   const { userInfo } = useAuth();
 
   const userId = userInfo?.id;
-  const API_GAMES_URL = `${API_BASE_URL}/allMatches/${userId}`;
+  const API_GAMES_URL = `${API_BASE_URL}/api/User/allMatches/${userId}`;
 
   useEffect(() => {
     const fetchMatches = async () => {
@@ -41,6 +41,8 @@ export default function RecentMatches() {
         }
 
         const data: Match[] = await response.json();
+        console.log("data", data);
+        
 
         const completedMatches = data.filter((match) => match.status === 2);
 
