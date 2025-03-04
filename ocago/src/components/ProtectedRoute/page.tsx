@@ -14,6 +14,7 @@ interface ProtectedRouteProps{
 export default function ProtectedRoute({children, adminOnly = false}: ProtectedRouteProps){
     const {userInfo, isAuthenticated} = useAuth();
     const router = useRouter();
+    
 
     useEffect(() =>{
         if(!isAuthenticated){
