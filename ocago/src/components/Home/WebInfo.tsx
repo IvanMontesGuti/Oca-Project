@@ -11,10 +11,35 @@ export function WebInfo() {
   const { socket, sendMessage} = useWebSocket();
   const [connectedUsers, setConnectedUsers] = useState<number | null>(null);
   const [usersInGame, setUsersInGame] = useState<number | null>(null);
-  const [activeGames, setActiveGames] = useState<number | null>(null);
+  const [disconnectedUsers, setDisconnectedUsers] = useState<number | null>(null);
 
+  const fetchStatusCounts = async () => {
+    try {
 
+      const inGameResponse = await fetch(GET_COUNT_STATUS(3));
+      if (inGameResponse.ok) {
+        const inGameData = await inGameResponse.json();
+        setUsersInGame(inGameData);
+      }
 
+      const disconnectedResponse = await fetch(GET_COUNT_STATUS(0));
+      if (disconnectedResponse.ok) {
+        const disconnectedData = await disconnectedResponse.json();
+        setDisconnectedUsers(disconnectedData);
+      }
+    } catch (error) {
+      console.error("Error al obtener contadores de estado:", error);
+    }
+  };
+
+  useEffect(() => {
+
+    fetchStatusCounts();
+
+    const intervalId = setInterval(fetchStatusCounts, 30000);
+
+    return () => clearInterval(intervalId);
+  }, []);
 
   useEffect(() => {
     if (!socket) return;
@@ -41,13 +66,13 @@ export function WebInfo() {
   return (
     <div className="flex items-center gap-4 text-sm text-gray-300">
       <span>
-        <strong className="text-white">{connectedUsers}</strong> Personas conectadas
+        <strong className="text-white">{connectedUsers !== null ? usersInGame : "1"}</strong> Personas conectadas
       </span>
       <span>
-        <strong className="text-white">{usersInGame}</strong> Personas en partida
+        <strong className="text-white">{usersInGame !== null ? usersInGame : "0"}</strong> Personas en partida
       </span>
       <span>
-        <strong className="text-white">{activeGames !== null ? activeGames : "0"}</strong> Partidas activas
+        <strong className="text-white">{disconnectedUsers !== null ? disconnectedUsers : "0"}</strong> Personas desconectadas
       </span>
     </div>
   );
