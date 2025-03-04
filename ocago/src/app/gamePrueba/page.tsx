@@ -16,13 +16,7 @@ type WebSocketMessage = {
 }
 
 // Define a type for the chat message data
-type ChatMessageData = {
-  GameId: string
-  Message: string
-  SenderId: string
-  SenderName: string
-  Timestamp: string
-}
+
 
 // Game state interface based on the actual response structure
 interface GameData {
@@ -53,7 +47,7 @@ const CELL_WIDTH = 99
 const CELL_HEIGHT = 113
 
 // Mapeo de posiciones a coordenadas x,y en la cuadrícula de 12x9
-const POSITION_COORDINATES = {
+const POSITION_COORDINATES: { [key: number]: { x: number; y: number } } = {
   0: { x: 2, y: 7 },
   1: { x: 3, y: 7 },
   2: { x: 4, y: 7 },
@@ -168,15 +162,17 @@ export default function WebSocketGame() {
   
     ws.onopen = () => {
       console.log("WebSocket connected");
-      setGameState((prev) => ({ ...prev, isConnected: true }));
-      
-      // Cuando se reconecta, solicita el estado actual del juego si ya había uno
-      if (prev.gameData?.Id) {
-        console.log("Reconnected - requesting game state for:", prev.gameData.Id);
-        setTimeout(() => {
-          ws.send(JSON.stringify({ Action: "GetGame", GameId: prev.gameData.Id }));
-        }, 500);
-      }
+      setGameState((prev) => {
+        if (prev.gameData?.Id) {
+          console.log("Reconnected - requesting game state for:", prev.gameData.Id);
+          setTimeout(() => {
+            if (prev.gameData) {
+              ws.send(JSON.stringify({ Action: "GetGame", GameId: prev.gameData.Id }));
+            }
+          }, 500);
+        }
+        return { ...prev, isConnected: true };
+      });
     };
   
     ws.onmessage = (event) => {
@@ -702,8 +698,7 @@ export default function WebSocketGame() {
               }}
             >
               {Array.from({ length: BOARD_WIDTH * BOARD_HEIGHT }).map((_, index) => {
-                const x = index % BOARD_WIDTH
-                const y = Math.floor(index / BOARD_WIDTH)
+                
                 return <div key={index} className="border border-red-500" />
               })}
             </div>
