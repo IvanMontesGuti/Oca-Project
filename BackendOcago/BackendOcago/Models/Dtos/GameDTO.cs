@@ -1,4 +1,5 @@
 ﻿using BackendOcago.Models.Database.Entities;
+using BackendOcago.Models.Database.Enum;
 
 namespace BackendOcago.Models.Dtos
 {
