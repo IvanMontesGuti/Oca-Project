@@ -6,6 +6,7 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Send, Dice5, Trophy, Clock } from "lucide-react"
+import { API_BASE_SOCKET_URL } from "@/lib/endpoints/config"
 
 // Define types for our WebSocket messages
 type WebSocketMessage = {
@@ -161,14 +162,12 @@ export default function WebSocketGame() {
   // Connect to WebSocket
   const connectWebSocket = () => {
     if (!username) return;
-  
-    const ws = new WebSocket(`wss://localhost:7107/ws/game/${username}/connect`);
-  
+
+    const ws = new WebSocket(`${API_BASE_SOCKET_URL}ws/game/${username}/connect`);
+
     ws.onopen = () => {
       console.log("WebSocket connected");
       setGameState((prev) => ({ ...prev, isConnected: true }));
-      
-      // Cuando se reconecta, solicita el estado actual del juego si ya había uno
       if (prev.gameData?.Id) {
         console.log("Reconnected - requesting game state for:", prev.gameData.Id);
         setTimeout(() => {
@@ -176,19 +175,19 @@ export default function WebSocketGame() {
         }, 500);
       }
     };
-  
+
     ws.onmessage = (event) => {
       const response = JSON.parse(event.data);
       console.log("Received data:", response);
-    
+
       if (response.action === "gameUpdate" && response.data) {
         // Manejo existente para actualizaciones completas del juego
         resetInactivityTimer();
-    
+
         if (response.data.Id) {
           localStorage.setItem('currentGameId', response.data.Id);
         }
-    
+
         console.log(
           "Player 1 position:",
           response.data.Player1Position,
@@ -203,27 +202,27 @@ export default function WebSocketGame() {
             POSITION_COORDINATES[response.data.Player2Position],
           );
         }
-    
+
         setGameState((prev) => ({
           ...prev,
           gameData: response.data,
         }));
-    
+
         if (response.data.Status === 2 && response.data.Winner) {
           setShowWinnerModal(true);
           stopInactivityTimer();
         }
-    
+
         if (response.data.Status === 1 && !isTimerRunning) {
           startInactivityTimer();
         }
       } else if (response.action === "moveUpdate" && response.data) {
         // Nuevo manejo para actualizaciones parciales después de un movimiento
         resetInactivityTimer();
-    
+
         setGameState((prev) => {
           if (!prev.gameData) return prev; // Si no hay gameData previo, no hacemos nada
-    
+
           const updatedGameData = {
             ...prev.gameData,
             // Actualizar campos específicos del mensaje moveUpdate
@@ -235,15 +234,15 @@ export default function WebSocketGame() {
             // Determinar de quién es el turno basándonos en NextTurnPlayerId
             IsPlayer1Turn: response.data.NextTurnPlayerId === prev.gameData.Player1Id,
           };
-    
+
           console.log("Updated game state after moveUpdate:", updatedGameData);
-    
+
           return {
             ...prev,
             gameData: updatedGameData,
           };
         });
-    
+
         // Mostrar mensaje del movimiento en el chat (opcional)
         if (response.data.Message) {
           setGameState((prev) => ({
@@ -251,7 +250,7 @@ export default function WebSocketGame() {
             messages: [...prev.messages, { sender: "Sistema", text: response.data.Message }],
           }));
         }
-    
+
         // Iniciar el temporizador si el juego está en progreso y no está corriendo
         if (response.data.GameStatus === 1 && !isTimerRunning) {
           startInactivityTimer();
@@ -266,12 +265,12 @@ export default function WebSocketGame() {
         }));
       }
     };
-  
+
     ws.onclose = () => {
       console.log("WebSocket disconnected - attempting to reconnect in 3 seconds");
       setGameState((prev) => ({ ...prev, isConnected: false }));
       stopInactivityTimer();
-      
+
       // Attempt to reconnect after 3 seconds
       setTimeout(() => {
         if (document.visibilityState !== 'hidden') {
@@ -280,11 +279,11 @@ export default function WebSocketGame() {
         }
       }, 3000);
     };
-  
+
     ws.onerror = (error) => {
       console.error("WebSocket error:", error);
     };
-  
+
     webSocketRef.current = ws;
     setIsLoggedIn(true);
   };
@@ -293,15 +292,15 @@ export default function WebSocketGame() {
   const startInactivityTimer = () => {
     setIsTimerRunning(true);
     setInactivityTimer(30); // Reset to 30 seconds
-  
+
     timerRef.current = setInterval(() => {
       setInactivityTimer((prev) => {
         if (prev <= 1) {
           console.log("Timer reached zero, preparing to surrender due to inactivity...");
-          
+
           // Get the game ID from state or localStorage backup
           const gameId = gameState.gameData?.Id || localStorage.getItem('currentGameId');
-          
+
           // Debug the current state
           console.log("Current game state:", JSON.stringify({
             gameId: gameId,
@@ -309,22 +308,22 @@ export default function WebSocketGame() {
             status: gameState.gameData?.Status,
             wsState: webSocketRef.current ? webSocketRef.current.readyState : 'null'
           }));
-          
+
           if (!gameId) {
             console.error("Cannot surrender: No game ID available in state or backup");
             stopInactivityTimer();
             return 0;
           }
-          
+
           if (!webSocketRef.current || webSocketRef.current.readyState !== WebSocket.OPEN) {
-            console.error("Cannot surrender: WebSocket not connected (state:", 
+            console.error("Cannot surrender: WebSocket not connected (state:",
               webSocketRef.current ? webSocketRef.current.readyState : "null)");
-            
+
             // Try to reconnect
             if (!webSocketRef.current || webSocketRef.current.readyState !== WebSocket.CONNECTING) {
               console.log("Attempting to reconnect before surrendering...");
               connectWebSocket();
-              
+
               // Set a one-time timer to try surrender after reconnection
               setTimeout(() => {
                 if (webSocketRef.current && webSocketRef.current.readyState === WebSocket.OPEN) {
@@ -333,14 +332,14 @@ export default function WebSocketGame() {
                 }
               }, 2000);
             }
-            
+
             stopInactivityTimer();
             return 0;
           }
-          
+
           // We have both game ID and active websocket - now surrender
           console.log("Executing surrender for game:", gameId);
-          
+
           try {
             // Send surrender message immediately
             const surrenderMsg = JSON.stringify({ Action: "Surrender", GameId: gameId });
@@ -350,10 +349,10 @@ export default function WebSocketGame() {
           } catch (error) {
             console.error("Error sending surrender message:", error);
           }
-          
+
           stopInactivityTimer();
           return 0;
-        }        
+        }
         return prev - 1;
       });
     }, 1000);
@@ -403,10 +402,10 @@ export default function WebSocketGame() {
 
   const surrender = () => {
     console.log("Manually initiating surrender...");
-    
+
     // Try to get game ID from state or backup
     const gameId = gameState.gameData?.Id || localStorage.getItem('currentGameId');
-    
+
     // Add debugging info
     console.log("Current game state:", JSON.stringify({
       gameId: gameId,
@@ -414,17 +413,17 @@ export default function WebSocketGame() {
       status: gameState.gameData?.Status,
       wsState: webSocketRef.current ? webSocketRef.current.readyState : 'null'
     }));
-    
+
     if (!gameId) {
       console.error("Cannot surrender: No game ID available in state or backup");
       return;
     }
-  
+
     if (!webSocketRef.current || webSocketRef.current.readyState !== WebSocket.OPEN) {
       console.error("Cannot surrender: WebSocket not connected");
       return;
     }
-  
+
     try {
       console.log("Executing surrender for game:", gameId);
       const surrenderMsg = JSON.stringify({ Action: "Surrender", GameId: gameId });
@@ -435,7 +434,7 @@ export default function WebSocketGame() {
       console.error("Error sending surrender message:", error);
     }
   };
-  
+
   // 4. Load any saved game ID on component mount
   useEffect(() => {
     const savedGameId = localStorage.getItem('currentGameId');
@@ -444,7 +443,7 @@ export default function WebSocketGame() {
       // Request game info for the saved ID
       webSocketRef.current.send(JSON.stringify({ Action: "GetGame", GameId: savedGameId }));
     }
-    
+
     return () => {
       if (webSocketRef.current) {
         webSocketRef.current.close();
@@ -452,7 +451,7 @@ export default function WebSocketGame() {
       stopInactivityTimer();
     };
   }, [stopInactivityTimer]);
-  
+
 
   const makeMove = () => {
     if (gameState.gameData?.Id) {
@@ -461,7 +460,7 @@ export default function WebSocketGame() {
     }
   }
 
-  
+
 
   const getActiveGames = () => {
     sendMessage({ Action: "GetActiveGames" })
@@ -548,7 +547,7 @@ export default function WebSocketGame() {
           )}
         </div>
       </header>
-      
+
       {/* Game ID display */}
       {gameState.gameData?.Id && (
         <div className="text-center mb-2 text-yellow-400 font-mono">ID: {gameState.gameData.Id}</div>
@@ -621,9 +620,8 @@ export default function WebSocketGame() {
 
           <div className="bg-blue-900 rounded-lg p-4 flex flex-col items-center">
             <div
-              className={`w-24 h-24 bg-yellow-400 rounded-lg mb-4 flex items-center justify-center ${
-                isRollingDice ? "animate-spin-slow" : ""
-              }`}
+              className={`w-24 h-24 bg-yellow-400 rounded-lg mb-4 flex items-center justify-center ${isRollingDice ? "animate-spin-slow" : ""
+                }`}
             >
               <Dice5 size={64} className="text-white" />
             </div>
@@ -648,39 +646,39 @@ export default function WebSocketGame() {
           </div>
 
           <div className="space-y-2">
-  {!gameState.gameData?.Id ? (
-    <>
-      <Button onClick={createGame} className="w-full bg-green-600 hover:bg-green-700">
-        Create New Game
-      </Button>
-      <div className="flex gap-2">
-        <Input
-          type="text"
-          placeholder="Game ID"
-          value={gameIdInput}
-          onChange={(e) => setGameIdInput(e.target.value)}
-          className="flex-1 bg-gray-800"
-        />
-        <Button onClick={joinGame} className="bg-blue-600 hover:bg-blue-700">
-          Join
-        </Button>
-      </div>
-    </>
-  ) : (
-    <div className="bg-gray-800 p-2 rounded">
-      Game Status:{" "}
-      {gameState.gameData.Status === 0
-        ? "Waiting for players"
-        : gameState.gameData.Status === 1
-          ? "In progress"
-          : "Finished"}
-    </div>
-  )}
-  <Button onClick={getActiveGames} className="w-full bg-purple-600 hover:bg-purple-700">
-    Get Active Games
-  </Button>
-</div>
-</div>
+            {!gameState.gameData?.Id ? (
+              <>
+                <Button onClick={createGame} className="w-full bg-green-600 hover:bg-green-700">
+                  Create New Game
+                </Button>
+                <div className="flex gap-2">
+                  <Input
+                    type="text"
+                    placeholder="Game ID"
+                    value={gameIdInput}
+                    onChange={(e) => setGameIdInput(e.target.value)}
+                    className="flex-1 bg-gray-800"
+                  />
+                  <Button onClick={joinGame} className="bg-blue-600 hover:bg-blue-700">
+                    Join
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <div className="bg-gray-800 p-2 rounded">
+                Game Status:{" "}
+                {gameState.gameData.Status === 0
+                  ? "Waiting for players"
+                  : gameState.gameData.Status === 1
+                    ? "In progress"
+                    : "Finished"}
+              </div>
+            )}
+            <Button onClick={getActiveGames} className="w-full bg-purple-600 hover:bg-purple-700">
+              Get Active Games
+            </Button>
+          </div>
+        </div>
         {/* Game board */}
         <div className="w-3/4 bg-gray-900 rounded-lg p-4">
           <div
@@ -775,13 +773,13 @@ export default function WebSocketGame() {
             ))}
           </div>
         </div>
-        
+
       )}
 
       {/* Winner modal */}
       <WinnerModal />
     </div>
-    
+
   )
 }
 
