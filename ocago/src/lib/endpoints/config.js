@@ -1,4 +1,4 @@
-const API_BASE = "localhost:7107";
+const API_BASE = process.env.BACKEND_URL;
 
 export const API_BASE_URL = `https://${API_BASE}`;
 export const API_BASE_SOCKET_URL = `wss://${API_BASE}`;
