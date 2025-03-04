@@ -34,7 +34,7 @@ namespace BackendOcago.Models.Database.Repositories
         {
             return await _dbContext.Friendships
                 .Where(f => f.ReceiverId == userId)
-                .Include(f => f.Sender) // Include only if you need Sender data
+                .Include(f => f.Sender) 
                 .ToListAsync();
         }
 

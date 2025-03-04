@@ -9,7 +9,6 @@ public class UserService
 {
     private readonly UnitOfWork _unitOfWork;
     private readonly UserMapper _mapper;
-    //private readonly string _rootPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
 
 
     public UserService(UnitOfWork unitOfWork, UserMapper mapper)
@@ -47,17 +46,14 @@ public class UserService
 
     public async Task<UserDto> InsertByMailAsync(RegisterRequest userRequest)
     {
-        // Normalizamos el nickname y el correo para compararlos de manera insensible a mayúsculas/minúsculas.
         string normalizedMail = userRequest.Mail.Trim().ToLower();
         string normalizedNickname = userRequest.Nickname.Trim().ToLower();
 
-        // Comprobamos si el correo ya está en uso.
         if (await _unitOfWork.UserRepository.GetByMailAsync(normalizedMail) != null)
         {
             throw new Exception("El correo ya está en uso");
         }
 
-        // Comprobamos si el nickname ya está en uso.
         if ((await _unitOfWork.UserRepository.GetAllAsync())
             .Any(u => u.Nickname.Trim().ToLower() == normalizedNickname))
         {
@@ -66,7 +62,6 @@ public class UserService
 
         string defaultRole = string.IsNullOrEmpty(userRequest.Role) ? "User" : userRequest.Role;
 
-        // Creación del nuevo usuario.
         User newUser = new User
         {
             Mail = normalizedMail,
@@ -84,7 +79,18 @@ public class UserService
 
 
     /* ----- UPDATE ----- */
+    public async Task<UserDto> UpdateRoleAsync(long userId,  string roleChanged)
+    {
+        var userEntity = await _unitOfWork.UserRepository.GetByIdAsync(userId) ?? throw new Exception("El usuario especificado no existe");
 
+        userEntity.Role = roleChanged;
+
+        _unitOfWork.UserRepository.Update(userEntity);
+
+        await _unitOfWork.UserRepository.SaveAsync();
+
+        return _mapper.ToDto(userEntity);
+    }
     public async Task<UserDto> UpdateAsync(UserDto userDto)
     {
         var userEntity = await _unitOfWork.UserRepository.GetByIdAsync(userDto.Id) ?? throw new Exception("El usuario especificado no existe");
@@ -109,19 +115,7 @@ public class UserService
 
         userEntity.Mail = newMail;
         userEntity.Nickname = newNickname;
-        //userEntity.AvatarUrl = newAvatarUrl;
-
-        //string oldImagePath = Path.Combine(_rootPath, oldNickname + ".png");
-        //string newImagePath = Path.Combine(_rootPath, newNickname +".png");
-
-        //if (File.Exists(oldImagePath))
-        //{
-        //    if (File.Exists(newImagePath))
-        //    {
-        //        File.Delete(newImagePath);
-        //    }
-        //    File.Move(oldImagePath, newImagePath);
-        //}
+   
         _unitOfWork.UserRepository.Update(userEntity);
 
         await _unitOfWork.UserRepository.SaveAsync();
@@ -137,36 +131,30 @@ public class UserService
             throw new Exception("El usuario no existe");
         }
 
-        // Verificamos la contraseña antigua comparando el hash.
         var hashedOldPassword = AuthService.HashPassword(oldPassword);
         if (user.Password != hashedOldPassword)
         {
             throw new Exception("Contraseña incorrecta");
         }
 
-        // Actualizamos la contraseña con el hash de la nueva.
         user.Password = AuthService.HashPassword(newPassword);
 
-        // Actualizamos la entidad en el repositorio y guardamos los cambios.
         _unitOfWork.UserRepository.Update(user);
         await _unitOfWork.SaveAsync();
 
         return true;
     }
 
-    /*
-    public async Task<UserDto> UpdateRole(HandleRole handleRole)
+    public async Task<List<Game>> GetAllMatchesAsync(long receiverId)
     {
-        User userEntity = await _unitOfWork.UserRepository.GetByIdAsync(handleRole.UserId) ?? throw new Exception("El usuario no existe");
-        userEntity.Role = handleRole.Role;
+        var allGames = await _unitOfWork.GameRepository.GetAllAsync();
+        string receiverIdString = receiverId.ToString();
 
-        _unitOfWork.UserRepository.Update(userEntity);
-
-        await _unitOfWork.UserRepository.SaveAsync();
-
-        return _mapper.ToDto(userEntity);
+        return allGames
+            .Where(f => f.Player1Id == receiverIdString || f.Player2Id == receiverIdString)
+            .ToList();
     }
-    */
+
     public async Task<int> GetStatusCount (UserStatus status)
     {
         return await _unitOfWork.UserRepository.CountStatusAsync(status);

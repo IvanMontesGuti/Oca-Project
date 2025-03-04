@@ -23,18 +23,18 @@ public class UserRepository : Repository<User>
             .CountAsync(user => user.Status == status);
     }
 
-
-
     public async Task<User> GetByMailAsync(string mail)
     {
         return await GetQueryable()
         .Where(user => user.Mail == mail).SingleOrDefaultAsync();
     }
+    
     public async Task<User> GetByNicknameAsync(string nickname)
     {
         return await GetQueryable()
         .Where(user => user.Nickname == nickname).SingleOrDefaultAsync();
     }
+    
     public async Task<string> GetRoleByMailAsync(string mail)
     {
         User user = await GetByMailAsync(mail);

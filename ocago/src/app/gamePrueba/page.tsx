@@ -168,7 +168,7 @@ export default function WebSocketGame() {
       console.log("WebSocket connected");
       setGameState((prev) => ({ ...prev, isConnected: true }));
       
-      // When reconnected, immediately request current game state if we had a game
+      // Cuando se reconecta, solicita el estado actual del juego si ya había uno
       if (prev.gameData?.Id) {
         console.log("Reconnected - requesting game state for:", prev.gameData.Id);
         setTimeout(() => {
@@ -180,17 +180,15 @@ export default function WebSocketGame() {
     ws.onmessage = (event) => {
       const response = JSON.parse(event.data);
       console.log("Received data:", response);
-  
+    
       if (response.action === "gameUpdate" && response.data) {
-        // Reset inactivity timer when game updates
+        // Manejo existente para actualizaciones completas del juego
         resetInactivityTimer();
-  
-        // Store game ID in localStorage as backup
+    
         if (response.data.Id) {
           localStorage.setItem('currentGameId', response.data.Id);
         }
-  
-        // Log positions for debugging
+    
         console.log(
           "Player 1 position:",
           response.data.Player1Position,
@@ -205,20 +203,57 @@ export default function WebSocketGame() {
             POSITION_COORDINATES[response.data.Player2Position],
           );
         }
-  
+    
         setGameState((prev) => ({
           ...prev,
           gameData: response.data,
         }));
-  
-        // Check if game is finished and show winner modal
+    
         if (response.data.Status === 2 && response.data.Winner) {
           setShowWinnerModal(true);
           stopInactivityTimer();
         }
-  
-        // Start timer if game is in progress
+    
         if (response.data.Status === 1 && !isTimerRunning) {
+          startInactivityTimer();
+        }
+      } else if (response.action === "moveUpdate" && response.data) {
+        // Nuevo manejo para actualizaciones parciales después de un movimiento
+        resetInactivityTimer();
+    
+        setGameState((prev) => {
+          if (!prev.gameData) return prev; // Si no hay gameData previo, no hacemos nada
+    
+          const updatedGameData = {
+            ...prev.gameData,
+            // Actualizar campos específicos del mensaje moveUpdate
+            Player1Position: prev.gameData.Player1Id === response.data.PlayerId ? response.data.NewPosition : prev.gameData.Player1Position,
+            Player2Position: prev.gameData.Player2Id === response.data.PlayerId ? response.data.NewPosition : prev.gameData.Player2Position,
+            Player1RemainingTurns: response.data.Player1RemainingTurns,
+            Player2RemainingTurns: response.data.Player2RemainingTurns,
+            Status: response.data.GameStatus,
+            // Determinar de quién es el turno basándonos en NextTurnPlayerId
+            IsPlayer1Turn: response.data.NextTurnPlayerId === prev.gameData.Player1Id,
+          };
+    
+          console.log("Updated game state after moveUpdate:", updatedGameData);
+    
+          return {
+            ...prev,
+            gameData: updatedGameData,
+          };
+        });
+    
+        // Mostrar mensaje del movimiento en el chat (opcional)
+        if (response.data.Message) {
+          setGameState((prev) => ({
+            ...prev,
+            messages: [...prev.messages, { sender: "Sistema", text: response.data.Message }],
+          }));
+        }
+    
+        // Iniciar el temporizador si el juego está en progreso y no está corriendo
+        if (response.data.GameStatus === 1 && !isTimerRunning) {
           startInactivityTimer();
         }
       } else if (response.action === "activeGames" && response.data) {
@@ -426,11 +461,7 @@ export default function WebSocketGame() {
     }
   }
 
-  const getGameInfo = () => {
-    if (gameState.gameData?.Id) {
-      sendMessage({ Action: "GetGame", GameId: gameState.gameData.Id })
-    }
-  }
+  
 
   const getActiveGames = () => {
     sendMessage({ Action: "GetActiveGames" })
@@ -517,6 +548,7 @@ export default function WebSocketGame() {
           )}
         </div>
       </header>
+      
       {/* Game ID display */}
       {gameState.gameData?.Id && (
         <div className="text-center mb-2 text-yellow-400 font-mono">ID: {gameState.gameData.Id}</div>
@@ -565,7 +597,7 @@ export default function WebSocketGame() {
         <div className="w-1/4 flex flex-col gap-4">
           <div className="bg-gray-900 rounded-lg p-4 flex-1">
             <h2 className="text-2xl font-bold mb-2">Chat</h2>
-            <div className="bg-gray-700 rounded-lg p-2 h-[calc(100%-80px)] overflow-y-auto mb-2">
+            <div className="bg-gray-700 rounded-lg p-2 max-h-80 overflow-y-auto mb-2">
               {gameState.messages.map((msg, index) => (
                 <div key={index} className="mb-2">
                   <span className="font-bold">{msg.sender}: </span>
@@ -616,52 +648,46 @@ export default function WebSocketGame() {
           </div>
 
           <div className="space-y-2">
-            {!gameState.gameData?.Id ? (
-              <>
-                <Button onClick={createGame} className="w-full bg-green-600 hover:bg-green-700">
-                  Create New Game
-                </Button>
-                <div className="flex gap-2">
-                  <Input
-                    type="text"
-                    placeholder="Game ID"
-                    value={gameIdInput}
-                    onChange={(e) => setGameIdInput(e.target.value)}
-                    className="flex-1 bg-gray-800"
-                  />
-                  <Button onClick={joinGame} className="bg-blue-600 hover:bg-blue-700">
-                    Join
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="bg-gray-800 p-2 rounded">
-                  Game Status:{" "}
-                  {gameState.gameData.Status === 0
-                    ? "Waiting for players"
-                    : gameState.gameData.Status === 1
-                      ? "In progress"
-                      : "Finished"}
-                </div>
-                <Button onClick={getGameInfo} className="w-full bg-blue-600 hover:bg-blue-700">
-                  Refresh Game Info
-                </Button>
-              </>
-            )}
-            <Button onClick={getActiveGames} className="w-full bg-purple-600 hover:bg-purple-700">
-              Get Active Games
-            </Button>
-          </div>
-        </div>
-
+  {!gameState.gameData?.Id ? (
+    <>
+      <Button onClick={createGame} className="w-full bg-green-600 hover:bg-green-700">
+        Create New Game
+      </Button>
+      <div className="flex gap-2">
+        <Input
+          type="text"
+          placeholder="Game ID"
+          value={gameIdInput}
+          onChange={(e) => setGameIdInput(e.target.value)}
+          className="flex-1 bg-gray-800"
+        />
+        <Button onClick={joinGame} className="bg-blue-600 hover:bg-blue-700">
+          Join
+        </Button>
+      </div>
+    </>
+  ) : (
+    <div className="bg-gray-800 p-2 rounded">
+      Game Status:{" "}
+      {gameState.gameData.Status === 0
+        ? "Waiting for players"
+        : gameState.gameData.Status === 1
+          ? "In progress"
+          : "Finished"}
+    </div>
+  )}
+  <Button onClick={getActiveGames} className="w-full bg-purple-600 hover:bg-purple-700">
+    Get Active Games
+  </Button>
+</div>
+</div>
         {/* Game board */}
         <div className="w-3/4 bg-gray-900 rounded-lg p-4">
           <div
             className="relative w-full h-full"
             style={{ aspectRatio: `${BOARD_WIDTH * CELL_WIDTH}/${BOARD_HEIGHT * CELL_HEIGHT}` }}
           >
-            <Image src="/images/tablero2.svg" alt="Tablero de OcaGo" layout="fill" objectFit="contain" />
+            <Image src="/images/tablero.svg" alt="Tablero de OcaGo" layout="fill" objectFit="contain" />
 
             {/* Grid de referencia (solo para depuración, puedes comentarlo en producción) */}
             <div
@@ -669,7 +695,7 @@ export default function WebSocketGame() {
               style={{
                 gridTemplateColumns: `repeat(${BOARD_WIDTH}, ${CELL_WIDTH}px)`,
                 gridTemplateRows: `repeat(${BOARD_HEIGHT}, ${CELL_HEIGHT}px)`,
-                opacity: 0.2,
+                opacity: 0,
                 pointerEvents: "none",
               }}
             >
@@ -749,11 +775,13 @@ export default function WebSocketGame() {
             ))}
           </div>
         </div>
+        
       )}
 
       {/* Winner modal */}
       <WinnerModal />
     </div>
+    
   )
 }
 

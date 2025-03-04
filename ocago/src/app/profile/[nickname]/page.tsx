@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { API_BASE_URL, GET_USER_BY_NICKNAME_URL, FRIENDSHIP_GET_BY_ID_URL, GET_USER_HISTORY } from "@/lib/endpoints/config";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Header2 } from "@/components/Home/navUser";
+import ProtectedRoute from "@/components/ProtectedRoute/page";
 
 interface User {
   id: string;
@@ -95,110 +96,112 @@ export default function UserProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-[#231356] text-white py-8">
-      <Header2 />
-      <div className="container mx-auto px-4">
-        {user && (
-          <div className="text-center mb-8">
-            <Avatar className="w-32 h-32 mx-auto">
-              <AvatarImage
-                src={
-                  user?.avatarUrl
-                    ? user.avatarUrl.startsWith("http")
-                      ? user.avatarUrl
-                      : `${API_BASE_URL}/${user.avatarUrl}`
-                    : "/placeholder.svg"
-                }
-                alt={user?.nickname || "Usuario"}
-              />
-              <AvatarFallback>{user?.nickname?.slice(0, 1)?.toUpperCase() ?? "NA"}</AvatarFallback>
-            </Avatar>
-            <h1 className="text-3xl font-bold mt-4">{user?.nickname ?? "Usuario"}</h1>
-            <p className="text-gray-300">{user?.mail ?? "Correo no disponible"}</p>
-          </div>
-        )}
-
-        <h2 className="text-2xl font-bold mb-4 text-center">Amigos</h2>
-        <div className="grid grid-cols-2 gap-4 mb-8">
-          {friends.length > 0 ? (
-            friends.map((friend) => (
-              <div
-                key={friend?.id || Math.random()}
-                onClick={() => router.push(`/profile/${friend.nickname}`)}
-                className="flex items-center gap-3 bg-[#1B0F40] p-4 rounded-lg cursor-pointer"
-              >
-                <Avatar>
-                  <AvatarImage
-                    src={
-                      friend?.avatarUrl
-                        ? friend.avatarUrl.startsWith("http")
-                          ? friend.avatarUrl
-                          : `${API_BASE_URL}/${friend.avatarUrl}`
-                        : "/placeholder.svg"
-                    }
-                    alt={friend?.nickname || "Amigo"}
-                  />
-                  <AvatarFallback>
-                    {friend?.nickname?.slice(0, 1)?.toUpperCase() ?? "NA"}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="text-white">{friend?.nickname ?? "Amigo desconocido"}</div>
-              </div>
-            ))
-          ) : (
-            <div className="text-center text-gray-400">
-              Este usuario no tiene amigos aún.
+    <ProtectedRoute>
+      <div className="min-h-screen bg-[#231356] text-white py-8">
+        <Header2 />
+        <div className="container mx-auto px-4">
+          {user && (
+            <div className="text-center mb-8">
+              <Avatar className="w-32 h-32 mx-auto">
+                <AvatarImage
+                  src={
+                    user?.avatarUrl
+                      ? user.avatarUrl.startsWith("http")
+                        ? user.avatarUrl
+                        : `${API_BASE_URL}/${user.avatarUrl}`
+                      : "/placeholder.svg"
+                  }
+                  alt={user?.nickname || "Usuario"}
+                />
+                <AvatarFallback>{user?.nickname?.slice(0, 1)?.toUpperCase() ?? "NA"}</AvatarFallback>
+              </Avatar>
+              <h1 className="text-3xl font-bold mt-4">{user?.nickname ?? "Usuario"}</h1>
+              <p className="text-gray-300">{user?.mail ?? "Correo no disponible"}</p>
             </div>
           )}
-        </div>
 
-        <h2 className="text-2xl font-bold mb-4 text-center">Historial de Juegos</h2>
-        <div className="space-y-4">
-          {games.length > 0 ? (
-            games.map((game) => (
-              <div
-                key={game.id}
-                className="bg-[#1B0F40] p-4 rounded-lg cursor-pointer"
-                onClick={() => router.push(`/game/${game.id}`)}
-              >
-                <p>Juego ID: {game.id}</p>
-                <p>
-                  {user?.id}{" "}
-                  <span
-                    className={`${game.winner === game.playerId1
-                      ? "text-green-400"
-                      : "text-red-400"
-                      }`}
-                  >
-                    {game.playerId1 || "Desconocido"}
-                  </span>
-                </p>
-                <p>
-                  Jugador 2:{" "}
-                  <span
-                    className={`${game.winner === game.playerId2
-                      ? "text-green-400"
-                      : "text-red-400"
-                      }`}
-                  >
-                    {game.playerId2 || "Desconocido"}
-                  </span>
-                </p>
-                <p className="text-green-500">
-                  Ganador:{" "}
-                  {game.winner
-                    ? game.winner === user?.id
-                      ? "Tú"
-                      : "Oponente"
-                    : "Sin definir"}
-                </p>
+          <h2 className="text-2xl font-bold mb-4 text-center">Amigos</h2>
+          <div className="grid grid-cols-2 gap-4 mb-8">
+            {friends.length > 0 ? (
+              friends.map((friend) => (
+                <div
+                  key={friend?.id || Math.random()}
+                  onClick={() => router.push(`/profile/${friend.nickname}`)}
+                  className="flex items-center gap-3 bg-[#1B0F40] p-4 rounded-lg cursor-pointer"
+                >
+                  <Avatar>
+                    <AvatarImage
+                      src={
+                        friend?.avatarUrl
+                          ? friend.avatarUrl.startsWith("http")
+                            ? friend.avatarUrl
+                            : `${API_BASE_URL}/${friend.avatarUrl}`
+                          : "/placeholder.svg"
+                      }
+                      alt={friend?.nickname || "Amigo"}
+                    />
+                    <AvatarFallback>
+                      {friend?.nickname?.slice(0, 1)?.toUpperCase() ?? "NA"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="text-white">{friend?.nickname ?? "Amigo desconocido"}</div>
+                </div>
+              ))
+            ) : (
+              <div className="text-center text-gray-400">
+                Este usuario no tiene amigos aún.
               </div>
-            ))
-          ) : (
-            <div className="text-center text-gray-400">No hay juegos registrados.</div>
-          )}
+            )}
+          </div>
+
+          <h2 className="text-2xl font-bold mb-4 text-center">Historial de Juegos</h2>
+          <div className="space-y-4">
+            {games.length > 0 ? (
+              games.map((game) => (
+                <div
+                  key={game.id}
+                  className="bg-[#1B0F40] p-4 rounded-lg cursor-pointer"
+                  onClick={() => router.push(`/game/${game.id}`)}
+                >
+                  <p>Juego ID: {game.id}</p>
+                  <p>
+                    {user?.id}{" "}
+                    <span
+                      className={`${game.winner === game.playerId1
+                        ? "text-green-400"
+                        : "text-red-400"
+                        }`}
+                    >
+                      {game.playerId1 || "Desconocido"}
+                    </span>
+                  </p>
+                  <p>
+                    Jugador 2:{" "}
+                    <span
+                      className={`${game.winner === game.playerId2
+                        ? "text-green-400"
+                        : "text-red-400"
+                        }`}
+                    >
+                      {game.playerId2 || "Desconocido"}
+                    </span>
+                  </p>
+                  <p className="text-green-500">
+                    Ganador:{" "}
+                    {game.winner
+                      ? game.winner === user?.id
+                        ? "Tú"
+                        : "Oponente"
+                      : "Sin definir"}
+                  </p>
+                </div>
+              ))
+            ) : (
+              <div className="text-center text-gray-400">No hay juegos registrados.</div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </ProtectedRoute>
   )
 }

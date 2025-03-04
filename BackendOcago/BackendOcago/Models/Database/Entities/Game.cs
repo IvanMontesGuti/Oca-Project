@@ -1,4 +1,6 @@
-﻿namespace BackendOcago.Models.Database.Entities
+﻿using BackendOcago.Models.Database.Enum;
+
+namespace BackendOcago.Models.Database.Entities
 {
     public class Game
     {
@@ -15,10 +17,5 @@
         public string Winner { get; set; }
     }
 
-    public enum GameStatus
-    {
-        WaitingForPlayers,
-        InProgress,
-        Finished
-    }
+
 }

@@ -63,6 +63,16 @@ public class UserController : ControllerBase
         return Ok(updatedUser);
     }
 
+    [HttpGet("allMatches/{userId}")]
+    public async Task<IActionResult> GetAllMatches(long userId)
+    {
+        var matches = await _userService.GetAllMatchesAsync(userId);
+        if (matches == null || !matches.Any())
+            return NotFound("No se encontraron partidas para este usuario.");
+
+        return Ok(matches);
+    }
+
     [HttpPut("ChangePassword")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePassword changePassword)
     {
@@ -90,6 +100,15 @@ public class UserController : ControllerBase
             .FirstOrDefaultAsync(u => u.Id == userId);
         if (user == null) return NotFound("Usuario no encontrado!");
         return Ok(user.Games);
+    }
+
+    [HttpPut("ChangeRole")]
+
+    public async Task<IActionResult> ChangeRole(long userId, string roleChanged)
+    {
+        var user = _userService.UpdateRoleAsync(userId, roleChanged);
+        
+        return Ok(user);
     }
 
 }

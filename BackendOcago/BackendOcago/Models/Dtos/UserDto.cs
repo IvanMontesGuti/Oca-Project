@@ -14,10 +14,10 @@ public class UserDto
     public UserStatus Status { get; set; } = UserStatus.Desconectado;
     public List<User> Friends { get; set; } = new ();
 
-    public List<Game> Games { get; set; } = new();  // Partidas
+    public List<Game> Games { get; set; } = new();  
 
-    public List<Friendship> SentFriendships { get; set; } = new ();  // Relaciones enviadas
-    public List<Friendship> ReceivedFriendships { get; set; } = new ();  // Relaciones recibidas
+    public List<Friendship> SentFriendships { get; set; } = new ();  
+    public List<Friendship> ReceivedFriendships { get; set; } = new ();  
 
 
 }

@@ -25,7 +25,6 @@ namespace BackendOcago.Services
 
             var searchTokens = TokenizeText(ClearText(searchQuery));
 
-            // Forzamos la evaluación en memoria con AsEnumerable() para que los métodos personalizados se ejecuten en C#
             var filteredUsers = users.AsEnumerable()
                                       .Where(user => MatchTokens(searchTokens, TokenizeText(ClearText(user.Nickname))))
                                       .ToList();

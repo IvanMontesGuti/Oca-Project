@@ -1,7 +1,9 @@
-﻿using BackendOcago.Models.Dtos;
+﻿using BackendOcago.Models.Database.Enum;
+using BackendOcago.Models.Dtos;
 using BackendOcago.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
@@ -13,11 +15,13 @@ namespace BackendOcago.Controllers
     public class GameWebSocketController : ControllerBase
     {
         private readonly GameService _gameService;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
         private static readonly Dictionary<string, WebSocket> _connections = new();
 
-        public GameWebSocketController(GameService gameService)
+        public GameWebSocketController(IServiceScopeFactory serviceScopeFactory, GameService gameService)
         {
             _gameService = gameService;
+            _serviceScopeFactory = serviceScopeFactory;
         }
 
         [HttpGet("connect")]
@@ -29,12 +33,10 @@ namespace BackendOcago.Controllers
 
                 if (_connections.ContainsKey(userId))
                 {
-                    Console.WriteLine($"🔄 Usuario {userId} ya estaba conectado. Cerrando conexión anterior.");
                     _connections[userId].Abort();
                 }
 
                 _connections[userId] = webSocket;
-                Console.WriteLine($"✅ Usuario {userId} conectado. Total conexiones activas: {_connections.Count}");
 
                 await HandleWebSocketConnection(userId, webSocket);
             }
@@ -71,18 +73,59 @@ namespace BackendOcago.Controllers
                 switch (jsonMessage.Action)
                 {
                     case "CreateGame":
+                        using (var scope = _serviceScopeFactory.CreateScope())
+                        {
+                            var userService = scope.ServiceProvider.GetRequiredService<UserService>();
+                            if (!long.TryParse(userId, out long numericUserId))
+                            {
+                                Console.WriteLine("❌ Error al convertir userId a long.");
+                            }
+                            else
+                            {
+                                UserDto user = await userService.GetByIdAsync(numericUserId);
+                                if (user.Role == "bloqueado")
+                                {
+                                    break;
+                                }
+                            }
+                        }
                         var game = await _gameService.CreateGameAsync(userId);
                         await SendMessageToClient(userId, new
                         {
                             action = "gameUpdate",
                             data = game
                         });
+                        
+                        using (var scope = _serviceScopeFactory.CreateScope())
+                        {
+                            var userService = scope.ServiceProvider.GetRequiredService<UserService>();
+                            if (!long.TryParse(userId, out long numericUserId))
+                            {
+                                Console.WriteLine("❌ Error al convertir userId a long.");
+                            }
+                            else
+                            {
+                                await userService.UpdateStatus(UserStatus.Jugando, numericUserId);
+                            }
+                        }
                         break;
                     case "JoinGame":
                         var joinedGame = await _gameService.JoinGameAsync(jsonMessage.GameId, userId);
                         if (joinedGame != null)
                         {
                             await NotifyPlayers(joinedGame, "gameUpdate");
+                        }
+                        using (var scope = _serviceScopeFactory.CreateScope())
+                        {
+                            var userService = scope.ServiceProvider.GetRequiredService<UserService>();
+                            if (!long.TryParse(userId, out long numericUserId))
+                            {
+                                Console.WriteLine("❌ Error al convertir userId a long.");
+                            }
+                            else
+                            {
+                                await userService.UpdateStatus(UserStatus.Jugando, numericUserId);
+                            }
                         }
                         break;
                     case "MakeMove":
@@ -96,12 +139,40 @@ namespace BackendOcago.Controllers
                         });
                         break;
                     case "CreateBotGame":
+                        using (var scope = _serviceScopeFactory.CreateScope())
+                        {
+                            var userService = scope.ServiceProvider.GetRequiredService<UserService>();
+                            if (!long.TryParse(userId, out long numericUserId))
+                            {
+                                Console.WriteLine("❌ Error al convertir userId a long.");
+                            }
+                            else
+                            {
+                                UserDto user = await userService.GetByIdAsync(numericUserId);
+                                if (user.Role == "bloqueado")
+                                {
+                                    break;
+                                }
+                            }
+                        }
                         var botGame = await _gameService.CreateBotGameAsync(userId);
                         await SendMessageToClient(userId, new
                         {
                             action = "gameUpdate",
                             data = botGame
                         });
+                        using (var scope = _serviceScopeFactory.CreateScope())
+                        {
+                            var userService = scope.ServiceProvider.GetRequiredService<UserService>();
+                            if (!long.TryParse(userId, out long numericUserId))
+                            {
+                                Console.WriteLine("❌ Error al convertir userId a long.");
+                            }
+                            else
+                            {
+                                await userService.UpdateStatus(UserStatus.Jugando, numericUserId);
+                            }
+                        }
                         break;
                     case "GetGame":
                         var gameInfo = await _gameService.GetGameAsync(jsonMessage.GameId);
@@ -120,8 +191,21 @@ namespace BackendOcago.Controllers
                         });
                         break;
                     case "Surrender":
+                        using (var scope = _serviceScopeFactory.CreateScope())
+                        {
+                            var userService = scope.ServiceProvider.GetRequiredService<UserService>();
+                            if (!long.TryParse(userId, out long numericUserId))
+                            {
+                                Console.WriteLine("❌ Error al convertir userId a long.");
+                            }
+                            else
+                            {
+                                await userService.UpdateStatus(UserStatus.Conectado, numericUserId);
+                            }
+                        }
                         var surrenderResult = await _gameService.SurrenderGameAsync(jsonMessage.GameId, userId);
                         await NotifyPlayers(surrenderResult, "gameUpdate");
+                        
                         // Enviar mensaje adicional sobre la rendición
                         await NotifyPlayers(new
                         {
@@ -131,21 +215,17 @@ namespace BackendOcago.Controllers
                             GameStatus = surrenderResult.Status,
                             Winner = surrenderResult.Winner
                         }, "surrenderUpdate");
+
+                        
                         break;
                     case "SendChat":
-                        // Procesar mensaje de chat
                         if (string.IsNullOrEmpty(jsonMessage.ChatMessage))
                         {
-                            Console.WriteLine("❌ Mensaje de chat vacío, ignorando");
                             break;
                         }
 
-                        Console.WriteLine($"💬 Mensaje de chat recibido de {userId} para partida {jsonMessage.GameId}: {jsonMessage.ChatMessage}");
-
-                        // Obtener información del juego para verificar que el usuario está en la partida
                         var chatGameInfo = await _gameService.GetGameAsync(jsonMessage.GameId);
 
-                        // Verificar que el usuario sea parte de la partida
                         if (chatGameInfo.Player1Id != userId && chatGameInfo.Player2Id != userId)
                         {
                             await SendMessageToClient(userId, new
@@ -156,12 +236,11 @@ namespace BackendOcago.Controllers
                             break;
                         }
 
-                        // Crear objeto de mensaje de chat
                         var chatMessage = new
                         {
                             GameId = jsonMessage.GameId,
                             SenderId = userId,
-                            SenderName = userId, // Podrías obtener el nombre real del usuario si lo tienes
+                            SenderName = userId, 
                             Message = jsonMessage.ChatMessage,
                             Timestamp = DateTime.UtcNow
                         };
@@ -224,7 +303,6 @@ namespace BackendOcago.Controllers
             }
             else
             {
-                // Para mensajes genéricos como la notificación de rendición
                 var messageObject = new
                 {
                     action = action,
@@ -263,6 +341,6 @@ namespace BackendOcago.Controllers
     {
         public string Action { get; set; }
         public Guid GameId { get; set; }
-        public string ChatMessage { get; set; } // Nuevo campo para mensajes de chat
+        public string ChatMessage { get; set; } 
     }
 }
