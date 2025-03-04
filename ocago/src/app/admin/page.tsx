@@ -6,7 +6,7 @@ import AdminPanel from "@/components/AdminPanel/page"
 
 export default function AdminPage(){
     return (
-        <ProtectedRoute requiredRole="admin">
+        <ProtectedRoute adminOnly>
             <AdminPanel/>
         </ProtectedRoute>
     )
