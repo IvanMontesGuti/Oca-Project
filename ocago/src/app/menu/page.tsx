@@ -14,6 +14,7 @@ import { Header2 } from "@/components/Home/navUser"
 import { useAuth } from "@/context/AuthContext"
 import { Header } from "@/components/header"
 import RecentMatches from "@/components/Game/RecentMatches"
+import ProtectedRoute from "@/components/ProtectedRoute/page"
 
 /*
 interface DecodedToken {
@@ -45,6 +46,7 @@ export default function OcaGame() {
 
   return (
     <>
+    <ProtectedRoute>
       <div className="min-h-screen bg-[#2E1B6B] text-white">
         {isAuthenticated ? <Header2 /> : <Header />}
         <Toaster />
@@ -107,6 +109,7 @@ export default function OcaGame() {
           </div>
         </div>
       </div>
+      </ProtectedRoute>
     </>
   )
 }
