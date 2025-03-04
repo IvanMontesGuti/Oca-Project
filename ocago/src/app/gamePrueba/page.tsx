@@ -168,7 +168,7 @@ export default function WebSocketGame() {
       console.log("WebSocket connected");
       setGameState((prev) => ({ ...prev, isConnected: true }));
       
-      // When reconnected, immediately request current game state if we had a game
+      // Cuando se reconecta, solicita el estado actual del juego si ya había uno
       if (prev.gameData?.Id) {
         console.log("Reconnected - requesting game state for:", prev.gameData.Id);
         setTimeout(() => {
@@ -182,15 +182,15 @@ export default function WebSocketGame() {
       console.log("Received data:", response);
   
       if (response.action === "gameUpdate" && response.data) {
-        // Reset inactivity timer when game updates
+        // Resetear el temporizador de inactividad cuando el juego se actualiza
         resetInactivityTimer();
   
-        // Store game ID in localStorage as backup
+        // Guardar el ID del juego en localStorage como respaldo
         if (response.data.Id) {
           localStorage.setItem('currentGameId', response.data.Id);
         }
   
-        // Log positions for debugging
+        // Actualizar el estado del juego automáticamente
         console.log(
           "Player 1 position:",
           response.data.Player1Position,
@@ -211,13 +211,13 @@ export default function WebSocketGame() {
           gameData: response.data,
         }));
   
-        // Check if game is finished and show winner modal
+        // Verificar si el juego terminó y mostrar el modal del ganador
         if (response.data.Status === 2 && response.data.Winner) {
           setShowWinnerModal(true);
           stopInactivityTimer();
         }
   
-        // Start timer if game is in progress
+        // Iniciar el temporizador si el juego está en progreso
         if (response.data.Status === 1 && !isTimerRunning) {
           startInactivityTimer();
         }
@@ -426,11 +426,7 @@ export default function WebSocketGame() {
     }
   }
 
-  const getGameInfo = () => {
-    if (gameState.gameData?.Id) {
-      sendMessage({ Action: "GetGame", GameId: gameState.gameData.Id })
-    }
-  }
+  
 
   const getActiveGames = () => {
     sendMessage({ Action: "GetActiveGames" })
@@ -517,6 +513,7 @@ export default function WebSocketGame() {
           )}
         </div>
       </header>
+      
       {/* Game ID display */}
       {gameState.gameData?.Id && (
         <div className="text-center mb-2 text-yellow-400 font-mono">ID: {gameState.gameData.Id}</div>
@@ -616,45 +613,39 @@ export default function WebSocketGame() {
           </div>
 
           <div className="space-y-2">
-            {!gameState.gameData?.Id ? (
-              <>
-                <Button onClick={createGame} className="w-full bg-green-600 hover:bg-green-700">
-                  Create New Game
-                </Button>
-                <div className="flex gap-2">
-                  <Input
-                    type="text"
-                    placeholder="Game ID"
-                    value={gameIdInput}
-                    onChange={(e) => setGameIdInput(e.target.value)}
-                    className="flex-1 bg-gray-800"
-                  />
-                  <Button onClick={joinGame} className="bg-blue-600 hover:bg-blue-700">
-                    Join
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="bg-gray-800 p-2 rounded">
-                  Game Status:{" "}
-                  {gameState.gameData.Status === 0
-                    ? "Waiting for players"
-                    : gameState.gameData.Status === 1
-                      ? "In progress"
-                      : "Finished"}
-                </div>
-                <Button onClick={getGameInfo} className="w-full bg-blue-600 hover:bg-blue-700">
-                  Refresh Game Info
-                </Button>
-              </>
-            )}
-            <Button onClick={getActiveGames} className="w-full bg-purple-600 hover:bg-purple-700">
-              Get Active Games
-            </Button>
-          </div>
-        </div>
-
+  {!gameState.gameData?.Id ? (
+    <>
+      <Button onClick={createGame} className="w-full bg-green-600 hover:bg-green-700">
+        Create New Game
+      </Button>
+      <div className="flex gap-2">
+        <Input
+          type="text"
+          placeholder="Game ID"
+          value={gameIdInput}
+          onChange={(e) => setGameIdInput(e.target.value)}
+          className="flex-1 bg-gray-800"
+        />
+        <Button onClick={joinGame} className="bg-blue-600 hover:bg-blue-700">
+          Join
+        </Button>
+      </div>
+    </>
+  ) : (
+    <div className="bg-gray-800 p-2 rounded">
+      Game Status:{" "}
+      {gameState.gameData.Status === 0
+        ? "Waiting for players"
+        : gameState.gameData.Status === 1
+          ? "In progress"
+          : "Finished"}
+    </div>
+  )}
+  <Button onClick={getActiveGames} className="w-full bg-purple-600 hover:bg-purple-700">
+    Get Active Games
+  </Button>
+</div>
+</div>
         {/* Game board */}
         <div className="w-3/4 bg-gray-900 rounded-lg p-4">
           <div
@@ -749,11 +740,13 @@ export default function WebSocketGame() {
             ))}
           </div>
         </div>
+        
       )}
 
       {/* Winner modal */}
       <WinnerModal />
     </div>
+    
   )
 }
 
