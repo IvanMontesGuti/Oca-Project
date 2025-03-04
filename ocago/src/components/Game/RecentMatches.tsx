@@ -1,81 +1,79 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Card } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
-import { CalendarIcon, Trophy } from "lucide-react"
-
-import { useAuth } from "@/context/AuthContext"
+import { useState, useEffect } from "react";
+import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { CalendarIcon, Trophy } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { API_BASE_URL } from "@/lib/endpoints/config";
 
 interface Match {
-  id: string
-  player1Id: string
-  player2Id: string | null
-  player1Position: number
-  player2Position: number
-  isPlayer1Turn: boolean
-  player1RemainingTurns: number
-  player2RemainingTurns: number
-  status: number 
-  lastUpdated: string
-  winner: string | null
+  id: string;
+  player1Id: string;
+  player2Id: string | null;
+  player1Position: number;
+  player2Position: number;
+  isPlayer1Turn: boolean;
+  player1RemainingTurns: number;
+  player2RemainingTurns: number;
+  status: number;
+  lastUpdated: string;
+  winner: string | null;
 }
 
 export default function RecentMatches() {
-  const [matches, setMatches] = useState<Match[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const { userInfo } = useAuth()
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { userInfo } = useAuth();
 
-  const userId = userInfo?.id  
+  const userId = userInfo?.id;
+  const API_GAMES_URL = `${API_BASE_URL}/allMatches/${userId}`;
 
   useEffect(() => {
     const fetchMatches = async () => {
       try {
-        setIsLoading(true)
-        const response = await fetch(`https://localhost:7107/api/User/allMatches/${userId}`)
+        setIsLoading(true);
+        const response = await fetch(API_GAMES_URL);
 
         if (!response.ok) {
-          throw new Error("No se pudieron cargar las partidas recientes")
+          throw new Error("No se pudieron cargar las partidas recientes");
         }
 
-        const data: Match[] = await response.json()
+        const data: Match[] = await response.json();
 
-        
-        const completedMatches = data.filter((match) => match.status === 2)
+        const completedMatches = data.filter((match) => match.status === 2);
 
-        setMatches(completedMatches)
+        setMatches(completedMatches);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Error desconocido")
-        console.error("Error fetching matches:", err)
+        setError(err instanceof Error ? err.message : "Error desconocido");
+        console.error("Error fetching matches:", err);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    fetchMatches()
-  }, [userId])
+    fetchMatches();
+  }, [API_GAMES_URL]);
 
-  
   const getPlayerName = (playerId: string | null): string => {
-    if (!playerId) return "Bot"
-    if (playerId === "{user}") return "Tú"
-    return `Jugador ${playerId}`
-  }
+    if (!playerId) return "Bot";
+    if (playerId === "{user}") return "Tú";
+    return `Jugador ${playerId}`;
+  };
 
   const getWinnerName = (match: Match): string => {
-    if (!match.winner) return "Empate"
-    if (match.winner === "{user}") return "Tú"
+    if (!match.winner) return "Empate";
+    if (match.winner === "{user}") return "Tú";
 
-    
     if (match.winner === match.player1Id) {
-      return getPlayerName(match.player1Id)
+      return getPlayerName(match.player1Id);
     } else if (match.winner === match.player2Id) {
-      return getPlayerName(match.player2Id)
+      return getPlayerName(match.player2Id);
     }
 
-    return `Jugador ${match.winner}`
-  }
+    return `Jugador ${match.winner}`;
+  };
 
   if (error) {
     return (
@@ -83,7 +81,7 @@ export default function RecentMatches() {
         <p className="font-medium">Error: {error}</p>
         <p className="text-sm mt-1 opacity-80">Intenta recargar la página</p>
       </div>
-    )
+    );
   }
 
   return (
@@ -113,7 +111,7 @@ export default function RecentMatches() {
                   </div>
                   <div className="flex items-center text-sm text-gray-300">
                     <CalendarIcon className="w-3 h-3 mr-1" />
-                    
+                    {new Date(match.lastUpdated).toLocaleDateString()}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -126,6 +124,5 @@ export default function RecentMatches() {
         </div>
       )}
     </div>
-  )
+  );
 }
-

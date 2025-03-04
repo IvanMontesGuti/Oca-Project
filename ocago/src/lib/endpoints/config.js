@@ -17,7 +17,7 @@ export const CHANGE_PASSWORD_URL = `${API_USER_URL}/ChangePassword`;
 export const UPDATE_USER_STATE = (num, id) => `${API_USER_URL}/Status?userStatusRequest=${num}&userId=${id}`;
 export const GET_COUNT_STATUS = (num) => `${API_USER_URL}/CountStatus?estado=${num}`;
 export const GET_USER_HISTORY = (id) => `${API_USER_URL}/History?userId=${id}`;
-export const API_GAMES_URL = `${API_USER_URL}/allMatches/${userId}`;
+export const API_GAME_URL = (id) => `${API_USER_URL}/allMatches/${id}`;
 
 /* --- IMAGE CONTROLLER --- */
 const API_IMAGE_URL = `${API_BASE_URL}/api/Images`;
