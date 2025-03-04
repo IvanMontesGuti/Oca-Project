@@ -73,12 +73,29 @@ namespace BackendOcago.Controllers
                 switch (jsonMessage.Action)
                 {
                     case "CreateGame":
+                        using (var scope = _serviceScopeFactory.CreateScope())
+                        {
+                            var userService = scope.ServiceProvider.GetRequiredService<UserService>();
+                            if (!long.TryParse(userId, out long numericUserId))
+                            {
+                                Console.WriteLine("❌ Error al convertir userId a long.");
+                            }
+                            else
+                            {
+                                UserDto user = await userService.GetByIdAsync(numericUserId);
+                                if (user.Role == "bloqueado")
+                                {
+                                    break;
+                                }
+                            }
+                        }
                         var game = await _gameService.CreateGameAsync(userId);
                         await SendMessageToClient(userId, new
                         {
                             action = "gameUpdate",
                             data = game
                         });
+                        
                         using (var scope = _serviceScopeFactory.CreateScope())
                         {
                             var userService = scope.ServiceProvider.GetRequiredService<UserService>();
@@ -122,6 +139,22 @@ namespace BackendOcago.Controllers
                         });
                         break;
                     case "CreateBotGame":
+                        using (var scope = _serviceScopeFactory.CreateScope())
+                        {
+                            var userService = scope.ServiceProvider.GetRequiredService<UserService>();
+                            if (!long.TryParse(userId, out long numericUserId))
+                            {
+                                Console.WriteLine("❌ Error al convertir userId a long.");
+                            }
+                            else
+                            {
+                                UserDto user = await userService.GetByIdAsync(numericUserId);
+                                if (user.Role == "bloqueado")
+                                {
+                                    break;
+                                }
+                            }
+                        }
                         var botGame = await _gameService.CreateBotGameAsync(userId);
                         await SendMessageToClient(userId, new
                         {
@@ -158,8 +191,6 @@ namespace BackendOcago.Controllers
                         });
                         break;
                     case "Surrender":
-                        var surrenderResult = await _gameService.SurrenderGameAsync(jsonMessage.GameId, userId);
-                        await NotifyPlayers(surrenderResult, "gameUpdate");
                         using (var scope = _serviceScopeFactory.CreateScope())
                         {
                             var userService = scope.ServiceProvider.GetRequiredService<UserService>();
@@ -172,6 +203,9 @@ namespace BackendOcago.Controllers
                                 await userService.UpdateStatus(UserStatus.Conectado, numericUserId);
                             }
                         }
+                        var surrenderResult = await _gameService.SurrenderGameAsync(jsonMessage.GameId, userId);
+                        await NotifyPlayers(surrenderResult, "gameUpdate");
+                        
                         // Enviar mensaje adicional sobre la rendición
                         await NotifyPlayers(new
                         {

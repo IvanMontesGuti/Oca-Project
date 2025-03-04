@@ -19,7 +19,7 @@ export default function ProtectedRoute({children, adminOnly = false}: ProtectedR
     useEffect(() =>{
         if(!isAuthenticated){
             toast.error("No puedes acceder a esta vista porque no estas logueado!", { duration: 3000, icon: "❌" });
-            router.push("/login");
+            //router.push("/login");
         }
     }, [isAuthenticated, router]) 
 
@@ -28,7 +28,7 @@ export default function ProtectedRoute({children, adminOnly = false}: ProtectedR
 
         toast.error("Tu acceso ha sido restringido por un administrador!", { duration: 3000, icon: "🚫" });
 
-        router.push("/");
+        //router.push("/");
         }
     }, [userInfo, router])
 

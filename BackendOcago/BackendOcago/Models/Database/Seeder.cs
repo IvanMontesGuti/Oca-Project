@@ -63,7 +63,7 @@ public class Seeder
                 Mail = "carla@gmail.es",
                 Password = AuthService.HashPassword("Carla#123456789"),
                 Nickname = "Carla",
-                Role = "user",
+                Role = "bloqueado",
                 AvatarUrl = "images/default.png",
                 ReceivedFriendships = new List<Friendship>(),
                 SentFriendships = new List<Friendship>()

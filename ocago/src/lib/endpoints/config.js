@@ -17,6 +17,8 @@ export const CHANGE_PASSWORD_URL = `${API_USER_URL}/ChangePassword`;
 export const UPDATE_USER_STATE = (num, id) => `${API_USER_URL}/Status?userStatusRequest=${num}&userId=${id}`;
 export const GET_COUNT_STATUS = (num) => `${API_USER_URL}/CountStatus?estado=${num}`;
 export const GET_USER_HISTORY = (id) => `${API_USER_URL}/History?userId=${id}`;
+export const API_GAME_URL = (id) => `${API_USER_URL}/allMatches/${id}`;
+
 export const API_GAMES_URL =(userId) => `${API_USER_URL}/allMatches/${userId}`;
 export const CHANGE_ROLE_USER_URL = (userId, role) =>`${API_USER_URL}/ChangeRole?userId=${userId}&roleChanged=${role}`
 export const GET_ALL_USERS_URL = `${API_USER_URL}/all`
@@ -30,6 +32,7 @@ export const IMAGE_DELETE_BY_NAME_URL = (name) => `${API_IMAGE_URL}/${name}`; //
 
 /* --- FRIENDSHIP CONTROLLER --- */
 const API_FRIENDSHIP_URL = `${API_BASE_URL}/api/Friendship`;
+export const FRIENDSHIP_DELETE = (userId, friendId) => `${API_BASE_URL}/api/Friendship/remove/${userId}/${friendId}`; // DELETE /api/Friendship/remove/{gameId}/{userId}
 export const FRIENDSHIP_SEND_REQUEST_URL = `${API_FRIENDSHIP_URL}/send`; // POST /api/Friendship/send
 export const FRIENDSHIP_RECEIVED_REQUEST_URL = (userId) => `${API_FRIENDSHIP_URL}/received/${userId}`; // POST /api/Friendship/received/{userId}
 export const FRIENDSHIP_ACCEPT_REQUEST_URL = (friendsipId) => `${API_FRIENDSHIP_URL}/accept/${friendsipId}`; // POST /api/Friendship/accept/{friendsipId}
