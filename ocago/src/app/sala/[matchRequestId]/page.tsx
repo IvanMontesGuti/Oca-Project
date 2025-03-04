@@ -10,6 +10,7 @@ import { API_BASE_URL } from "@/lib/endpoints/config"
 import { Crown, X } from "lucide-react"
 import { toast } from "sonner"
 import { Header2 } from "@/components/Home/navUser"
+import ProtectedRoute from "@/components/ProtectedRoute/page"
 
 interface Player {
   id: string
@@ -171,6 +172,7 @@ export default function GameRoom() {
   const areAllPlayersReady = players.length === 2 && players.every((player) => player.isReady)
 
   return (
+    <ProtectedRoute>
     <div className="min-h-screen bg-gradient-to-br from-gray-900 to-purple-900 flex flex-col items-center justify-center p-4">
       <Header2 />
       <div className="w-full max-w-4xl bg-black/30 backdrop-blur-md rounded-2xl overflow-hidden shadow-2xl border border-purple-500/20">
@@ -229,6 +231,8 @@ export default function GameRoom() {
         </div>
       </div>
     </div>
+    </ProtectedRoute>
+
   )
 }
 
