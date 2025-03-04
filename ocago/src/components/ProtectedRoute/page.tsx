@@ -8,28 +8,38 @@ import { toast } from "sonner"
 
 interface ProtectedRouteProps{
     children: React.ReactNode
-    requiredRole?: "user" | "admin"
+    adminOnly?: boolean
 }
 
-export default function ProtectedRoute({children, requiredRole}: ProtectedRouteProps){
+export default function ProtectedRoute({children, adminOnly = false}: ProtectedRouteProps){
     const {userInfo, isAuthenticated} = useAuth();
     const router = useRouter();
+    
 
     useEffect(() =>{
         if(!isAuthenticated){
             toast.error("No puedes acceder a esta vista porque no estas logueado!", { duration: 3000, icon: "❌" });
             //router.push("/login");
         }
-    }) 
-    useEffect(() => {
-        if(userInfo?.role !== requiredRole){
+    }, [isAuthenticated, router]) 
 
-        toast.error("No puedes acceder a esta vista!", { duration: 3000, icon: "❌" });
+    useEffect(() => {
+        if(userInfo?.role === "bloqueado"){
+
+        toast.error("Tu acceso ha sido restringido por un administrador!", { duration: 3000, icon: "🚫" });
 
         //router.push("/");
         }
-    }, [isAuthenticated, userInfo, requiredRole, router])
+    }, [userInfo, router])
 
+    useEffect(() => {
+        if(adminOnly && userInfo?.role !== "admin"){
+
+        toast.error("Acceso solo para administradores", { duration: 3000, icon: "⚠️" });
+
+        router.push("/");
+        }
+    }, [adminOnly, userInfo, router])
 
     return <>{children}</>
 }

@@ -11,12 +11,39 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
-import { API_BASE_URL } from "@/lib/endpoints/config";
+import { API_BASE_URL, GET_USER_BY_ID_URL } from "@/lib/endpoints/config";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useEffect, useState } from "react";
 
 export function Header2() {
-  const { userInfo, logout } = useAuth();
+  const { userInfo, logout, userId } = useAuth();
   const { family_name, unique_name } = userInfo || {};
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  const fetchUserRole = async () => {
+    if (!userId) return;
+    try {
+      const response = await fetch(GET_USER_BY_ID_URL(userId), {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) throw new Error("⚠️ Error al obtener el rol del usuario");
+
+      const data = await response.json();
+      setUserRole(data.role);
+    } catch (error) {
+      console.error("❌ Error obteniendo rol del usuario:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserRole();
+  }, [userId]);
+  
+  useEffect(() => {
+    if(userRole === "bloqueado") logout()
+  }, [userRole]);
 
   const handleLogout = () => {
     logout();
@@ -74,17 +101,17 @@ export function Header2() {
             </Link>
           </DropdownMenuItem>
 
-          {userInfo?.role === "admin" && (
-          <DropdownMenuItem asChild>
-            <Link
-              href="/admin"
-              className="cursor-pointer flex items-center gap-2 text-yellow-500"
-            >
-              <Settings className="h-4 w-4" />
-              <span>Panel de Administrador</span>
-            </Link>
-          </DropdownMenuItem>
-        )}
+          {userRole === "admin" && (
+            <DropdownMenuItem asChild>
+              <Link
+                href="/admin"
+                className="cursor-pointer flex items-center gap-2 text-yellow-500"
+              >
+                <Settings className="h-4 w-4" />
+                <span>Panel de Administrador</span>
+              </Link>
+            </DropdownMenuItem>
+          )}
           <DropdownMenuSeparator />
 
           <DropdownMenuItem

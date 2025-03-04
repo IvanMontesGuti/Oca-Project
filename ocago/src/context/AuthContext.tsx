@@ -2,8 +2,9 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { jwtDecode } from "jwt-decode";
-import { LOGIN_URL, REGISTER_URL } from "@/lib/endpoints/config";
+import { GET_USER_BY_ID_URL, LOGIN_URL, REGISTER_URL } from "@/lib/endpoints/config";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 
 interface JwtPayload {
@@ -29,6 +30,7 @@ interface AuthContextType {
   logout: () => void;
   isAuthenticated: boolean;
   updateUserInfo: (newInfo: any) => void;
+  getUserRole: () => Promise<string | null>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,6 +39,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [token, setToken] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [userInfo, setUserInfo] = useState<DecodedToken | null>(null);
+  const [initialRole, setInitialRole] = useState<string | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const router = useRouter()
 
@@ -57,11 +60,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       try {
         const decodedToken = jwtDecode<DecodedToken>(savedToken);
         setUserInfo(decodedToken);
+        setInitialRole(decodedToken.role) 
         const extractedUserId = extractUserId(savedToken);
         if (extractedUserId) {
           setToken(savedToken);
           setUserId(extractedUserId);
           setIsAuthenticated(true);
+          updateUserRole()
         } else {
           logout();
         }
@@ -71,6 +76,38 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     }
   }, []);
+  useEffect(() => {
+    if (initialRole && userInfo?.role && initialRole !== userInfo.role) {
+      toast.info("Un administrador ha cambiado tu rol, cerrando sesión...", { duration: 3000, icon: "🔄" });
+      console.log("🚫 Cierre de sesión: Rol cambiado de", initialRole, "a", userInfo.role);
+      logout();
+    }
+  }, [initialRole, userInfo?.role]);
+
+const updateUserRole = async () => {
+    if (!userId) return;
+    try {
+      const response = await fetch(GET_USER_BY_ID_URL(userId), {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) throw new Error("⚠️ Error al obtener el rol del usuario");
+
+      const userData = await response.json();
+
+      setUserInfo((prevInfo) => {
+        if (!prevInfo) return null;
+        return {
+          ...prevInfo,
+          role: userData.role || prevInfo.role || null,
+        };
+      });
+    } catch (error) {
+      console.error("❌ Error obteniendo rol del usuario:", error);
+    }
+  };
 
   const login = async (mail: string, password: string, rememberMe: boolean) => {
     try {
@@ -79,20 +116,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mail, password }),
       });
-  
+
       const data = await response.json();
-  
+
       if (!data?.accessToken) throw new Error("⚠️ Token de acceso inválido");
-  
+
       const extractedUserId = extractUserId(data.accessToken);
       if (!extractedUserId) throw new Error("⚠️ No se pudo extraer userId");
-  
+
       const decodedToken = jwtDecode<DecodedToken>(data.accessToken);
       setUserInfo(decodedToken);
+      setInitialRole(decodedToken.role);
       setToken(data.accessToken);
       setUserId(extractedUserId);
       setIsAuthenticated(true);
-  
+      updateUserRole()
       if (typeof window !== "undefined") {
         if (rememberMe) {
           localStorage.setItem("accessToken", data.accessToken);
@@ -115,9 +153,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         role: "User",  // 🚨 Asegúrate de incluir el rol aquí
         avatarUrl: avatarUrl
       };
-  
+
       console.log("📦 Cuerpo enviado:", body);  // 📌 LOG para verificar el cuerpo enviado
-  
+
       const response = await fetch(REGISTER_URL, {
         method: "POST",
         headers: {
@@ -125,26 +163,26 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         },
         body: JSON.stringify(body)
       });
-  
+
       if (!response.ok) {
         const errorData = await response.json();
         console.error("❌ Respuesta del servidor:", errorData);  // 📌 LOG para respuesta del servidor
         throw new Error(errorData.message || "⚠️ Error en el registro");
       }
-  
+
       const data = await response.json();
       if (!data?.accessToken) throw new Error("⚠️ Token de acceso inválido");
-  
+
       const extractedUserId = extractUserId(data.accessToken);
       if (!extractedUserId) throw new Error("⚠️ No se pudo extraer el userId");
-  
+
       const decodedToken = jwtDecode<DecodedToken>(data.accessToken);
       setUserInfo(decodedToken);
-  
+      setInitialRole(data.role);
       setToken(data.accessToken);
       setUserId(extractedUserId);
       setIsAuthenticated(true);
-  
+      updateUserRole()
       if (typeof window !== "undefined") {
         localStorage.setItem("accessToken", data.accessToken);
       }
@@ -153,14 +191,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       throw error;
     }
   };
-  
-  
+
+
 
   const logout = () => {
     setToken(null);
     setUserId(null);
     setUserInfo(null);
     setIsAuthenticated(false);
+    setInitialRole(null);  
 
     if (typeof window !== "undefined") {
       localStorage.removeItem("accessToken");
@@ -172,8 +211,27 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUserInfo((prevInfo) => ({ ...prevInfo, ...newInfo }))
   }
 
+  const getUserRole = async (): Promise<string | null> => {
+    if (!userId) return null;
+    try {
+      const response = await fetch(GET_USER_BY_ID_URL(userId), {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) throw new Error("⚠️ Error al obtener el rol del usuario");
+
+      const userData = await response.json();
+      return userData.role || null;
+    } catch (error) {
+      console.error("❌ Error obteniendo rol del usuario:", error);
+      return null;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ token, userId, userInfo, login, register, logout, isAuthenticated, updateUserInfo}}>
+    <AuthContext.Provider value={{ token, userId, userInfo, login, register, logout, isAuthenticated, updateUserInfo, getUserRole }}>
       {children}
     </AuthContext.Provider>
   );
